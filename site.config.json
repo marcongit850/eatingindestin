@@ -1,0 +1,10 @@
+{
+  "origin": "https://eatingindestin.352marc.workers.dev",
+  "name": "Eating in Destin",
+  "worker": "eatingindestin",
+  "featured": [
+    "harbor-docks-destin-harbor",
+    "the-back-porch-mid-destin",
+    "beach-walk-cafe-crystal-beach"
+  ]
+}
