@@ -62,10 +62,17 @@ test("map popups show the name, address, and profile", () => {
   assert.match(html, /Harbor Docks/);
   assert.match(html, /538 Harbor Blvd/);
   assert.match(html, /class="popup-address"/);
-  assert.doesNotMatch(html, /popup-photo/);
+  assert.match(html, /class="popup-photo"/);
+  assert.match(html, /\/images\/restaurants\/harbor-docks-destin-harbor\/01\.jpg/);
   assert.match(html, /href="\/restaurants\/harbor-docks-destin-harbor\/"/);
   assert.match(html, />View restaurant</);
   assert.doesNotMatch(html, /View profile|https?:\/\//);
+
+  const plain = restaurants.find((item) => item.slug === "sundries-general-market-sandestin");
+  const plainHtml = markerPopup(plain);
+  assert.match(plainHtml, /Sundries General Market/);
+  assert.match(plainHtml, /class="popup-address"/);
+  assert.doesNotMatch(plainHtml, /popup-photo/);
 });
 
 test("map list cards stay compact", () => {
@@ -73,12 +80,18 @@ test("map list cards stay compact", () => {
   assert.equal(monogram("The Back Porch"), "BP");
   assert.equal(monogram("Beach Walk Cafe"), "BW");
   const harbor = restaurants.find((item) => item.slug === "harbor-docks-destin-harbor");
-  const mark = mapListCard(harbor);
+  const photo = mapListCard(harbor);
+  assert.match(photo, /class="map-thumb"/);
+  assert.match(photo, /harbor-docks-destin-harbor\/01\.jpg/);
+  assert.match(photo, /<strong>Harbor Docks<\/strong>/);
+  assert.match(photo, /class="map-meta">Destin Harbor · \$\$/);
+  assert.match(photo, /class="map-address">538 Harbor Blvd/);
+  assert.doesNotMatch(photo, /class="map-thumb ph"/);
+  const plain = restaurants.find((item) => item.slug === "sundries-general-market-sandestin");
+  const mark = mapListCard(plain);
   assert.match(mark, /class="map-thumb ph"/);
-  assert.match(mark, /aria-hidden="true">HD</);
-  assert.match(mark, /<strong>Harbor Docks<\/strong>/);
-  assert.match(mark, /class="map-meta">Destin Harbor · \$\$/);
-  assert.match(mark, /class="map-address">538 Harbor Blvd/);
+  assert.match(mark, /aria-hidden="true">SG</);
+  assert.match(mark, /class="map-meta">Sandestin · \$</);
   assert.doesNotMatch(mark, /<img/);
 });
 

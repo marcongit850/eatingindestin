@@ -76,12 +76,29 @@ check("User-agent: *" in robots and "Allow: /" in robots, "robots should allow c
 missing_coords = [item["slug"] for item in restaurants if not isinstance(item.get("lat"), (int, float)) or not isinstance(item.get("lng"), (int, float)) or not item.get("address")]
 check(not missing_coords, f"listings missing address or coordinates: {missing_coords}")
 photos = [item for item in restaurants if item.get("image")]
-check(photos == [], "restaurant photo files are not in the repo yet, so listings stay monograms")
-check(build.local_listing_photo("harbor-docks-destin-harbor") is None, "a slug without a dropped file should stay a monogram")
-check(build.listing_photos("harbor-docks-destin-harbor") == [], "Harbor Docks has no photo folder yet")
+missing_photos = sorted(item["slug"] for item in restaurants if not item.get("image"))
+check(
+    missing_photos
+    == [
+        "cosmo-s-robo-diner-sandestin",
+        "juju-boba-destin-commons",
+        "moo-la-la-ice-cream-and-desserts-sandestin",
+        "sundries-general-market-sandestin",
+    ],
+    f"only the four listings without source photos should keep a monogram, got {missing_photos}",
+)
+check(len(photos) == 199, f"expected 199 restaurant photos, got {len(photos)}")
+check(build.local_listing_photo("not-a-restaurant") is None, "a slug without a dropped file should stay a monogram")
+check(build.listing_photos("sundries-general-market-sandestin") == [], "Sundries General Market has no photo folder")
+harbor_photo = build.listing_photos("harbor-docks-destin-harbor")
+check(
+    harbor_photo and harbor_photo[0].endswith("/harbor-docks-destin-harbor/01.jpg"),
+    f"Harbor Docks cover should be 01, got {harbor_photo}",
+)
 for item in photos:
     path = ROOT / item["image"].lstrip("/")
     check(path.is_file(), f"missing photo file {item['image']}")
+    check(item["image"].endswith("/01.jpg"), f"cover should be 01.jpg for {item['slug']}")
     check(path.stat().st_size < 500_000, f"photo too large for the web: {item['image']}")
 readme = (ROOT / "README.md").read_text(encoding="utf-8")
 check("images/restaurants/" in readme and "`01` is the cover" in readme, "README should say how restaurant photos are stored")
@@ -203,6 +220,7 @@ check(".cover-arrow" in styles and "min-width: 44px" in styles, "featured arrows
 for slug in featured:
     check(f'/restaurants/{slug}/' in home, f"homepage cover missing {slug}")
     check(f'href="/restaurants/{slug}/">View restaurant</a>' in home, f"featured cover for {slug} should say View restaurant")
+    check(f'/images/restaurants/{slug}/01.jpg' in home, f"featured cover for {slug} should use its photo")
 check("Read the profile" not in home, "featured cover should not put the profile URL in the label")
 check("View restaurant" in home, "featured cover CTA should say View restaurant")
 llms = (ROOT / "llms.txt").read_text(encoding="utf-8")
@@ -222,9 +240,16 @@ if card:
     check("Breakfast" in tag and "Lunch" in tag and "Dinner" in tag, "Harbor Docks meal data")
 
 harbor_page = (ROOT / "restaurants" / "harbor-docks-destin-harbor" / "index.html").read_text(encoding="utf-8")
-harbor_hero = harbor_page.split('class="profile-hero"', 1)[1].split('class="wrap profile-head"', 1)[0]
-check('class="ph"' in harbor_hero and 'class="mono"' in harbor_hero, "a listing without a photo should keep the monogram")
-check("<img" not in harbor_hero and 'class="profile-film"' not in harbor_page, "Harbor Docks should stay a monogram until photos arrive")
+harbor_hero = harbor_page.split('class="profile-hero"', 1)[1].split('class="profile-film"', 1)[0]
+check("/images/restaurants/harbor-docks-destin-harbor/01.jpg" in harbor_hero, "Harbor Docks hero should be the supplied cover")
+check(
+    'class="profile-film"' in harbor_page and "/images/restaurants/harbor-docks-destin-harbor/02.jpg" in harbor_page,
+    "Harbor Docks profile should show the extra photos",
+)
+sundries = (ROOT / "restaurants" / "sundries-general-market-sandestin" / "index.html").read_text(encoding="utf-8")
+sundries_hero = sundries.split('class="profile-hero"', 1)[1].split('class="wrap profile-head"', 1)[0]
+check('class="ph"' in sundries_hero and 'class="mono"' in sundries_hero, "a listing without a photo should keep the monogram")
+check("<img" not in sundries_hero and 'class="profile-film"' not in sundries, "Sundries General Market should stay a monogram")
 check("static.wixstatic.com" not in home and "static.wixstatic.com" not in harbor_page, "Destin pages should not hotlink Wix photos")
 for area_slug in ("miramar-beach", "destin-harbor", "crystal-beach"):
     card_html = home.split(f'href="/restaurants/?area={area_slug}"', 1)[1].split("</a>", 1)[0]

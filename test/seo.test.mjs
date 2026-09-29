@@ -101,7 +101,11 @@ assert.equal(typeof restaurant.geo.latitude, "number");
 assert.equal(typeof restaurant.geo.longitude, "number");
 assert.ok(restaurant.telephone);
 assert.equal(profile["@graph"].some((node) => node["@type"] === "BreadcrumbList"), true);
-assert.equal(JSON.stringify(restaurant).includes('"image"'), false);
+assert.match(restaurant.image, /\/images\/restaurants\/harbor-docks-destin-harbor\/01\.jpg$/);
+
+const sundries = jsonLd(read("restaurants/sundries-general-market-sandestin/index.html"));
+const sundriesRestaurant = sundries["@graph"].find((node) => node["@type"] === "Restaurant");
+assert.equal(JSON.stringify(sundriesRestaurant).includes('"image"'), false);
 
 const town = jsonLd(read("areas/destin-harbor/index.html"));
 assert.equal(town["@graph"].some((node) => node["@type"] === "ItemList"), true);
