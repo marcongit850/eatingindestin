@@ -1,0 +1,61 @@
+<footer class="site-footer">
+  <div class="wrap subscribe-band">
+    <div class="subscribe-copy">
+      <p class="kicker">Stay in the know</p>
+      <h2>Exclusive restaurant coupons</h2>
+    </div>
+    <form class="subscribe-form" action="/api/subscribe" method="post" data-subscribe>
+      <label>
+        <span>Email <abbr title="required">*</abbr></span>
+        <input name="email" type="email" required autocomplete="email" inputmode="email" placeholder="you@example.com">
+      </label>
+      <fieldset>
+        <legend>I am a…</legend>
+        <label class="subscribe-choice"><input type="radio" name="audience" value="local"> <span>Local</span></label>
+        <label class="subscribe-choice"><input type="radio" name="audience" value="visitor"> <span>Visitor</span></label>
+      </fieldset>
+      <label class="subscribe-choice">
+        <input type="checkbox" name="coupons" value="yes">
+        <span>Yes, I want coupons!</span>
+      </label>
+      <button type="submit">Submit</button>
+      <p class="subscribe-status" role="status" aria-live="polite"></p>
+    </form>
+  </div>
+  <div class="wrap footer-grid">
+    <div>
+      <p class="footer-mark"><img src="/images/eating-in-destin-logo.png" alt="Eating in Destin" width="1660" height="714"></p>
+      <p>A restaurant guide for Destin and Miramar Beach, Florida.</p>
+    </div>
+    <nav aria-label="Footer">
+      <a href="/restaurants/">Restaurants</a>
+      <a href="/map/">Map</a>
+      <a href="/areas/">Areas</a>
+      <a href="/about/">About</a>
+      <a href="/contact/">Contact</a>
+    </nav>
+  </div>
+  <dialog id="subscribe-popup" class="subscribe-popup" aria-labelledby="subscribe-popup-title">
+    <div class="subscribe-card">
+      <button type="button" class="subscribe-close" data-subscribe-close aria-label="Close"><span aria-hidden="true">×</span></button>
+      <h2 id="subscribe-popup-title">Subscribe to get exclusive restaurant coupons!</h2>
+      <form class="subscribe-form" action="/api/subscribe" method="post" data-subscribe>
+        <label>
+          <span>Email <abbr title="required">*</abbr></span>
+          <input name="email" type="email" required autocomplete="email" inputmode="email" placeholder="you@example.com">
+        </label>
+        <fieldset>
+          <legend>I am a…</legend>
+          <label class="subscribe-choice"><input type="radio" name="audience" value="local"> <span>Local</span></label>
+          <label class="subscribe-choice"><input type="radio" name="audience" value="visitor"> <span>Visitor</span></label>
+        </fieldset>
+        <label class="subscribe-choice">
+          <input type="checkbox" name="coupons" value="yes">
+          <span>Yes, I want coupons!</span>
+        </label>
+        <button type="submit">Submit</button>
+        <p class="subscribe-status" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </dialog>
+</footer>

@@ -1,0 +1,9 @@
+{
+  "name": "eatingindestin",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "python3 scripts/build.py",
+    "test": "python3 scripts/build.py && python3 test/check_site.py && node --test test/filters.test.mjs test/seo.test.mjs test/subscribe.test.mjs test/listing.test.mjs"
+  }
+}
