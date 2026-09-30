@@ -344,6 +344,21 @@ check(
 check("<em>Eating</em>" not in shared_header, "header should not keep the text wordmark")
 check('class="footer-mark"' in shared_footer and 'src="/images/eating-in-destin-logo.png"' in shared_footer, "footer should use the Eating in Destin logo")
 check('alt="Eating in Destin"' in shared_footer and "<em>Eating</em>" not in shared_footer, "footer logo needs alt text")
+check(
+    'class="footer-sister"' in shared_footer
+    and "Be sure to also check out" in shared_footer
+    and 'src="/images/eating-on-30a-logo.png"' in shared_footer
+    and 'alt="Eating on 30A"' in shared_footer
+    and 'href="https://eatingon30a.352marc.workers.dev"' in shared_footer,
+    "footer should point visitors to Eating on 30A",
+)
+check((ROOT / "images" / "eating-on-30a-logo.png").is_file(), "30A logo should live in images")
+check("workers.dev/images" not in shared_footer, "30A logo should not be hotlinked")
+sister_css = styles.split(".footer-sister a", 1)
+check(
+    len(sister_css) == 2 and "flex-wrap: wrap" in sister_css[1][:500],
+    "30A footer promo should wrap instead of overflowing",
+)
 check("logo.svg" not in shared_header and "logo.svg" not in shared_footer and not (ROOT / "logo.svg").exists(), "the masthead file should stay out of the site")
 check((ROOT / "images" / "eating-in-destin-logo.png").is_file(), "transparent logo file should be in images")
 check('href="/favicon.png"' in home and 'href="/apple-touch-icon.png"' in home, "home should link the circle favicon")
