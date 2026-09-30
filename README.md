@@ -88,7 +88,14 @@ Signup notes and listing requests from `/contact/` go out through the Resend HTT
 - `SUBSCRIBE_FROM` — a verified Resend sender, also used as the From address for listing mail
 - `CONTACT_EMAIL` — inbox that receives the signup and listing requests
 
-If any secret is missing, the worker still accepts the signup or listing note and returns `delivered: false`. It does not call another newsletter product. A listing email sets `reply_to` to the address on the form so a reply goes back to that person.
+If any of those three secrets is missing, the worker still accepts the signup or listing note and returns `delivered: false`. It does not call another newsletter product. A listing email sets `reply_to` to the address on the form so a reply goes back to that person.
+
+Coupon signups are also posted to a Google Apps Script webhook, which appends a row, when both of these secrets are set:
+
+- `GOOGLE_SHEETS_WEBHOOK_URL`
+- `GOOGLE_SHEETS_WEBHOOK_TOKEN`
+
+The JSON response reports that separately as `recorded`. If either Sheets secret is missing, the worker skips the webhook and returns `recorded: false`. A webhook error also returns `recorded: false` and leaves `delivered` as Resend reported it, so a signup Resend already accepted stays successful. Listing requests are not written to the sheet.
 
 ```bash
 npx wrangler deploy
