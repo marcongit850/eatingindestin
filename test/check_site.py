@@ -79,38 +79,15 @@ missing_photos = sorted(item["slug"] for item in restaurants if not item.get("im
 check(
     missing_photos
     == [
-        "arbys-destin-mid-destin",
-        "bric-a-brac-mid-destin",
-        "cafe-destin-mid-destin",
-        "ciao-italian-bistro-and-pizza-mid-destin",
-        "cracker-barrel-destin-mid-destin",
         "crafty-siren-destin-harbor",
-        "frozen-bloom-creamery-mid-destin",
-        "funnel-cakes-destin-harbor",
-        "locohana-tropical-grill-destin-harbor",
-        "sea-level-crystal-beach",
-        "sonic-destin-mid-destin",
-        "sprinkles-cafe-crystal-beach",
-        "spun-fun-cotton-candy-destin-harbor",
-        "starbucks-emerald-coast-mid-destin",
-        "subway-destin-mid-destin",
         "sundries-general-market-sandestin",
-        "taco-bell-destin-destin-harbor",
-        "the-beach-house-sandestin",
-        "the-bistro-at-courtyard-sandestin-grand-boulevard",
-        "the-candy-maker-destin-mid-destin",
-        "the-candy-maker-miramar-beach-sandestin",
-        "the-lobby-bar-sandestin",
-        "the-rooftop-crystal-beach",
-        "wendys-destin-mid-destin",
-        "whataburger-destin-harbor-destin-harbor",
-        "whole-foods-market-destin-commons",
     ],
     f"unexpected monogram listings: {missing_photos}",
 )
-check(len(photos) == 190, f"expected 190 restaurant photos, got {len(photos)}")
+check(len(photos) == 214, f"expected 214 restaurant photos, got {len(photos)}")
 check(build.local_listing_photo("not-a-restaurant") is None, "a slug without a dropped file should stay a monogram")
 check(build.listing_photos("sundries-general-market-sandestin") == [], "Sundries General Market has no photo folder")
+check(build.listing_photos("crafty-siren-destin-harbor") == [], "Crafty Siren has no photo folder")
 check(
     build.listing_photos("juju-boba-destin-commons")
     == [
