@@ -170,6 +170,28 @@ check("town" not in listing_js, "listing script should not send a town")
 check("Marc" not in listing_js and "Thanks. We have your note." in listing_js, "listing script should thank without a personal name")
 check(".listing-form" in styles and ".listing-status" in styles, "listing form should use the site styles")
 check("See the restaurants" in about and "Open the directory" not in about, "about button should invite visitors in")
+check('<h2 id="print-guides-heading">Coming in 2027</h2>' in about, "about page should announce the 2027 print guides")
+check(build.e(build.PRINT_GUIDES) in about, "about page should use the print guide paragraph")
+about_main = about.split("<main", 1)[-1].split("</main>", 1)[0]
+check("\u2014" not in about_main, "about body should not use an em dash")
+check('class="print-covers"' in about, "print covers should share one layout")
+for cover in build.PRINT_COVERS:
+    check(cover["jpg"] in about and cover["webp"] in about, f"about page should include {cover['jpg']}")
+    check(build.e(cover["alt"]) in about, f"about page should describe {cover['jpg']}")
+    for name in (cover["jpg"], cover["webp"]):
+        cover_path = ROOT / name.lstrip("/")
+        check(cover_path.is_file(), f"missing print cover {name}")
+        check(cover_path.stat().st_size < 400_000, f"print cover too large for the web: {name}")
+guides_css = styles.split(".print-covers {", 1)
+check(
+    len(guides_css) == 2 and "grid-template-columns: minmax(0, 1fr)" in guides_css[1][:500],
+    "print covers should stack in one column by default",
+)
+desktop_css = styles.split("@media (min-width: 720px)", 1)[1]
+check(
+    ".print-covers" in desktop_css and "repeat(2, minmax(0, 1fr))" in desktop_css,
+    "print covers should sit side by side from 720px",
+)
 check("Find breakfast, lunch, and dinner in Destin and Miramar Beach" in home, "homepage hero should welcome visitors to Destin")
 check('src="/images/hero-beachside-dining.jpg"' in home, "homepage hero should use the harbor dining photo")
 check('srcset="/images/hero-beachside-dining.webp"' in home, "homepage hero should offer the WebP photo")

@@ -88,6 +88,32 @@ ABOUT_TOWNS = (
     "Explore the areas along this stretch of the Emerald Coast, including Miramar Beach, Sandestin, Grand Boulevard, "
     "Destin Commons, Mid-Destin, Destin Harbor, and Crystal Beach."
 )
+PRINT_GUIDES = (
+    "Looking ahead, we\u2019ll also be launching a printed version of the \"Eating In\" guides in 2027, "
+    "bringing the same curated experience into a high-quality physical format you can bring along."
+)
+PRINT_COVERS = (
+    {
+        "jpg": "/images/guides/eating-in-destin-spring-summer-2027.jpg",
+        "webp": "/images/guides/eating-in-destin-spring-summer-2027.webp",
+        "width": 1024,
+        "height": 1536,
+        "alt": (
+            "Spring/Summer 2027 cover of Eating in Destin, with oysters, fish tacos, "
+            "and cocktails on a table at Destin Harbor."
+        ),
+    },
+    {
+        "jpg": "/images/guides/eating-on-30a-spring-summer-2027.jpg",
+        "webp": "/images/guides/eating-on-30a-spring-summer-2027.webp",
+        "width": 1024,
+        "height": 1536,
+        "alt": (
+            "Spring/Summer 2027 cover of Eating on 30A, with seared scallops "
+            "in front of white beach houses along the Gulf."
+        ),
+    },
+)
 TOWNS = (
     "The areas in the guide are Miramar Beach, Sandestin, Grand Boulevard, Destin Commons, "
     "Mid-Destin, Destin Harbor, and Crystal Beach."
@@ -1416,13 +1442,29 @@ def build_areas(areas: list[dict], restaurants: list[dict]) -> None:
         )
 
 
+def print_cover(cover: dict) -> str:
+    return (
+        "<figure>"
+        f'<picture><source srcset="{e(cover["webp"])}" type="image/webp">'
+        f'<img src="{e(cover["jpg"])}" width="{cover["width"]}" height="{cover["height"]}" '
+        f'alt="{e(cover["alt"])}" loading="lazy" decoding="async">'
+        "</picture></figure>"
+    )
+
+
 def build_about() -> None:
+    covers = "".join(print_cover(cover) for cover in PRINT_COVERS)
     body = (
-        '<div class="wrap page-intro prose"><p class="kicker">About</p>'
+        '<div class="wrap page-intro"><div class="prose"><p class="kicker">About</p>'
         "<h1>The Destin restaurant guide</h1>"
         f"<p>{e(ABOUT_LEAD)}</p>"
         f"<p>{e(ABOUT_TOWNS)}</p>"
-        '<p><a class="button" href="/restaurants/">See the restaurants</a></p></div>'
+        '<p><a class="button" href="/restaurants/">See the restaurants</a></p>'
+        '<section class="print-guides" aria-labelledby="print-guides-heading">'
+        '<h2 id="print-guides-heading">Coming in 2027</h2>'
+        f"<p>{e(PRINT_GUIDES)}</p>"
+        f'<div class="print-covers">{covers}</div>'
+        "</section></div></div>"
     )
     write(
         ROOT / "about" / "index.html",
