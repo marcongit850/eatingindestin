@@ -192,6 +192,16 @@ check(".listing-form" in styles and ".listing-status" in styles, "listing form s
 check("See the restaurants" in about and "Open the directory" not in about, "about button should invite visitors in")
 check('<h2 id="print-guides-heading">Coming in 2027</h2>' in about, "about page should announce the 2027 print guides")
 check(build.e(build.PRINT_GUIDES) in about, "about page should use the print guide paragraph")
+contact_sentence = (
+    "For information or to reserve your space, please "
+    '<a class="text-link" href="/contact/">contact us</a>.'
+)
+check(f"<p>{contact_sentence}</p>" in about, "print guide section should invite visitors to contact us")
+print_section = about.split('<h2 id="print-guides-heading">Coming in 2027</h2>', 1)[-1]
+check(
+    print_section.find(build.e(build.PRINT_GUIDES)) < print_section.find(contact_sentence) < print_section.find('class="print-covers"'),
+    "contact sentence should follow the print guide paragraph",
+)
 about_main = about.split("<main", 1)[-1].split("</main>", 1)[0]
 check("\u2014" not in about_main, "about body should not use an em dash")
 check('class="print-covers"' in about, "print covers should share one layout")
