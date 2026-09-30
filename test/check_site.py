@@ -188,11 +188,19 @@ contact_form = contact.split("<form", 1)[1].split("</form>", 1)[0]
 contact_fields = ["name", "email", "restaurant", "type", "details"]
 contact_order = [contact_form.find(f'name="{field}"') for field in contact_fields]
 check(all(index >= 0 for index in contact_order) and contact_order == sorted(contact_order), "contact fields should run name, email, restaurant, type, details")
-for request_type in ("update", "edit", "deletion", "new"):
+for request_type in ("update", "edit", "deletion", "new", "other"):
     check(f'value="{request_type}"' in contact, f"contact form missing request type {request_type}")
+check(">Other</span>" in contact, "contact form should offer Other next to the other request types")
+restaurant_input = re.search(r'<input name="restaurant"[^>]*>', contact)
+check(
+    restaurant_input is not None and "required" not in restaurant_input.group(0) and "Restaurant name <abbr" not in contact,
+    "restaurant name should be optional",
+)
 check('src="/listing.js"' in contact, "contact page should load the listing form script")
 listing_js = (ROOT / "listing.js").read_text(encoding="utf-8")
 check("/api/listing" in listing_js, "listing script should post to the worker")
+check("Enter the restaurant name." not in listing_js, "listing script should not require a restaurant name")
+check('type !== "other"' in listing_js, "listing script should accept an Other request")
 check("town" not in listing_js, "listing script should not send a town")
 check(
     'queryValue(params, "restaurant", 160)' in listing_js and 'queryValue(params, "subject", 4000)' in listing_js,
