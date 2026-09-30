@@ -2,7 +2,7 @@
 
 > Restaurant guide for Destin and Miramar Beach, Florida.
 
-Eating in Destin is a restaurant guide for Destin and Miramar Beach. Find breakfast, lunch, and dinner from the Harbor to Crystal Beach, with the address, the hours, and a feel for the place.
+Eating in Destin is a restaurant guide for Destin and Miramar Beach. Find breakfast, lunch, and dinner, with the address, the hours, and a feel for the place.
 
 The areas in the guide are Miramar Beach, Sandestin, Grand Boulevard, Destin Commons, Mid-Destin, Destin Harbor, and Crystal Beach.
 
@@ -15,13 +15,13 @@ The areas in the guide are Miramar Beach, Sandestin, Grand Boulevard, Destin Com
 
 ## Areas
 
-- [Miramar Beach](https://eatingindestin.352marc.workers.dev/areas/miramar-beach/): The western edge of the guide, with beach restaurants along Scenic Gulf Drive, Silver Sands, and US 98.
+- [Miramar Beach](https://eatingindestin.352marc.workers.dev/areas/miramar-beach/): Beach restaurants along Scenic Gulf Drive, Silver Sands, and US 98.
 - [Sandestin](https://eatingindestin.352marc.workers.dev/areas/sandestin/): Baytowne Wharf, the marina, and the resort hotels, with waterfront dining inside Sandestin.
 - [Grand Boulevard](https://eatingindestin.352marc.workers.dev/areas/grand-boulevard/): The Sandestin town center north of the bay, with sit-down restaurants around the square.
 - [Destin Commons](https://eatingindestin.352marc.workers.dev/areas/destin-commons/): The open-air shopping center in Destin, with casual dining along the commons and Commons Drive.
 - [Mid-Destin](https://eatingindestin.352marc.workers.dev/areas/mid-destin/): The US 98 stretch through Destin, with everyday restaurants between the harbor and Sandestin.
 - [Destin Harbor](https://eatingindestin.352marc.workers.dev/areas/destin-harbor/): HarborWalk Village and the Destin Harbor docks, with seafood houses on the water.
-- [Crystal Beach](https://eatingindestin.352marc.workers.dev/areas/crystal-beach/): The east end of Destin along Scenic 98, including Henderson Beach and the gulf-front inns.
+- [Crystal Beach](https://eatingindestin.352marc.workers.dev/areas/crystal-beach/): Along Scenic 98, including Henderson Beach and the gulf-front inns.
 
 ## Restaurants
 
