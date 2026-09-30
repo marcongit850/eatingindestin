@@ -95,7 +95,7 @@ Coupon signups are also posted to a Google Apps Script webhook, which appends a 
 - `GOOGLE_SHEETS_WEBHOOK_URL`
 - `GOOGLE_SHEETS_WEBHOOK_TOKEN`
 
-The JSON response reports that separately as `recorded`. If either Sheets secret is missing, the worker skips the webhook and returns `recorded: false`. A webhook error also returns `recorded: false` and leaves `delivered` as Resend reported it, so a signup Resend already accepted stays successful. Listing requests are not written to the sheet.
+The JSON response reports that separately as `recorded`. If either Sheets secret is missing, the worker skips the webhook and returns `recorded: false`. A row is recorded only when the webhook response is JSON and `ok` is true. A non-JSON body, including an Apps Script HTML page such as “Script function not found: doPost” on HTTP 200, and a JSON body with `ok: false`, are `recorded: false`. That miss leaves `delivered` as Resend reported it, so a signup Resend already accepted stays successful. Listing requests are not written to the sheet.
 
 ```bash
 npx wrangler deploy
