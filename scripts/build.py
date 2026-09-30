@@ -60,6 +60,16 @@ FALLBACK_COPY = {
 
 MEAL_ORDER = ["Breakfast", "Lunch", "Dinner", "Desserts", "Drinks"]
 
+# Curated list. Names are matched loosely (apostrophes and a trailing s)
+# so the published row is tagged without adding a column to the CSV export.
+LAURENS_FAVORITES = (
+    ("The Melting Pot", ("melting pot",)),
+    ("McGuire's", ("mcguire", "mcguires")),
+    ("Seagar's", ("seagar", "seagars")),
+    ("Ruth's Chris", ("ruths chris", "ruth chris", "ruth kris")),
+    ("Crab Trap", ("crab trap",)),
+)
+
 # None publishes every PUBLISHED row in data/restaurants.csv.
 # Set this to a list of slugs only when a design sample is needed again.
 SAMPLE_SLUGS = None
@@ -87,6 +97,32 @@ ABOUT_LEAD = (
 ABOUT_TOWNS = (
     "Explore the areas along this stretch of the Emerald Coast, including Miramar Beach, Sandestin, Grand Boulevard, "
     "Destin Commons, Mid-Destin, Destin Harbor, and Crystal Beach."
+)
+PRINT_GUIDES = (
+    "Looking ahead, we\u2019ll also be launching a printed version of the \"Eating In\" guides in 2027, "
+    "bringing the same curated experience into a high-quality physical format you can bring along."
+)
+PRINT_COVERS = (
+    {
+        "jpg": "/images/guides/eating-in-destin-spring-summer-2027.jpg",
+        "webp": "/images/guides/eating-in-destin-spring-summer-2027.webp",
+        "width": 1024,
+        "height": 1536,
+        "alt": (
+            "Spring/Summer 2027 cover of Eating in Destin, with oysters, fish tacos, "
+            "and cocktails on a table at Destin Harbor."
+        ),
+    },
+    {
+        "jpg": "/images/guides/eating-on-30a-spring-summer-2027.jpg",
+        "webp": "/images/guides/eating-on-30a-spring-summer-2027.webp",
+        "width": 1024,
+        "height": 1536,
+        "alt": (
+            "Spring/Summer 2027 cover of Eating on 30A, with seared scallops "
+            "in front of white beach houses along the Gulf."
+        ),
+    },
 )
 TOWNS = (
     "The areas in the guide are Miramar Beach, Sandestin, Grand Boulevard, Destin Commons, "
@@ -134,6 +170,51 @@ def parse_list(raw: str) -> list[str]:
 
 def is_yes(raw: str) -> bool:
     return any(item.lower() in {"yes", "occasional"} for item in parse_list(raw))
+
+
+def fold_name(name: str) -> str:
+    text = unicodedata.normalize("NFKD", name or "")
+    for mark in ("'", "’", "‘", "`"):
+        text = text.replace(mark, "")
+    text = text.encode("ascii", "ignore").decode("ascii").lower()
+    return re.sub(r"[^a-z0-9]+", " ", text).strip()
+
+
+def token_matches(token: str, alias: str) -> bool:
+    return token == alias or token == f"{alias}s" or alias == f"{token}s"
+
+
+def phrase_matches(name: str, alias: str) -> bool:
+    tokens = fold_name(name).split()
+    wanted = fold_name(alias).split()
+    if not wanted or len(wanted) > len(tokens):
+        return False
+    width = len(wanted)
+    for start in range(len(tokens) - width + 1):
+        window = tokens[start : start + width]
+        if all(token_matches(token, want) for token, want in zip(window, wanted)):
+            return True
+    return False
+
+
+def laurens_favorite_label(name: str) -> str | None:
+    hits = [label for label, aliases in LAURENS_FAVORITES if any(phrase_matches(name, alias) for alias in aliases)]
+    if len(hits) > 1:
+        raise SystemExit(f"{name} matches more than one Lauren's favorite: {', '.join(hits)}")
+    return hits[0] if hits else None
+
+
+def assert_laurens_favorites(restaurants: list[dict]) -> None:
+    found: dict[str, list[str]] = {label: [] for label, _aliases in LAURENS_FAVORITES}
+    for restaurant in restaurants:
+        label = laurens_favorite_label(restaurant["name"])
+        if restaurant["laurensFavorite"] != (label is not None):
+            raise SystemExit(f"Lauren's favorite flag drifted for {restaurant['name']}")
+        if label:
+            found[label].append(restaurant["name"])
+    problems = [f"{label} matched {names or 'nothing'}" for label, names in found.items() if len(names) != 1]
+    if problems:
+        raise SystemExit("Lauren's favorites must match exactly one listing each: " + "; ".join(problems))
 
 
 def clean_text(raw: str) -> str:
@@ -405,6 +486,7 @@ def load_restaurants() -> list[dict]:
                 "outdoor": is_yes(row.get("Outdoor Dining")),
                 "kids": is_yes(row.get("Kid Friendly")),
                 "music": is_yes(row.get("Live Music")),
+                "laurensFavorite": laurens_favorite_label(name) is not None,
                 "happyDrinks": is_yes(row.get("Happy Hour (drinks)")),
                 "happyFood": is_yes(row.get("Happy Hour (food)")),
                 "reservations": is_yes(row.get("Reservations")),
@@ -420,6 +502,7 @@ def load_restaurants() -> list[dict]:
             }
         )
     restaurants.sort(key=lambda item: item["name"].lower())
+    assert_laurens_favorites(restaurants)
     return restaurants
 
 
@@ -597,6 +680,7 @@ def card(restaurant: dict, heading: str = "h2") -> str:
             f'data-outdoor="{yes_no(restaurant["outdoor"])}"',
             f'data-kids="{yes_no(restaurant["kids"])}"',
             f'data-music="{yes_no(restaurant["music"])}"',
+            f'data-laurens="{yes_no(restaurant["laurensFavorite"])}"',
             f'data-search="{e(restaurant["search"])}"',
         ]
     )
@@ -809,6 +893,7 @@ def filter_form(areas: list[dict], cuisines: list[str]) -> str:
         '<label class="check"><input type="checkbox" name="outdoor" value="yes"><span>Outdoor dining</span></label>'
         '<label class="check"><input type="checkbox" name="kids" value="yes"><span>Kid friendly</span></label>'
         '<label class="check"><input type="checkbox" name="music" value="yes"><span>Live music</span></label>'
+        '<label class="check"><input type="checkbox" name="laurens" value="yes"><span>Lauren\'s Favorites</span></label>'
         "</div>"
         '<div class="filter-actions"><button type="submit">Apply</button><a class="clear" href="/restaurants/">Clear</a></div>'
         "</form>"
@@ -839,6 +924,7 @@ def public_record(restaurant: dict) -> dict:
         "outdoor": restaurant["outdoor"],
         "kids": restaurant["kids"],
         "music": restaurant["music"],
+        "laurensFavorite": restaurant["laurensFavorite"],
         "image": restaurant["cardImage"],
     }
 
@@ -1041,7 +1127,7 @@ def build_home(restaurants: list[dict], areas: list[dict], hero: str | None) -> 
 def build_directory(restaurants: list[dict], areas: list[dict], cuisines: list[str]) -> None:
     pending = (
         "<script>!function(){var p=new URLSearchParams(location.search);"
-        "['meal','area','cuisine','q','outdoor','kids','music'].some(function(k){return p.get(k)})"
+        "['meal','area','cuisine','q','outdoor','kids','music','laurens'].some(function(k){return p.get(k)})"
         "&&document.documentElement.classList.add('js-filter')}();</script>\n"
     )
     cards = "".join(card(restaurant) for restaurant in restaurants)
@@ -1116,6 +1202,8 @@ def build_detail(restaurant: dict, restaurants: list[dict]) -> None:
         flags.append("Kid friendly")
     if restaurant["music"]:
         flags.append("Live music")
+    if restaurant["laurensFavorite"]:
+        flags.append("Lauren's Favorites")
     if restaurant["happyDrinks"]:
         flags.append("Happy hour drinks")
     if restaurant["happyFood"]:
@@ -1433,13 +1521,31 @@ def build_areas(areas: list[dict], restaurants: list[dict]) -> None:
         )
 
 
+def print_cover(cover: dict) -> str:
+    return (
+        "<figure>"
+        f'<picture><source srcset="{e(cover["webp"])}" type="image/webp">'
+        f'<img src="{e(cover["jpg"])}" width="{cover["width"]}" height="{cover["height"]}" '
+        f'alt="{e(cover["alt"])}" loading="lazy" decoding="async">'
+        "</picture></figure>"
+    )
+
+
 def build_about() -> None:
+    covers = "".join(print_cover(cover) for cover in PRINT_COVERS)
     body = (
-        '<div class="wrap page-intro prose"><p class="kicker">About</p>'
+        '<div class="wrap page-intro"><div class="prose"><p class="kicker">About</p>'
         "<h1>The Destin restaurant guide</h1>"
         f"<p>{e(ABOUT_LEAD)}</p>"
         f"<p>{e(ABOUT_TOWNS)}</p>"
-        '<p><a class="button" href="/restaurants/">See the restaurants</a></p></div>'
+        '<p><a class="button" href="/restaurants/">See the restaurants</a></p>'
+        '<section class="print-guides" aria-labelledby="print-guides-heading">'
+        '<h2 id="print-guides-heading">Coming in 2027</h2>'
+        f"<p>{e(PRINT_GUIDES)}</p>"
+        '<p>For information or to reserve your space, please '
+        '<a class="text-link" href="/contact/">contact us</a>.</p>'
+        f'<div class="print-covers">{covers}</div>'
+        "</section></div></div>"
     )
     write(
         ROOT / "about" / "index.html",

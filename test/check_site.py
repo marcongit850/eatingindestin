@@ -43,6 +43,26 @@ check("full restaurant CSV" not in home.lower(), "homepage should not say the CS
 check("<h1>Where to eat<br> in Destin.</h1>" in home, "homepage headline should say where to eat in Destin")
 check('<h1 id="listing-title">Where to eat</h1>' in directory, "directory heading should be Where to eat")
 check("Filter by area, meal, or a few words." in directory, "directory intro should name the filters")
+check(
+    'name="laurens" value="yes"' in directory and ">Lauren's Favorites</span>" in directory,
+    "directory filter should include Lauren's Favorites",
+)
+map_page = (ROOT / "map" / "index.html").read_text(encoding="utf-8")
+check(">Lauren's Favorites</span>" in map_page, "map filter should include Lauren's Favorites")
+favorite_names = sorted(item["name"] for item in restaurants if item.get("laurensFavorite") is True)
+check(
+    favorite_names
+    == [
+        "McGuire's Irish Pub",
+        "Ruth's Chris Steak House",
+        "Seagar's Prime Steaks & Seafood",
+        "The Crab Trap Destin",
+        "The Melting Pot",
+    ],
+    f"Lauren's favorites should be the five tagged listings, got {favorite_names}",
+)
+check(directory.count('data-laurens="yes"') == 5, "directory should mark exactly five Lauren's favorites")
+check("laurens" in site_js and "laurensFavorite" in site_js, "site.js should filter Lauren's favorites")
 check("The table" not in directory and "Narrow the guide" not in directory, "directory should drop the old heading and intro")
 build_src = (ROOT / "scripts" / "build.py").read_text(encoding="utf-8")
 check(build_src.count("def build_detail(") == 1, "restaurant profiles should come from one template function")
@@ -181,6 +201,38 @@ check('class="profile-claim"' not in directory, "directory cards should not repe
 check("Marc" not in listing_js and "Thanks. We have your note." in listing_js, "listing script should thank without a personal name")
 check(".listing-form" in styles and ".listing-status" in styles, "listing form should use the site styles")
 check("See the restaurants" in about and "Open the directory" not in about, "about button should invite visitors in")
+check('<h2 id="print-guides-heading">Coming in 2027</h2>' in about, "about page should announce the 2027 print guides")
+check(build.e(build.PRINT_GUIDES) in about, "about page should use the print guide paragraph")
+contact_sentence = (
+    "For information or to reserve your space, please "
+    '<a class="text-link" href="/contact/">contact us</a>.'
+)
+check(f"<p>{contact_sentence}</p>" in about, "print guide section should invite visitors to contact us")
+print_section = about.split('<h2 id="print-guides-heading">Coming in 2027</h2>', 1)[-1]
+check(
+    print_section.find(build.e(build.PRINT_GUIDES)) < print_section.find(contact_sentence) < print_section.find('class="print-covers"'),
+    "contact sentence should follow the print guide paragraph",
+)
+about_main = about.split("<main", 1)[-1].split("</main>", 1)[0]
+check("\u2014" not in about_main, "about body should not use an em dash")
+check('class="print-covers"' in about, "print covers should share one layout")
+for cover in build.PRINT_COVERS:
+    check(cover["jpg"] in about and cover["webp"] in about, f"about page should include {cover['jpg']}")
+    check(build.e(cover["alt"]) in about, f"about page should describe {cover['jpg']}")
+    for name in (cover["jpg"], cover["webp"]):
+        cover_path = ROOT / name.lstrip("/")
+        check(cover_path.is_file(), f"missing print cover {name}")
+        check(cover_path.stat().st_size < 400_000, f"print cover too large for the web: {name}")
+guides_css = styles.split(".print-covers {", 1)
+check(
+    len(guides_css) == 2 and "grid-template-columns: minmax(0, 1fr)" in guides_css[1][:500],
+    "print covers should stack in one column by default",
+)
+desktop_css = styles.split("@media (min-width: 720px)", 1)[1]
+check(
+    ".print-covers" in desktop_css and "repeat(2, minmax(0, 1fr))" in desktop_css,
+    "print covers should sit side by side from 720px",
+)
 check("Find breakfast, lunch, and dinner in Destin and Miramar Beach" in home, "homepage hero should welcome visitors to Destin")
 check('src="/images/hero-beachside-dining.jpg"' in home, "homepage hero should use the harbor dining photo")
 check('srcset="/images/hero-beachside-dining.webp"' in home, "homepage hero should offer the WebP photo")
