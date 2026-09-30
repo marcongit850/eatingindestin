@@ -27,8 +27,8 @@ HERO_IMAGE = "/images/hero-beachside-dining.jpg"
 HERO_WEBP = "/images/hero-beachside-dining.webp"
 HERO_ALT = "Fishing boats in Destin Harbor with a spread of shrimp, oysters, and fresh fish."
 
-# West to east: Miramar Beach through Crystal Beach.
-WEST_TO_EAST = [
+# Display order for area lists. Keep this sequence; it is not a geographic sort.
+AREA_ORDER = [
     "miramar-beach",
     "sandestin",
     "grand-boulevard",
@@ -49,13 +49,13 @@ SHORT_NAMES = {
 }
 
 FALLBACK_COPY = {
-    "miramar-beach": "The western edge of the guide, with beach restaurants along Scenic Gulf Drive, Silver Sands, and US 98.",
+    "miramar-beach": "Beach restaurants along Scenic Gulf Drive, Silver Sands, and US 98.",
     "sandestin": "Baytowne Wharf, the marina, and the resort hotels, with waterfront dining inside Sandestin.",
     "grand-boulevard": "The Sandestin town center north of the bay, with sit-down restaurants around the square.",
     "destin-commons": "The open-air shopping center in Destin, with casual dining along the commons and Commons Drive.",
     "mid-destin": "The US 98 stretch through Destin, with everyday restaurants between the harbor and Sandestin.",
     "destin-harbor": "HarborWalk Village and the Destin Harbor docks, with seafood houses on the water.",
-    "crystal-beach": "The east end of Destin along Scenic 98, including Henderson Beach and the gulf-front inns.",
+    "crystal-beach": "Along Scenic 98, including Henderson Beach and the gulf-front inns.",
 }
 
 MEAL_ORDER = ["Breakfast", "Lunch", "Dinner", "Desserts", "Drinks"]
@@ -77,12 +77,12 @@ PHOTO_EXTS = (".jpg", ".jpeg", ".webp", ".png")
 
 ABOUT = (
     "Eating in Destin is a restaurant guide for Destin and Miramar Beach. "
-    "Find breakfast, lunch, and dinner from the Harbor to Crystal Beach, "
+    "Find breakfast, lunch, and dinner, "
     "with the address, the hours, and a feel for the place."
 )
 ABOUT_LEAD = (
     "Eating in Destin is your guide to dining in Destin and Miramar Beach. "
-    "Discover breakfast, lunch, and dinner from Destin Harbor to Crystal Beach, with restaurant locations, hours, and a sense of what to expect before you go."
+    "Discover breakfast, lunch, and dinner, with restaurant locations, hours, and a sense of what to expect before you go."
 )
 ABOUT_TOWNS = (
     "Explore the areas along this stretch of the Emerald Coast, including Miramar Beach, Sandestin, Grand Boulevard, "
@@ -474,7 +474,7 @@ def load_areas(restaurants: list[dict]) -> list[dict]:
             }
     ordered = []
     seen = set()
-    for slug in WEST_TO_EAST + sorted(by_slug):
+    for slug in AREA_ORDER + sorted(by_slug):
         if slug in seen or slug not in by_slug or counts.get(slug, 0) == 0:
             continue
         seen.add(slug)
@@ -952,7 +952,7 @@ def build_home(restaurants: list[dict], areas: list[dict], hero: str | None) -> 
         '<p class="issue-line">A restaurant guide for the Emerald Coast.</p>'
         '<p class="eyebrow">Destin Harbor · Miramar Beach</p>'
         "<h1>Where to eat<br> in Destin.</h1>"
-        '<p class="lede">Find breakfast, lunch, and dinner in Destin and Miramar Beach — from the Harbor to Crystal Beach.</p>'
+        '<p class="lede">Find breakfast, lunch, and dinner in Destin and Miramar Beach.</p>'
         '<form class="search-form" action="/restaurants/" method="get">'
         '<label class="field"><span class="sr-only">Search restaurants</span>'
         '<input name="q" type="search" placeholder="Oysters, coffee, the harbor…"></label>'
@@ -961,7 +961,7 @@ def build_home(restaurants: list[dict], areas: list[dict], hero: str | None) -> 
         f'<nav class="meal-index" aria-label="Meals">{meals_html}</nav>'
         f"{cover}"
         '<section class="section band"><div class="wrap">'
-        '<div class="section-head"><div><p class="kicker">West to east</p><h2>The areas</h2></div>'
+        '<div class="section-head"><div><p class="kicker">Neighborhoods</p><h2>The areas</h2></div>'
         "<p>Select an area to explore restaurants in Destin and Miramar Beach.</p></div>"
         f'<div class="town-grid">{"".join(towns)}</div>'
         '<p class="section-links"><a class="text-link" href="/areas/">Area notes</a><a class="text-link" href="/map/">The map</a></p>'
@@ -1310,15 +1310,15 @@ def build_areas(areas: list[dict], restaurants: list[dict]) -> None:
             f'<span class="town-copy"><strong>{e(area["fullName"])}</strong><small>{area["count"]} {word}</small></span></a>'
         )
     body = (
-        '<div class="wrap page-intro"><p class="kicker">West to east</p><h1>Areas in Destin</h1>'
-        '<p class="lede">From Miramar Beach to Crystal Beach, explore Destin Harbor, Sandestin, and the neighborhoods in between.</p>'
+        '<div class="wrap page-intro"><p class="kicker">Neighborhoods</p><h1>Areas in Destin</h1>'
+        '<p class="lede">Explore the neighborhoods in the guide, including Miramar Beach, Sandestin, Destin Harbor, and Crystal Beach.</p>'
         f'<div class="town-grid">{"".join(cards)}</div></div>'
     )
     write(
         ROOT / "areas" / "index.html",
         layout(
             "Areas in Destin | Eating in Destin",
-            "Restaurant areas in Destin and Miramar Beach, Florida, from Miramar Beach through the Harbor to Crystal Beach.",
+            "Restaurant areas in Destin and Miramar Beach, Florida, including Miramar Beach, the Harbor, and Crystal Beach.",
             "/areas/",
             "areas",
             body,
@@ -1428,7 +1428,7 @@ def build_about() -> None:
         ROOT / "about" / "index.html",
         layout(
             "About the Eating in Destin restaurant guide",
-            "Find breakfast, lunch, and dinner in Destin and Miramar Beach, Florida, from Destin Harbor to Crystal Beach and Sandestin.",
+            "Find breakfast, lunch, and dinner in Destin and Miramar Beach, Florida, including Destin Harbor, Crystal Beach, and Sandestin.",
             "/about/",
             "about",
             body,

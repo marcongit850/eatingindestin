@@ -172,9 +172,32 @@ check("a feel for the place" in home, "homepage essay should use the visitor gui
 areas_index = (ROOT / "areas" / "index.html").read_text(encoding="utf-8")
 check("<h1>Areas in Destin</h1>" in areas_index, "areas page heading should name Destin")
 check(
-    "From Miramar Beach to Crystal Beach, explore Destin Harbor, Sandestin, and the neighborhoods in between." in areas_index,
-    "areas page intro should invite visitors along the coast",
+    "Explore the neighborhoods in the guide, including Miramar Beach, Sandestin, Destin Harbor, and Crystal Beach." in areas_index,
+    "areas page intro should name neighborhoods without a geographic order",
 )
+ordering_claim = re.compile(r"west\s*(?:to|-|–|—|→)\s*east", re.I)
+sweep_phrases = (
+    "western edge of the guide",
+    "from the Harbor to Crystal Beach",
+    "from Destin Harbor to Crystal Beach",
+    "from Miramar Beach to Crystal Beach",
+    "from Miramar Beach through the Harbor",
+    "neighborhoods in between",
+    "east end of Destin",
+)
+copy_files = [
+    ROOT / "index.html",
+    ROOT / "about" / "index.html",
+    ROOT / "llms.txt",
+    ROOT / "llms-full.txt",
+    ROOT / "data" / "locations.json",
+    * (ROOT / "areas").glob("**/index.html"),
+]
+for copy_path in copy_files:
+    copy_text = copy_path.read_text(encoding="utf-8")
+    check(ordering_claim.search(copy_text) is None, f"{copy_path.relative_to(ROOT)} should not claim a west-to-east order")
+    for phrase in sweep_phrases:
+        check(phrase not in copy_text, f"{copy_path.relative_to(ROOT)} should not say {phrase!r}")
 town_count = styles.split(".town small {", 1)
 check(
     len(town_count) == 2 and "white-space: nowrap" in town_count[1][:500],
