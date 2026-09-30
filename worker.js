@@ -5,7 +5,10 @@
  * optional. When the secrets exist, both
  * email CONTACT_EMAIL through Resend (https://resend.com). Nothing is emailed
  * until all three are set: RESEND_API_KEY, SUBSCRIBE_FROM (a verified Resend
- * sender), CONTACT_EMAIL.
+ * sender), CONTACT_EMAIL. A coupon signup is also appended through an Apps
+ * Script webhook when GOOGLE_SHEETS_WEBHOOK_URL and GOOGLE_SHEETS_WEBHOOK_TOKEN
+ * are set. `delivered` is the Resend result and `recorded` is the sheet result.
+ * A sheet miss leaves a Resend success as a success.
  */
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -50,9 +53,44 @@ async function postResend(env, message, fetchImpl, failure) {
   return { ok: true, delivered: true };
 }
 
+function sheetsReady(env) {
+  const url = env && env.GOOGLE_SHEETS_WEBHOOK_URL;
+  const token = env && env.GOOGLE_SHEETS_WEBHOOK_TOKEN;
+  if (!url || !token) return null;
+  return { url, token };
+}
+
+function sheetPayload(payload, token) {
+  const body = {
+    token,
+    site: "Destin",
+    email: payload.email,
+    coupons: Boolean(payload.coupons),
+    sourcePage: `https://${CANONICAL_HOST}/`,
+  };
+  if (payload.audience === "local" || payload.audience === "visitor") body.audience = payload.audience;
+  return body;
+}
+
+async function postSheets(payload, env, fetchImpl) {
+  const ready = sheetsReady(env);
+  if (!ready) return { recorded: false };
+  try {
+    const response = await fetchImpl(ready.url, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(sheetPayload(payload, ready.token)),
+    });
+    if (!response.ok) return { recorded: false };
+    return { recorded: true };
+  } catch {
+    return { recorded: false };
+  }
+}
+
 export async function deliverSubscribe(payload, env, fetchImpl = fetch) {
   const who = payload.audience === "local" ? "Local" : payload.audience === "visitor" ? "Visitor" : "Not specified";
-  return postResend(
+  const mailed = await postResend(
     env,
     {
       subject: "Eating in Destin coupon signup",
@@ -61,6 +99,8 @@ export async function deliverSubscribe(payload, env, fetchImpl = fetch) {
     fetchImpl,
     "The signup could not be sent.",
   );
+  const sheet = await postSheets(payload, env, fetchImpl);
+  return { ...mailed, recorded: sheet.recorded };
 }
 
 function oneLine(value, max) {
