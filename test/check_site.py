@@ -256,6 +256,18 @@ check('aria-label="Previous featured"' in home and 'aria-label="Next featured"' 
 check('data-featured-step="-1"' in home and 'data-featured-step="1"' in home, "featured arrows should step through the list")
 check('class="cover-controls" hidden' in home, "featured arrows stay hidden until the page script runs")
 check("stepFeatured" in site_js and "data-featured-step" in site_js, "page script should cycle the featured cover")
+check(
+    "shouldAutoRotateFeatured" in site_js and "FEATURED_ROTATE_MS = 8000" in site_js,
+    "featured cover should advance on its own every 8 seconds",
+)
+check(
+    "prefers-reduced-motion" in site_js and "visibilitychange" in site_js and "pagehide" in site_js,
+    "featured auto-rotate should stop for reduced motion, a hidden tab, and leaving the page",
+)
+check(
+    "mouseenter" in site_js and "mouseleave" in site_js and "focusin" in site_js and "focusout" in site_js,
+    "featured auto-rotate should pause for pointer and keyboard focus",
+)
 check("mapListCard" in site_js and "map-thumb" in site_js and "openPopup" in site_js, "map list should use compact cards and still open the pin")
 check("#map-list .map-hit" in styles and "#map-list .map-thumb" in styles, "map list cards should stay compact")
 check(".cover-arrow" in styles and "min-width: 44px" in styles, "featured arrows should stay large enough to tap")

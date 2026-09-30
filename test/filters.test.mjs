@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { describeFilters, featuredIndex, filtersFromParams, framePins, inGuideFrame, mapListCard, markerPopup, matches, monogram, spreadOverlaps, stepFeatured } from "../site.js";
+import { FEATURED_ROTATE_MS, describeFilters, featuredIndex, featuredStatusForStep, filtersFromParams, framePins, inGuideFrame, mapListCard, markerPopup, matches, monogram, shouldAutoRotateFeatured, spreadOverlaps, stepFeatured } from "../site.js";
 
 const restaurants = JSON.parse(readFileSync(new URL("../data/restaurants.json", import.meta.url), "utf8"));
 
@@ -134,6 +134,26 @@ test("featured arrows cycle every listing and wrap", () => {
   assert.equal(stepFeatured(featuredIndex(4, Date.UTC(2026, 8, 29)), 1, 4), stepFeatured(featuredIndex(4, Date.UTC(2026, 8, 29, 18)), 1, 4));
   assert.equal(stepFeatured(1, 0, 4), 1);
   assert.equal(stepFeatured(0, 1, 0), 0);
+});
+
+test("featured auto-rotate waits eight seconds unless someone is using the cover", () => {
+  assert.equal(FEATURED_ROTATE_MS, 8000);
+  const running = { reducedMotion: false, hovering: false, focused: false, hidden: false, count: 3 };
+  assert.equal(shouldAutoRotateFeatured(running), true);
+  assert.equal(shouldAutoRotateFeatured({ ...running, reducedMotion: true }), false);
+  assert.equal(shouldAutoRotateFeatured({ ...running, hovering: true }), false);
+  assert.equal(shouldAutoRotateFeatured({ ...running, focused: true }), false);
+  assert.equal(shouldAutoRotateFeatured({ ...running, hidden: true }), false);
+  assert.equal(shouldAutoRotateFeatured({ ...running, count: 1 }), false);
+  assert.equal(shouldAutoRotateFeatured({ ...running, count: 0 }), false);
+  assert.equal(shouldAutoRotateFeatured(), false);
+});
+
+test("featured status is announced only for a user step", () => {
+  assert.equal(featuredStatusForStep("Harbor Docks", 0, 3), null);
+  assert.equal(featuredStatusForStep("Harbor Docks", 0, 3, { announce: false }), null);
+  assert.equal(featuredStatusForStep("The Back Porch", 1, 3, { announce: true }), "The Back Porch, 2 of 3");
+  assert.equal(featuredStatusForStep("  ", 2, 3, { announce: true }), "");
 });
 
 test("filter label names the town", () => {
