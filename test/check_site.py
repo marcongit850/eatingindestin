@@ -44,12 +44,45 @@ check("<h1>Where to eat<br> in Destin.</h1>" in home, "homepage headline should 
 check('<h1 id="listing-title">Restaurants in Destin</h1>' in directory, "directory heading should target restaurants in Destin")
 check("Filter by area, meal, or a few words." in directory, "directory intro should name the filters")
 check("Food in Destin and Miramar Beach, Florida." in directory, "directory intro should name Destin and Miramar Beach")
+check('id="browse-areas-heading">Browse by area</h2>' in directory, "directory should offer browse by area below the listings")
+directory_intro, directory_listings = directory.split('<div id="cards"', 1)
+check("Miramar Beach restaurants" not in directory_intro, "area page links should not sit in the filter row")
+check('class="section-links"' not in directory_intro, "the filter row should not include the area shortcut nav")
+for area_slug, area_name in (
+    ("miramar-beach", "Miramar Beach"),
+    ("sandestin", "Sandestin"),
+    ("grand-boulevard", "Grand Boulevard"),
+    ("destin-commons", "Destin Commons"),
+    ("mid-destin", "Mid-Destin"),
+    ("destin-harbor", "Destin Harbor"),
+    ("crystal-beach", "Crystal Beach"),
+):
+    check(
+        f'href="/areas/{area_slug}/">{area_name} restaurants</a>' in directory_listings,
+        f"directory should link to {area_name} below the listings",
+    )
+check('name="area"' in directory and ">All areas</option>" in directory, "directory keeps the area dropdown")
+check(
+    'class="view-switch"' in directory
+    and 'aria-current="page">List</a>' in directory
+    and 'data-view="/map/">Map</a>' in directory
+    and directory.find('class="view-switch"') < directory.find('id="filters"'),
+    "directory should switch between list and map beside the filters",
+)
 check(
     'name="laurens" value="yes"' in directory and ">Lauren's Favorites</span>" in directory,
     "directory filter should include Lauren's Favorites",
 )
 map_page = (ROOT / "map" / "index.html").read_text(encoding="utf-8")
 check(">Lauren's Favorites</span>" in map_page, "map filter should include Lauren's Favorites")
+check('name="area"' in map_page and ">All areas</option>" in map_page, "map keeps the area dropdown")
+check(
+    'class="view-switch"' in map_page
+    and 'aria-current="page">Map</a>' in map_page
+    and 'data-view="/restaurants/">List</a>' in map_page
+    and map_page.find('class="view-switch"') < map_page.find('id="filters"'),
+    "map should switch between list and map beside the filters",
+)
 favorite_names = sorted(item["name"] for item in restaurants if item.get("laurensFavorite") is True)
 check(
     favorite_names

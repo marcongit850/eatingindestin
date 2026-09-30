@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { FEATURED_ROTATE_MS, describeFilters, featuredIndex, featuredStatusForStep, filtersAreBlank, filtersFromParams, framePins, inGuideFrame, mapListCard, markerPopup, matches, monogram, shouldAutoRotateFeatured, spreadOverlaps, stepFeatured } from "../site.js";
+import { FEATURED_ROTATE_MS, describeFilters, featuredIndex, featuredStatusForStep, filtersAreBlank, filtersFromParams, framePins, inGuideFrame, mapListCard, markerPopup, matches, monogram, shouldAutoRotateFeatured, spreadOverlaps, stepFeatured, viewHref } from "../site.js";
 
 const restaurants = JSON.parse(readFileSync(new URL("../data/restaurants.json", import.meta.url), "utf8"));
 
@@ -10,6 +10,13 @@ const blank = { meal: "", area: "", cuisine: "", q: "", outdoor: "", kids: "", m
 test("empty filters keep the full directory", () => {
   assert.equal(restaurants.filter((item) => matches(item, blank)).length, restaurants.length);
   assert.equal(restaurants.length, 215);
+});
+
+test("list and map links keep the active filters", () => {
+  const filters = { ...blank, meal: "Dinner", area: "destin-harbor", outdoor: "yes" };
+  assert.equal(viewHref("/map/", filters), "/map/?meal=Dinner&area=destin-harbor&outdoor=yes");
+  assert.equal(viewHref("/restaurants/", filters), "/restaurants/?meal=Dinner&area=destin-harbor&outdoor=yes");
+  assert.equal(viewHref("/restaurants/", blank), "/restaurants/");
 });
 
 test("homepage meal and town query strings filter the directory", () => {

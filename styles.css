@@ -278,6 +278,29 @@ body.home .nav a[aria-current="page"] { box-shadow: inset 0 -1px 0 rgba(247, 242
   letter-spacing: 0.04em;
 }
 .text-link:hover { color: var(--coral-deep); }
+.view-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin: 1.5rem 0 0;
+}
+.view-switch .button { min-width: 7.25rem; }
+.view-switch + .filters { margin-top: 1.15rem; }
+.browse-areas {
+  margin-top: 3.2rem;
+  padding-top: 1.7rem;
+  border-top: 1px solid var(--line);
+}
+.browse-areas h2 {
+  margin: 0 0 0.95rem;
+  font-size: clamp(1.85rem, 3vw, 2.4rem);
+}
+.browse-areas .section-links {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 0.7rem 1.6rem;
+  margin: 0;
+}
 
 .cover-stage { position: relative; }
 .cover { display: grid; gap: 1.6rem 3.2rem; align-items: center; }
