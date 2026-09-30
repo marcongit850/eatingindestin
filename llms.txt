@@ -33,6 +33,7 @@ The areas in the guide are Miramar Beach, Sandestin, Grand Boulevard, Destin Com
 - [Another Broken Egg Cafe Destin Commons](https://eatingindestin.352marc.workers.dev/restaurants/another-broken-egg-cafe-destin-commons-destin-commons/): Destin Commons in Destin and Miramar Beach.
 - [Another Broken Egg Cafe Grand Boulevard](https://eatingindestin.352marc.workers.dev/restaurants/another-broken-egg-cafe-grand-boulevard-grand-boulevard/): Grand Boulevard in Destin and Miramar Beach.
 - [Ara Rooftop Pool & Lounge](https://eatingindestin.352marc.workers.dev/restaurants/ara-rooftop-pool-and-lounge-sandestin/): Sandestin in Destin and Miramar Beach.
+- [Arby's Destin](https://eatingindestin.352marc.workers.dev/restaurants/arbys-destin-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [Auntie Anne's Silver Sands](https://eatingindestin.352marc.workers.dev/restaurants/auntie-anne-s-silver-sands-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
 - [Austons on 98](https://eatingindestin.352marc.workers.dev/restaurants/austons-on-98-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
 - [Azul Mexican Fusion](https://eatingindestin.352marc.workers.dev/restaurants/azul-mexican-fusion-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
@@ -46,16 +47,18 @@ The areas in the guide are Miramar Beach, Sandestin, Grand Boulevard, Destin Com
 - [Black Bear Bread Co.](https://eatingindestin.352marc.workers.dev/restaurants/black-bear-bread-co-grand-boulevard/): Grand Boulevard in Destin and Miramar Beach.
 - [Boardwalk Fry Co.](https://eatingindestin.352marc.workers.dev/restaurants/boardwalk-fry-co-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
 - [Boathouse Oyster Bar](https://eatingindestin.352marc.workers.dev/restaurants/boathouse-oyster-bar-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
-- [Bonefish Grill Destin](https://eatingindestin.352marc.workers.dev/restaurants/bonefish-grill-destin-mid-destin/): Mid-Destin in Destin and Miramar Beach.
+- [Bonefish Grill Destin](https://eatingindestin.352marc.workers.dev/restaurants/bonefish-grill-destin-mid-destin/): Destin Commons in Destin and Miramar Beach.
 - [Boshamps Seafood & Oyster House](https://eatingindestin.352marc.workers.dev/restaurants/boshamps-seafood-and-oyster-house-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
+- [Bric à Brac](https://eatingindestin.352marc.workers.dev/restaurants/bric-a-brac-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [BrickTop's](https://eatingindestin.352marc.workers.dev/restaurants/bricktop-s-grand-boulevard/): Grand Boulevard in Destin and Miramar Beach.
 - [Brotula's Seafood House & Steamer](https://eatingindestin.352marc.workers.dev/restaurants/brotula-s-seafood-house-and-steamer-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
 - [Bubba Gump Shrimp Co.](https://eatingindestin.352marc.workers.dev/restaurants/bubba-gump-shrimp-co-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [Buffalo Jack's Legendary Wings & Pizza](https://eatingindestin.352marc.workers.dev/restaurants/buffalo-jack-s-legendary-wings-and-pizza-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
 - [Bunkley's Burgers and Grill](https://eatingindestin.352marc.workers.dev/restaurants/bunkley-s-burgers-and-grill-sandestin/): Sandestin in Destin and Miramar Beach.
-- [Burrito del Sol Destin](https://eatingindestin.352marc.workers.dev/restaurants/burrito-del-sol-destin-mid-destin/): Mid-Destin in Destin and Miramar Beach.
+- [Burrito del Sol Destin](https://eatingindestin.352marc.workers.dev/restaurants/burrito-del-sol-destin-mid-destin/): Destin Harbor in Destin and Miramar Beach.
 - [Cabana Cafe](https://eatingindestin.352marc.workers.dev/restaurants/cabana-cafe-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
 - [Cafe Cafe](https://eatingindestin.352marc.workers.dev/restaurants/cafe-cafe-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
+- [Café Destin](https://eatingindestin.352marc.workers.dev/restaurants/cafe-destin-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [Camille's at Crystal Beach](https://eatingindestin.352marc.workers.dev/restaurants/camille-s-at-crystal-beach-crystal-beach/): Crystal Beach in Destin and Miramar Beach.
 - [Camille's Sidewalk Cafe](https://eatingindestin.352marc.workers.dev/restaurants/camille-s-sidewalk-cafe-crystal-beach/): Crystal Beach in Destin and Miramar Beach.
 - [Cannery Lane Cantina](https://eatingindestin.352marc.workers.dev/restaurants/cannery-lane-cantina-sandestin/): Sandestin in Destin and Miramar Beach.
@@ -68,33 +71,31 @@ The areas in the guide are Miramar Beach, Sandestin, Grand Boulevard, Destin Com
 - [Chick-fil-A Miramar Beach](https://eatingindestin.352marc.workers.dev/restaurants/chick-fil-a-miramar-beach-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
 - [Chicken Salad Chick Destin](https://eatingindestin.352marc.workers.dev/restaurants/chicken-salad-chick-destin-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [Chipotle Mexican Grill Destin Commons](https://eatingindestin.352marc.workers.dev/restaurants/chipotle-mexican-grill-destin-commons-destin-commons/): Destin Commons in Destin and Miramar Beach.
+- [Ciao Italian Bistro & Pizza](https://eatingindestin.352marc.workers.dev/restaurants/ciao-italian-bistro-and-pizza-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [Cissy's Scenic 98 Cafe](https://eatingindestin.352marc.workers.dev/restaurants/cissy-s-scenic-98-cafe-crystal-beach/): Crystal Beach in Destin and Miramar Beach.
-- [City Food Hall Destin](https://eatingindestin.352marc.workers.dev/restaurants/city-food-hall-destin-mid-destin/): Mid-Destin in Destin and Miramar Beach.
-- [City Social Destin](https://eatingindestin.352marc.workers.dev/restaurants/city-social-destin-destin-commons/): Destin Commons in Destin and Miramar Beach.
 - [Clean Juice](https://eatingindestin.352marc.workers.dev/restaurants/clean-juice-sandestin/): Sandestin in Destin and Miramar Beach.
-- [Cosmo's Robo Diner](https://eatingindestin.352marc.workers.dev/restaurants/cosmo-s-robo-diner-sandestin/): Sandestin in Destin and Miramar Beach.
+- [Coyote Ugly Saloon](https://eatingindestin.352marc.workers.dev/restaurants/coyote-ugly-saloon-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
 - [Crackings](https://eatingindestin.352marc.workers.dev/restaurants/crackings-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [Culver's Miramar Beach](https://eatingindestin.352marc.workers.dev/restaurants/culver-s-miramar-beach-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
-- [Destination Little Donuts](https://eatingindestin.352marc.workers.dev/restaurants/destination-little-donuts-destin-commons/): Destin Commons in Destin and Miramar Beach.
 - [Dewey Destin's Harborside](https://eatingindestin.352marc.workers.dev/restaurants/dewey-destin-s-harborside-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
 - [Dewey Destin's Seafood Restaurant](https://eatingindestin.352marc.workers.dev/restaurants/dewey-destin-s-seafood-restaurant-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
 - [Domo Izakaya](https://eatingindestin.352marc.workers.dev/restaurants/domo-izakaya-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [Dude & Meatball's](https://eatingindestin.352marc.workers.dev/restaurants/dude-and-meatball-s-sandestin/): Sandestin in Destin and Miramar Beach.
-- [East Pass Seafood & Oyster House](https://eatingindestin.352marc.workers.dev/restaurants/east-pass-seafood-and-oyster-house-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
-- [El Jalisco Destin](https://eatingindestin.352marc.workers.dev/restaurants/el-jalisco-destin-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [El Jalisco Destin Commons](https://eatingindestin.352marc.workers.dev/restaurants/el-jalisco-destin-commons-destin-commons/): Destin Commons in Destin and Miramar Beach.
 - [Emeril's Coastal](https://eatingindestin.352marc.workers.dev/restaurants/emeril-s-coastal-grand-boulevard/): Grand Boulevard in Destin and Miramar Beach.
 - [Everkrisp](https://eatingindestin.352marc.workers.dev/restaurants/everkrisp-grand-boulevard/): Grand Boulevard in Destin and Miramar Beach.
 - [Fat Clemenza's](https://eatingindestin.352marc.workers.dev/restaurants/fat-clemenza-s-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
 - [Fat Tuesday Daiquiri Bar](https://eatingindestin.352marc.workers.dev/restaurants/fat-tuesday-daiquiri-bar-sandestin/): Sandestin in Destin and Miramar Beach.
-- [Fatboys Destin](https://eatingindestin.352marc.workers.dev/restaurants/fatboys-destin-mid-destin/): Mid-Destin in Destin and Miramar Beach.
+- [Fatboys Destin](https://eatingindestin.352marc.workers.dev/restaurants/fatboys-destin-mid-destin/): Destin Harbor in Destin and Miramar Beach.
 - [Fatboys Miramar Beach](https://eatingindestin.352marc.workers.dev/restaurants/fatboys-miramar-beach-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
 - [Firehouse Subs Destin](https://eatingindestin.352marc.workers.dev/restaurants/firehouse-subs-destin-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [First Watch Destin](https://eatingindestin.352marc.workers.dev/restaurants/first-watch-destin-destin-commons/): Destin Commons in Destin and Miramar Beach.
 - [Fish Heads Bar](https://eatingindestin.352marc.workers.dev/restaurants/fish-heads-bar-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
+- [Fish On Seafood House](https://eatingindestin.352marc.workers.dev/restaurants/fish-on-seafood-house-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [Five Guys Miramar Beach](https://eatingindestin.352marc.workers.dev/restaurants/five-guys-miramar-beach-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
 - [Fleming's Prime Steakhouse & Wine Bar](https://eatingindestin.352marc.workers.dev/restaurants/fleming-s-prime-steakhouse-and-wine-bar-grand-boulevard/): Grand Boulevard in Destin and Miramar Beach.
 - [Formula Fresh](https://eatingindestin.352marc.workers.dev/restaurants/formula-fresh-destin-commons/): Destin Commons in Destin and Miramar Beach.
+- [Frozen Bloom Creamery](https://eatingindestin.352marc.workers.dev/restaurants/frozen-bloom-creamery-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [Fudpucker's Beachside Bar & Grill](https://eatingindestin.352marc.workers.dev/restaurants/fudpucker-s-beachside-bar-and-grill-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [Gilligan's Seafood](https://eatingindestin.352marc.workers.dev/restaurants/gilligan-s-seafood-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
 - [Graffiti Pizza](https://eatingindestin.352marc.workers.dev/restaurants/graffiti-pizza-destin-commons/): Destin Commons in Destin and Miramar Beach.
@@ -108,22 +109,19 @@ The areas in the guide are Miramar Beach, Sandestin, Grand Boulevard, Destin Com
 - [Harry T's Lighthouse](https://eatingindestin.352marc.workers.dev/restaurants/harry-t-s-lighthouse-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
 - [Holi Indian Kitchen](https://eatingindestin.352marc.workers.dev/restaurants/holi-indian-kitchen-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
 - [Hooters Destin](https://eatingindestin.352marc.workers.dev/restaurants/hooters-destin-mid-destin/): Mid-Destin in Destin and Miramar Beach.
-- [Horizons](https://eatingindestin.352marc.workers.dev/restaurants/horizons-crystal-beach/): Crystal Beach in Destin and Miramar Beach.
+- [Horizons Gastropub](https://eatingindestin.352marc.workers.dev/restaurants/horizons-crystal-beach/): Crystal Beach in Destin and Miramar Beach.
 - [Hungry Howie's Pizza Destin](https://eatingindestin.352marc.workers.dev/restaurants/hungry-howie-s-pizza-destin-mid-destin/): Mid-Destin in Destin and Miramar Beach.
-- [I Heart Mac & Cheese](https://eatingindestin.352marc.workers.dev/restaurants/i-heart-mac-and-cheese-destin-commons/): Destin Commons in Destin and Miramar Beach.
 - [Ice Cream on the Harbor](https://eatingindestin.352marc.workers.dev/restaurants/ice-cream-on-the-harbor-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
-- [IHOP Miramar Beach](https://eatingindestin.352marc.workers.dev/restaurants/ihop-miramar-beach-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
 - [Island Wing Company Destin](https://eatingindestin.352marc.workers.dev/restaurants/island-wing-company-destin-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [It'sugar Destin Commons](https://eatingindestin.352marc.workers.dev/restaurants/it-sugar-destin-commons-destin-commons/): Destin Commons in Destin and Miramar Beach.
-- [Jackacuda's Seafood & Sushi](https://eatingindestin.352marc.workers.dev/restaurants/jackacuda-s-seafood-and-sushi-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
+- [Jackacuda's Seafood & Sushi](https://eatingindestin.352marc.workers.dev/restaurants/jackacuda-s-seafood-and-sushi-destin-harbor/): Mid-Destin in Destin and Miramar Beach.
 - [Jersey Mike's Subs Destin](https://eatingindestin.352marc.workers.dev/restaurants/jersey-mike-s-subs-destin-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [Jester Mardi Gras Daiquiris](https://eatingindestin.352marc.workers.dev/restaurants/jester-mardi-gras-daiquiris-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
 - [Jet's Pizza Destin](https://eatingindestin.352marc.workers.dev/restaurants/jet-s-pizza-destin-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [Jimmy John's Grand Boulevard](https://eatingindestin.352marc.workers.dev/restaurants/jimmy-john-s-grand-boulevard-grand-boulevard/): Grand Boulevard in Destin and Miramar Beach.
 - [John Wehner's Village Door Restaurant](https://eatingindestin.352marc.workers.dev/restaurants/john-wehner-s-village-door-restaurant-sandestin/): Sandestin in Destin and Miramar Beach.
 - [Jon Smith Subs](https://eatingindestin.352marc.workers.dev/restaurants/jon-smith-subs-sandestin/): Sandestin in Destin and Miramar Beach.
-- [JuJu Boba](https://eatingindestin.352marc.workers.dev/restaurants/juju-boba-destin-commons/): Destin Commons in Destin and Miramar Beach.
-- [Kenny D's Beach Bar & Grill](https://eatingindestin.352marc.workers.dev/restaurants/kenny-d-s-beach-bar-and-grill-crystal-beach/): Crystal Beach in Destin and Miramar Beach.
+- [Kenny D's Beach Bar & Grill](https://eatingindestin.352marc.workers.dev/restaurants/kenny-d-s-beach-bar-and-grill-crystal-beach/): Miramar Beach in Destin and Miramar Beach.
 - [Kilwins Destin Commons](https://eatingindestin.352marc.workers.dev/restaurants/kilwins-destin-commons-destin-commons/): Destin Commons in Destin and Miramar Beach.
 - [Kilwins Grand Boulevard](https://eatingindestin.352marc.workers.dev/restaurants/kilwins-grand-boulevard-grand-boulevard/): Grand Boulevard in Destin and Miramar Beach.
 - [Kona Ice HarborWalk](https://eatingindestin.352marc.workers.dev/restaurants/kona-ice-harborwalk-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
@@ -133,14 +131,13 @@ The areas in the guide are Miramar Beach, Sandestin, Grand Boulevard, Destin Com
 - [LongHorn Steakhouse Destin](https://eatingindestin.352marc.workers.dev/restaurants/longhorn-steakhouse-destin-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [Louisiana Lagniappe](https://eatingindestin.352marc.workers.dev/restaurants/louisiana-lagniappe-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
 - [LuLu's Destin](https://eatingindestin.352marc.workers.dev/restaurants/lulu-s-destin-mid-destin/): Mid-Destin in Destin and Miramar Beach.
-- [Mama Clemenza's](https://eatingindestin.352marc.workers.dev/restaurants/mama-clemenza-s-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
+- [Mac Shack](https://eatingindestin.352marc.workers.dev/restaurants/mac-shack-destin-commons/): Destin Commons in Destin and Miramar Beach.
 - [Maple Street Biscuit Company](https://eatingindestin.352marc.workers.dev/restaurants/maple-street-biscuit-company-sandestin/): Sandestin in Destin and Miramar Beach.
 - [Marco's Pizza Miramar Beach](https://eatingindestin.352marc.workers.dev/restaurants/marco-s-pizza-miramar-beach-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
 - [Margaritaville Destin](https://eatingindestin.352marc.workers.dev/restaurants/margaritaville-destin-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
 - [Marina Bar & Grill](https://eatingindestin.352marc.workers.dev/restaurants/marina-bar-and-grill-sandestin/): Sandestin in Destin and Miramar Beach.
 - [Marina Cafe](https://eatingindestin.352marc.workers.dev/restaurants/marina-cafe-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
 - [Mary's Kitchen](https://eatingindestin.352marc.workers.dev/restaurants/mary-s-kitchen-mid-destin/): Mid-Destin in Destin and Miramar Beach.
-- [McAlister's Deli Destin](https://eatingindestin.352marc.workers.dev/restaurants/mcalister-s-deli-destin-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [McGuire's Irish Pub](https://eatingindestin.352marc.workers.dev/restaurants/mcguire-s-irish-pub-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
 - [Mellow Mushroom Destin](https://eatingindestin.352marc.workers.dev/restaurants/mellow-mushroom-destin-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [Merlin's Pizza](https://eatingindestin.352marc.workers.dev/restaurants/merlin-s-pizza-mid-destin/): Mid-Destin in Destin and Miramar Beach.
@@ -157,18 +154,18 @@ The areas in the guide are Miramar Beach, Sandestin, Grand Boulevard, Destin Com
 - [Outcast Seafood](https://eatingindestin.352marc.workers.dev/restaurants/outcast-seafood-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
 - [Ovide](https://eatingindestin.352marc.workers.dev/restaurants/ovide-sandestin/): Sandestin in Destin and Miramar Beach.
 - [P.F. Chang's](https://eatingindestin.352marc.workers.dev/restaurants/p-f-chang-s-grand-boulevard/): Grand Boulevard in Destin and Miramar Beach.
-- [Panera Bread Miramar Beach](https://eatingindestin.352marc.workers.dev/restaurants/panera-bread-miramar-beach-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
+- [Pandora's Steakhouse](https://eatingindestin.352marc.workers.dev/restaurants/pandoras-steakhouse-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
+- [Panera Bread Miramar Beach](https://eatingindestin.352marc.workers.dev/restaurants/panera-bread-miramar-beach-miramar-beach/): Mid-Destin in Destin and Miramar Beach.
 - [Papa John's Pizza Destin](https://eatingindestin.352marc.workers.dev/restaurants/papa-john-s-pizza-destin-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [Paris Banh Mi Miramar Beach](https://eatingindestin.352marc.workers.dev/restaurants/paris-banh-mi-miramar-beach-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
 - [Pascalli Kitchen](https://eatingindestin.352marc.workers.dev/restaurants/pascalli-kitchen-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
 - [Pazzo Italiano](https://eatingindestin.352marc.workers.dev/restaurants/pazzo-italiano-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [Pepito's Mexican Restaurant](https://eatingindestin.352marc.workers.dev/restaurants/pepito-s-mexican-restaurant-mid-destin/): Mid-Destin in Destin and Miramar Beach.
-- [Pepito's Mexican Restaurant Destin East](https://eatingindestin.352marc.workers.dev/restaurants/pepito-s-mexican-restaurant-destin-east-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [Perla Baking Co.](https://eatingindestin.352marc.workers.dev/restaurants/perla-baking-co-grand-boulevard/): Grand Boulevard in Destin and Miramar Beach.
-- [Pino Gelato Cafe](https://eatingindestin.352marc.workers.dev/restaurants/pino-gelato-cafe-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
+- [Pizza Hut Miramar Beach](https://eatingindestin.352marc.workers.dev/restaurants/pizza-hut-miramar-beach-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
 - [Pompano Joe's](https://eatingindestin.352marc.workers.dev/restaurants/pompano-joe-s-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
 - [Poppy's Crazy Lobster](https://eatingindestin.352marc.workers.dev/restaurants/poppy-s-crazy-lobster-sandestin/): Sandestin in Destin and Miramar Beach.
-- [Primrose](https://eatingindestin.352marc.workers.dev/restaurants/primrose-crystal-beach/): Crystal Beach in Destin and Miramar Beach.
+- [Primrose Coastal Italian](https://eatingindestin.352marc.workers.dev/restaurants/primrose-crystal-beach/): Crystal Beach in Destin and Miramar Beach.
 - [Real Thai Fusion](https://eatingindestin.352marc.workers.dev/restaurants/real-thai-fusion-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
 - [Red Brick Pizza](https://eatingindestin.352marc.workers.dev/restaurants/red-brick-pizza-destin-commons/): Destin Commons in Destin and Miramar Beach.
 - [Red Door Saloon](https://eatingindestin.352marc.workers.dev/restaurants/red-door-saloon-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
@@ -181,25 +178,29 @@ The areas in the guide are Miramar Beach, Sandestin, Grand Boulevard, Destin Com
 - [Ruth's Chris Steak House](https://eatingindestin.352marc.workers.dev/restaurants/ruth-s-chris-steak-house-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [Sandcastles Restaurant](https://eatingindestin.352marc.workers.dev/restaurants/sandcastles-restaurant-sandestin/): Sandestin in Destin and Miramar Beach.
 - [Say Cheese](https://eatingindestin.352marc.workers.dev/restaurants/say-cheese-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
+- [Sea Level](https://eatingindestin.352marc.workers.dev/restaurants/sea-level-crystal-beach/): Crystal Beach in Destin and Miramar Beach.
 - [Seagar's Prime Steaks & Seafood](https://eatingindestin.352marc.workers.dev/restaurants/seagar-s-prime-steaks-and-seafood-sandestin/): Sandestin in Destin and Miramar Beach.
-- [Shades Bar & Grill](https://eatingindestin.352marc.workers.dev/restaurants/shades-bar-and-grill-grand-boulevard/): Grand Boulevard in Destin and Miramar Beach.
 - [Shake's Frozen Custard](https://eatingindestin.352marc.workers.dev/restaurants/shake-s-frozen-custard-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [Slick Lips Seafood & Oyster House](https://eatingindestin.352marc.workers.dev/restaurants/slick-lips-seafood-and-oyster-house-sandestin/): Sandestin in Destin and Miramar Beach.
 - [Smashburger Destin Commons](https://eatingindestin.352marc.workers.dev/restaurants/smashburger-destin-commons-destin-commons/): Destin Commons in Destin and Miramar Beach.
 - [Smoothie King Destin](https://eatingindestin.352marc.workers.dev/restaurants/smoothie-king-destin-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [SnowBiz by Ray](https://eatingindestin.352marc.workers.dev/restaurants/snowbiz-by-ray-destin-commons/): Destin Commons in Destin and Miramar Beach.
-- [Soleil](https://eatingindestin.352marc.workers.dev/restaurants/soleil-crystal-beach/): Crystal Beach in Destin and Miramar Beach.
+- [Sonic Destin](https://eatingindestin.352marc.workers.dev/restaurants/sonic-destin-mid-destin/): Mid-Destin in Destin and Miramar Beach.
+- [Sprinkles Café](https://eatingindestin.352marc.workers.dev/restaurants/sprinkles-cafe-crystal-beach/): Crystal Beach in Destin and Miramar Beach.
 - [Starbucks Destin Commons](https://eatingindestin.352marc.workers.dev/restaurants/starbucks-destin-commons-destin-commons/): Destin Commons in Destin and Miramar Beach.
+- [Starbucks Emerald Coast](https://eatingindestin.352marc.workers.dev/restaurants/starbucks-emerald-coast-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [Starbucks Grand Boulevard](https://eatingindestin.352marc.workers.dev/restaurants/starbucks-grand-boulevard-grand-boulevard/): Grand Boulevard in Destin and Miramar Beach.
 - [Starbucks Miramar Beach](https://eatingindestin.352marc.workers.dev/restaurants/starbucks-miramar-beach-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
+- [Subway Destin](https://eatingindestin.352marc.workers.dev/restaurants/subway-destin-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [Sundries General Market](https://eatingindestin.352marc.workers.dev/restaurants/sundries-general-market-sandestin/): Sandestin in Destin and Miramar Beach.
 - [Sweetbay Coffee](https://eatingindestin.352marc.workers.dev/restaurants/sweetbay-coffee-sandestin/): Sandestin in Destin and Miramar Beach.
+- [Taco Bell Destin](https://eatingindestin.352marc.workers.dev/restaurants/taco-bell-destin-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
 - [Tailfins Waterfront Grill](https://eatingindestin.352marc.workers.dev/restaurants/tailfins-waterfront-grill-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
 - [Talay Thai Cuisine](https://eatingindestin.352marc.workers.dev/restaurants/talay-thai-cuisine-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
 - [Taqueria Mi Gente](https://eatingindestin.352marc.workers.dev/restaurants/taqueria-mi-gente-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [Thai 9 Cuisine](https://eatingindestin.352marc.workers.dev/restaurants/thai-9-cuisine-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
 - [The Back Porch](https://eatingindestin.352marc.workers.dev/restaurants/the-back-porch-mid-destin/): Mid-Destin in Destin and Miramar Beach.
-- [The Bavarian's Wirtshaus](https://eatingindestin.352marc.workers.dev/restaurants/the-bavarian-s-wirtshaus-mid-destin/): Mid-Destin in Destin and Miramar Beach.
+- [The Beach House](https://eatingindestin.352marc.workers.dev/restaurants/the-beach-house-sandestin/): Sandestin in Destin and Miramar Beach.
 - [The Beef Jerky Outlet](https://eatingindestin.352marc.workers.dev/restaurants/the-beef-jerky-outlet-destin-commons/): Destin Commons in Destin and Miramar Beach.
 - [The Crab Trap Destin](https://eatingindestin.352marc.workers.dev/restaurants/the-crab-trap-destin-crystal-beach/): Crystal Beach in Destin and Miramar Beach.
 - [The Craft Bar](https://eatingindestin.352marc.workers.dev/restaurants/the-craft-bar-grand-boulevard/): Grand Boulevard in Destin and Miramar Beach.
@@ -210,8 +211,9 @@ The areas in the guide are Miramar Beach, Sandestin, Grand Boulevard, Destin Com
 - [The Fudgery](https://eatingindestin.352marc.workers.dev/restaurants/the-fudgery-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
 - [The Green Panini](https://eatingindestin.352marc.workers.dev/restaurants/the-green-panini-sandestin/): Sandestin in Destin and Miramar Beach.
 - [The Local Market](https://eatingindestin.352marc.workers.dev/restaurants/the-local-market-mid-destin/): Mid-Destin in Destin and Miramar Beach.
-- [The Melting Pot](https://eatingindestin.352marc.workers.dev/restaurants/the-melting-pot-mid-destin/): Mid-Destin in Destin and Miramar Beach.
+- [The Melting Pot](https://eatingindestin.352marc.workers.dev/restaurants/the-melting-pot-mid-destin/): Miramar Beach in Destin and Miramar Beach.
 - [The Pancakery](https://eatingindestin.352marc.workers.dev/restaurants/the-pancakery-mid-destin/): Mid-Destin in Destin and Miramar Beach.
+- [The Rooftop](https://eatingindestin.352marc.workers.dev/restaurants/the-rooftop-crystal-beach/): Crystal Beach in Destin and Miramar Beach.
 - [The Spice & Tea Exchange](https://eatingindestin.352marc.workers.dev/restaurants/the-spice-and-tea-exchange-destin-commons/): Destin Commons in Destin and Miramar Beach.
 - [The Surf Hut](https://eatingindestin.352marc.workers.dev/restaurants/the-surf-hut-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
 - [The Whale's Tail](https://eatingindestin.352marc.workers.dev/restaurants/the-whale-s-tail-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
@@ -225,8 +227,10 @@ The areas in the guide are Miramar Beach, Sandestin, Grand Boulevard, Destin Com
 - [Waffle House Destin](https://eatingindestin.352marc.workers.dev/restaurants/waffle-house-destin-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [Waffle House Miramar Beach](https://eatingindestin.352marc.workers.dev/restaurants/waffle-house-miramar-beach-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
 - [Waldo's Chicken & Beer](https://eatingindestin.352marc.workers.dev/restaurants/waldo-s-chicken-and-beer-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
+- [Wendy's Destin](https://eatingindestin.352marc.workers.dev/restaurants/wendys-destin-mid-destin/): Mid-Destin in Destin and Miramar Beach.
 - [Wetzel's Pretzels](https://eatingindestin.352marc.workers.dev/restaurants/wetzel-s-pretzels-destin-commons/): Destin Commons in Destin and Miramar Beach.
 - [Whataburger Destin](https://eatingindestin.352marc.workers.dev/restaurants/whataburger-destin-miramar-beach/): Miramar Beach in Destin and Miramar Beach.
+- [Whataburger Destin Harbor](https://eatingindestin.352marc.workers.dev/restaurants/whataburger-destin-harbor-destin-harbor/): Destin Harbor in Destin and Miramar Beach.
 - [Yaki](https://eatingindestin.352marc.workers.dev/restaurants/yaki-sandestin/): Sandestin in Destin and Miramar Beach.
 
 ## Optional

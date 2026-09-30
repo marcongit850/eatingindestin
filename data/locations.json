@@ -4,7 +4,7 @@
     "name": "Miramar Beach",
     "shortName": "Miramar Beach",
     "description": "Beach restaurants along Scenic Gulf Drive, Silver Sands, and US 98.",
-    "count": 38,
+    "count": 37,
     "image": "/images/areas/miramar-beach.jpg"
   },
   {
@@ -20,7 +20,7 @@
     "name": "Grand Boulevard",
     "shortName": "Grand Boulevard",
     "description": "The Sandestin town center north of the bay, with sit-down restaurants around the square.",
-    "count": 18,
+    "count": 17,
     "image": "/images/areas/grand-boulevard.jpg"
   },
   {
@@ -28,7 +28,7 @@
     "name": "Destin Commons",
     "shortName": "Destin Commons",
     "description": "The open-air shopping center in Destin, with casual dining along the commons and Commons Drive.",
-    "count": 24,
+    "count": 22,
     "image": "/images/areas/destin-commons.jpg"
   },
   {
@@ -36,7 +36,7 @@
     "name": "Mid-Destin",
     "shortName": "Mid-Destin",
     "description": "The US 98 stretch through Destin, with everyday restaurants between the harbor and Sandestin.",
-    "count": 47,
+    "count": 50,
     "image": "/images/areas/mid-destin.jpg"
   },
   {
@@ -44,7 +44,7 @@
     "name": "Destin Harbor",
     "shortName": "Destin Harbor",
     "description": "HarborWalk Village and the Destin Harbor docks, with seafood houses on the water.",
-    "count": 32,
+    "count": 36,
     "image": "/images/areas/destin-harbor.jpg"
   },
   {
@@ -52,7 +52,7 @@
     "name": "Crystal Beach",
     "shortName": "Crystal Beach",
     "description": "Along Scenic 98, including Henderson Beach and the gulf-front inns.",
-    "count": 10,
+    "count": 11,
     "image": "/images/areas/crystal-beach.jpg"
   }
 ]

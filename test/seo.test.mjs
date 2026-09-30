@@ -88,7 +88,7 @@ assert.equal(home["@graph"][1].publisher["@id"], `${ORIGIN}/#organization`);
 
 const directory = jsonLd(read("restaurants/index.html"));
 const list = directory["@graph"].find((node) => node["@type"] === "ItemList");
-assert.equal(list.numberOfItems, 203);
+assert.equal(list.numberOfItems, 207);
 assert.equal(directory["@graph"].some((node) => node["@type"] === "BreadcrumbList"), true);
 
 const profile = jsonLd(read("restaurants/harbor-docks-destin-harbor/index.html"));
@@ -145,7 +145,7 @@ assert.equal(locs.includes(`${ORIGIN}/`), true);
 assert.equal(locs.includes(`${ORIGIN}/restaurants/`), true);
 assert.equal(locs.includes(`${ORIGIN}/restaurants/harbor-docks-destin-harbor/`), true);
 assert.equal(locs.includes(`${ORIGIN}/404.html`), false);
-assert.equal(locs.length, 6 + 7 + 203);
+assert.equal(locs.length, 6 + 7 + 207);
 
 const llms = read("llms.txt");
 const llmsFull = read("llms-full.txt");

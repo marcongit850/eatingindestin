@@ -31,11 +31,11 @@ def check(condition: bool, message: str) -> None:
 
 
 shown = build.published_restaurants()
-check(len(source) == 203, f"named published rows should stay at 203, got {len(source)}")
-check(len(restaurants) == len(shown) == 203, "public json should include every named published restaurant")
+check(len(source) == 207, f"named published rows should stay at 207, got {len(source)}")
+check(len(restaurants) == len(shown) == 207, "public json should include every named published restaurant")
 csv_rows = build.load_rows(ROOT / "data" / "restaurants.csv")
 blank_names = [row for row in csv_rows if build.clean_text(row.get("Status")) == "PUBLISHED" and not build.clean_text(row.get("Restaurant Name"))]
-check(len(csv_rows) == 317 and len(blank_names) == 114, "the CSV keeps 317 rows, including 114 blank stubs that stay off the site")
+check(len(csv_rows) == 337 and len(blank_names) == 114, "the CSV keeps 337 rows, including 114 blank stubs that stay off the site")
 detail_pages = list((ROOT / "restaurants").glob("*/index.html"))
 check(len(detail_pages) == len(restaurants), f"generated {len(detail_pages)} detail pages for {len(restaurants)} rows")
 check("not on the site yet" not in home and "Design preview" not in home, "homepage should not say the catalog is still a sample")
@@ -51,9 +51,8 @@ check('"name": "eatingindestin"' in wrangler, "worker name must stay eatingindes
 check("eatingindestin.com" not in wrangler, "wrangler must not attach the vanity domain")
 check("routes" not in wrangler, "wrangler must not declare custom routes")
 
-for meal in ("Breakfast", "Lunch", "Dinner", "Desserts"):
+for meal in ("Breakfast", "Lunch", "Dinner", "Desserts", "Drinks"):
     check(f'href="/restaurants/?meal={meal}"' in home, f"homepage missing meal link {meal}")
-check('href="/restaurants/?meal=Drinks"' not in home, "homepage should not link a meal the CSV does not list")
 
 areas = json.loads((ROOT / "data" / "locations.json").read_text(encoding="utf-8"))
 check(len(areas) == len({item["areaSlug"] for item in restaurants}), f"town pages should match listed areas, got {len(areas)}")
@@ -80,15 +79,28 @@ missing_photos = sorted(item["slug"] for item in restaurants if not item.get("im
 check(
     missing_photos
     == [
-        "cosmo-s-robo-diner-sandestin",
+        "arbys-destin-mid-destin",
+        "bric-a-brac-mid-destin",
+        "cafe-destin-mid-destin",
+        "ciao-italian-bistro-and-pizza-mid-destin",
+        "frozen-bloom-creamery-mid-destin",
+        "sea-level-crystal-beach",
+        "sonic-destin-mid-destin",
+        "sprinkles-cafe-crystal-beach",
+        "starbucks-emerald-coast-mid-destin",
+        "subway-destin-mid-destin",
         "sundries-general-market-sandestin",
+        "taco-bell-destin-destin-harbor",
+        "the-beach-house-sandestin",
+        "the-rooftop-crystal-beach",
+        "wendys-destin-mid-destin",
+        "whataburger-destin-harbor-destin-harbor",
     ],
-    f"only Sundries and Cosmo's should keep a monogram, got {missing_photos}",
+    f"unexpected monogram listings: {missing_photos}",
 )
-check(len(photos) == 201, f"expected 201 restaurant photos, got {len(photos)}")
+check(len(photos) == 191, f"expected 191 restaurant photos, got {len(photos)}")
 check(build.local_listing_photo("not-a-restaurant") is None, "a slug without a dropped file should stay a monogram")
 check(build.listing_photos("sundries-general-market-sandestin") == [], "Sundries General Market has no photo folder")
-check(build.listing_photos("cosmo-s-robo-diner-sandestin") == [], "Cosmo's Robo Diner has no photo folder")
 check(
     build.listing_photos("juju-boba-destin-commons")
     == [
@@ -219,15 +231,15 @@ check(
     len(town_count) == 2 and "white-space: nowrap" in town_count[1][:500],
     "town restaurant counts should stay on one line",
 )
-check("10 Restaurants" in areas_index and "10 places" not in areas_index, "area cards should count Restaurants")
-check("47 Restaurants" in home and re.search(r"\bplaces\b", home) is None, "homepage area counts should say Restaurants")
+check("11 Restaurants" in areas_index and "11 places" not in areas_index, "area cards should count Restaurants")
+check("50 Restaurants" in home and re.search(r"\bplaces\b", home) is None, "homepage area counts should say Restaurants")
 check(build.restaurant_count_word(1, label=True) == "Restaurant", "a single listing is a Restaurant label")
 check(build.restaurant_count_word(7) == "restaurants", "sentence counts stay lowercase")
 check("1 restaurant on the map" in site_js and "restaurants on the map" in site_js, "map count should say restaurants")
 check("place on the map" not in site_js, "map count should not say place")
 check("filter" not in areas_index.lower() and "directory" not in areas_index.lower(), "towns page should not explain the directory")
 crystal = (ROOT / "areas" / "crystal-beach" / "index.html").read_text(encoding="utf-8")
-check("Show 10 Restaurants" in crystal, "Crystal Beach should label its count as Restaurants")
+check("Show 11 Restaurants" in crystal, "Crystal Beach should label its count as Restaurants")
 check("Destin Harbor" in (ROOT / "areas" / "destin-harbor" / "index.html").read_text(encoding="utf-8"), "Destin Harbor stays an area name")
 for area_page in (ROOT / "areas").glob("*/index.html"):
     text = area_page.read_text(encoding="utf-8")
@@ -289,12 +301,7 @@ sundries = (ROOT / "restaurants" / "sundries-general-market-sandestin" / "index.
 sundries_hero = sundries.split('class="profile-hero"', 1)[1].split('class="wrap profile-head"', 1)[0]
 check('class="ph"' in sundries_hero and 'class="mono"' in sundries_hero, "a listing without a photo should keep the monogram")
 check("<img" not in sundries_hero and 'class="profile-film"' not in sundries, "Sundries General Market should stay a monogram")
-cosmo = (ROOT / "restaurants" / "cosmo-s-robo-diner-sandestin" / "index.html").read_text(encoding="utf-8")
-cosmo_hero = cosmo.split('class="profile-hero"', 1)[1].split('class="wrap profile-head"', 1)[0]
-check('class="ph"' in cosmo_hero and 'class="mono"' in cosmo_hero, "Cosmo's Robo Diner should keep the monogram")
-check("<img" not in cosmo_hero and 'class="profile-film"' not in cosmo, "Cosmo's Robo Diner should stay a monogram")
 for slug, extras in (
-    ("juju-boba-destin-commons", ("02.jpg",)),
     ("moo-la-la-ice-cream-and-desserts-sandestin", ("02.jpg", "03.jpg")),
 ):
     page = (ROOT / "restaurants" / slug / "index.html").read_text(encoding="utf-8")
