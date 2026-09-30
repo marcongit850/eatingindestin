@@ -250,6 +250,18 @@ function paramsFromFilters(filters) {
   return params;
 }
 
+export function viewHref(path, filters) {
+  const query = paramsFromFilters(filters || {}).toString();
+  return query ? `${path}?${query}` : path;
+}
+
+function syncViewLinks(filters) {
+  for (const link of document.querySelectorAll("[data-view]")) {
+    const path = link.getAttribute("data-view");
+    if (path) link.href = viewHref(path, filters);
+  }
+}
+
 function syncUrl(filters) {
   const params = paramsFromFilters(filters);
   const query = params.toString();
@@ -281,6 +293,7 @@ function bootDirectory() {
     if (empty) empty.hidden = shown !== 0;
     document.title = filtersAreBlank(filters) ? baseTitle : `${label} | Eating in Destin`;
     if (pushUrl) syncUrl(filters);
+    syncViewLinks(filters);
     document.documentElement.classList.remove("js-filter");
   };
 
@@ -379,6 +392,7 @@ function bootMap() {
   const apply = (filters, pushUrl) => {
     draw(filters);
     if (pushUrl) syncUrl(filters);
+    syncViewLinks(filters);
   };
 
   fetch("/data/restaurants.json")

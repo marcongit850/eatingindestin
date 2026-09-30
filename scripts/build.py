@@ -1060,6 +1060,32 @@ def area_link_nav(areas: list[dict], current: str = "", label: str = "Areas") ->
     return f'<nav class="section-links" aria-label="{e(label)}">{"".join(links)}</nav>'
 
 
+def browse_by_area(areas: list[dict]) -> str:
+    nav = area_link_nav(areas)
+    if not nav:
+        return ""
+    return (
+        '<section class="browse-areas" aria-labelledby="browse-areas-heading">'
+        '<h2 id="browse-areas-heading">Browse by area</h2>'
+        f"{nav}</section>"
+    )
+
+
+def view_switch(current: str) -> str:
+    modes = (("listing", "List", "/restaurants/"), ("map", "Map", "/map/"))
+    links = []
+    for key, label, href in modes:
+        klass = "button" if key == current else "button secondary"
+        current_attr = ' aria-current="page"' if key == current else ""
+        links.append(f'<a class="{klass}" href="{href}" data-view="{href}"{current_attr}>{label}</a>')
+    script = (
+        "<script>!function(){var q=location.search;if(!q)return;"
+        "document.querySelectorAll('[data-view]').forEach(function(a){"
+        "a.href=a.getAttribute('data-view')+q;});}();</script>"
+    )
+    return f'<nav class="view-switch" aria-label="List or map">{"".join(links)}</nav>{script}'
+
+
 def graph(*nodes: dict) -> dict:
     return {"@context": "https://schema.org", "@graph": list(nodes)}
 
@@ -1400,11 +1426,12 @@ def build_directory(restaurants: list[dict], areas: list[dict], cuisines: list[s
         '<p class="kicker">Directory</p>'
         '<h1 id="listing-title">Restaurants in Destin</h1>'
         '<p class="lede">Food in Destin and Miramar Beach, Florida. Filter by area, meal, or a few words.</p>'
-        f'{area_link_nav(areas)}'
+        f'{view_switch("listing")}'
         f"{filter_form(areas, cuisines)}"
         f'<p id="result-count" class="count" aria-live="polite">{len(restaurants)} restaurants</p>'
         f'<p id="empty" class="empty" hidden>No restaurants match. <a href="/restaurants/">Clear the filters</a>.</p>'
-        f'<div id="cards" class="card-grid">{cards}</div></div>'
+        f'<div id="cards" class="card-grid">{cards}</div>'
+        f"{browse_by_area(areas)}</div>"
     )
     extra = pending + json_ld(
         graph(
@@ -1603,6 +1630,7 @@ def build_map(areas: list[dict], cuisines: list[str]) -> None:
         '<p class="kicker">The map</p>'
         '<h1 id="listing-title">Around Destin</h1>'
         "<p class=\"lede\">Explore restaurants and food on the map of Destin and Miramar Beach. Tap a pin to see the restaurant name, street address, and full profile.</p>"
+        + view_switch("map")
         + filter_form(areas, cuisines).replace('action="/restaurants/"', 'action="/map/"').replace('href="/restaurants/"', 'href="/map/"')
         + '<p id="result-count" class="count">Loading the map…</p>'
         '<p id="map-note" class="empty" hidden></p>'
