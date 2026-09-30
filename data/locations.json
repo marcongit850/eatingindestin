@@ -12,7 +12,7 @@
     "name": "Sandestin",
     "shortName": "Sandestin",
     "description": "Baytowne Wharf, the marina, and the resort hotels, with waterfront dining inside Sandestin.",
-    "count": 34,
+    "count": 36,
     "image": "/images/areas/sandestin.jpg"
   },
   {
@@ -20,7 +20,7 @@
     "name": "Grand Boulevard",
     "shortName": "Grand Boulevard",
     "description": "The Sandestin town center north of the bay, with sit-down restaurants around the square.",
-    "count": 17,
+    "count": 18,
     "image": "/images/areas/grand-boulevard.jpg"
   },
   {
@@ -28,7 +28,7 @@
     "name": "Destin Commons",
     "shortName": "Destin Commons",
     "description": "The open-air shopping center in Destin, with casual dining along the commons and Commons Drive.",
-    "count": 22,
+    "count": 23,
     "image": "/images/areas/destin-commons.jpg"
   },
   {
@@ -36,7 +36,7 @@
     "name": "Mid-Destin",
     "shortName": "Mid-Destin",
     "description": "The US 98 stretch through Destin, with everyday restaurants between the harbor and Sandestin.",
-    "count": 50,
+    "count": 51,
     "image": "/images/areas/mid-destin.jpg"
   },
   {
@@ -44,7 +44,7 @@
     "name": "Destin Harbor",
     "shortName": "Destin Harbor",
     "description": "HarborWalk Village and the Destin Harbor docks, with seafood houses on the water.",
-    "count": 36,
+    "count": 40,
     "image": "/images/areas/destin-harbor.jpg"
   },
   {

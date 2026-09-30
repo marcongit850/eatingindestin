@@ -31,11 +31,11 @@ def check(condition: bool, message: str) -> None:
 
 
 shown = build.published_restaurants()
-check(len(source) == 207, f"named published rows should stay at 207, got {len(source)}")
-check(len(restaurants) == len(shown) == 207, "public json should include every named published restaurant")
+check(len(source) == 216, f"named published rows should stay at 216, got {len(source)}")
+check(len(restaurants) == len(shown) == 216, "public json should include every named published restaurant")
 csv_rows = build.load_rows(ROOT / "data" / "restaurants.csv")
 blank_names = [row for row in csv_rows if build.clean_text(row.get("Status")) == "PUBLISHED" and not build.clean_text(row.get("Restaurant Name"))]
-check(len(csv_rows) == 337 and len(blank_names) == 114, "the CSV keeps 337 rows, including 114 blank stubs that stay off the site")
+check(len(csv_rows) == 347 and len(blank_names) == 114, "the CSV keeps 347 rows, including 114 blank stubs that stay off the site")
 detail_pages = list((ROOT / "restaurants").glob("*/index.html"))
 check(len(detail_pages) == len(restaurants), f"generated {len(detail_pages)} detail pages for {len(restaurants)} rows")
 check("not on the site yet" not in home and "Design preview" not in home, "homepage should not say the catalog is still a sample")
@@ -83,22 +83,32 @@ check(
         "bric-a-brac-mid-destin",
         "cafe-destin-mid-destin",
         "ciao-italian-bistro-and-pizza-mid-destin",
+        "cracker-barrel-destin-mid-destin",
+        "crafty-siren-destin-harbor",
         "frozen-bloom-creamery-mid-destin",
+        "funnel-cakes-destin-harbor",
+        "locohana-tropical-grill-destin-harbor",
         "sea-level-crystal-beach",
         "sonic-destin-mid-destin",
         "sprinkles-cafe-crystal-beach",
+        "spun-fun-cotton-candy-destin-harbor",
         "starbucks-emerald-coast-mid-destin",
         "subway-destin-mid-destin",
         "sundries-general-market-sandestin",
         "taco-bell-destin-destin-harbor",
         "the-beach-house-sandestin",
+        "the-bistro-at-courtyard-sandestin-grand-boulevard",
+        "the-candy-maker-destin-mid-destin",
+        "the-candy-maker-miramar-beach-sandestin",
+        "the-lobby-bar-sandestin",
         "the-rooftop-crystal-beach",
         "wendys-destin-mid-destin",
         "whataburger-destin-harbor-destin-harbor",
+        "whole-foods-market-destin-commons",
     ],
     f"unexpected monogram listings: {missing_photos}",
 )
-check(len(photos) == 191, f"expected 191 restaurant photos, got {len(photos)}")
+check(len(photos) == 190, f"expected 190 restaurant photos, got {len(photos)}")
 check(build.local_listing_photo("not-a-restaurant") is None, "a slug without a dropped file should stay a monogram")
 check(build.listing_photos("sundries-general-market-sandestin") == [], "Sundries General Market has no photo folder")
 check(
@@ -232,7 +242,7 @@ check(
     "town restaurant counts should stay on one line",
 )
 check("11 Restaurants" in areas_index and "11 places" not in areas_index, "area cards should count Restaurants")
-check("50 Restaurants" in home and re.search(r"\bplaces\b", home) is None, "homepage area counts should say Restaurants")
+check("51 Restaurants" in home and re.search(r"\bplaces\b", home) is None, "homepage area counts should say Restaurants")
 check(build.restaurant_count_word(1, label=True) == "Restaurant", "a single listing is a Restaurant label")
 check(build.restaurant_count_word(7) == "restaurants", "sentence counts stay lowercase")
 check("1 restaurant on the map" in site_js and "restaurants on the map" in site_js, "map count should say restaurants")
