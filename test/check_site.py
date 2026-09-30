@@ -81,15 +81,31 @@ check(
     missing_photos
     == [
         "cosmo-s-robo-diner-sandestin",
-        "juju-boba-destin-commons",
-        "moo-la-la-ice-cream-and-desserts-sandestin",
         "sundries-general-market-sandestin",
     ],
-    f"only the four listings without source photos should keep a monogram, got {missing_photos}",
+    f"only Sundries and Cosmo's should keep a monogram, got {missing_photos}",
 )
-check(len(photos) == 199, f"expected 199 restaurant photos, got {len(photos)}")
+check(len(photos) == 201, f"expected 201 restaurant photos, got {len(photos)}")
 check(build.local_listing_photo("not-a-restaurant") is None, "a slug without a dropped file should stay a monogram")
 check(build.listing_photos("sundries-general-market-sandestin") == [], "Sundries General Market has no photo folder")
+check(build.listing_photos("cosmo-s-robo-diner-sandestin") == [], "Cosmo's Robo Diner has no photo folder")
+check(
+    build.listing_photos("juju-boba-destin-commons")
+    == [
+        "/images/restaurants/juju-boba-destin-commons/01.jpg",
+        "/images/restaurants/juju-boba-destin-commons/02.jpg",
+    ],
+    "JuJu Boba should use the two supplied photos",
+)
+check(
+    build.listing_photos("moo-la-la-ice-cream-and-desserts-sandestin")
+    == [
+        "/images/restaurants/moo-la-la-ice-cream-and-desserts-sandestin/01.jpg",
+        "/images/restaurants/moo-la-la-ice-cream-and-desserts-sandestin/02.jpg",
+        "/images/restaurants/moo-la-la-ice-cream-and-desserts-sandestin/03.jpg",
+    ],
+    "Moo La-La should use the three supplied photos",
+)
 harbor_photo = build.listing_photos("harbor-docks-destin-harbor")
 check(
     harbor_photo and harbor_photo[0].endswith("/harbor-docks-destin-harbor/01.jpg"),
@@ -273,10 +289,38 @@ sundries = (ROOT / "restaurants" / "sundries-general-market-sandestin" / "index.
 sundries_hero = sundries.split('class="profile-hero"', 1)[1].split('class="wrap profile-head"', 1)[0]
 check('class="ph"' in sundries_hero and 'class="mono"' in sundries_hero, "a listing without a photo should keep the monogram")
 check("<img" not in sundries_hero and 'class="profile-film"' not in sundries, "Sundries General Market should stay a monogram")
+cosmo = (ROOT / "restaurants" / "cosmo-s-robo-diner-sandestin" / "index.html").read_text(encoding="utf-8")
+cosmo_hero = cosmo.split('class="profile-hero"', 1)[1].split('class="wrap profile-head"', 1)[0]
+check('class="ph"' in cosmo_hero and 'class="mono"' in cosmo_hero, "Cosmo's Robo Diner should keep the monogram")
+check("<img" not in cosmo_hero and 'class="profile-film"' not in cosmo, "Cosmo's Robo Diner should stay a monogram")
+for slug, extras in (
+    ("juju-boba-destin-commons", ("02.jpg",)),
+    ("moo-la-la-ice-cream-and-desserts-sandestin", ("02.jpg", "03.jpg")),
+):
+    page = (ROOT / "restaurants" / slug / "index.html").read_text(encoding="utf-8")
+    hero = page.split('class="profile-hero"', 1)[1].split('class="wrap profile-head"', 1)[0]
+    check(f"/images/restaurants/{slug}/01.jpg" in hero, f"{slug} hero should be the supplied cover")
+    check(
+        re.search(r'<div class="ph"[^>]*\shidden>', hero) is not None,
+        f"{slug} monogram should stay a hidden fallback behind the photo",
+    )
+    check(hero.index("<img") < hero.index('class="ph"'), f"{slug} should show the photo ahead of the monogram")
+    for extra in extras:
+        check(f"/images/restaurants/{slug}/{extra}" in page, f"{slug} profile should show {extra}")
 check("static.wixstatic.com" not in home and "static.wixstatic.com" not in harbor_page, "Destin pages should not hotlink Wix photos")
-for area_slug in ("miramar-beach", "destin-harbor", "crystal-beach"):
-    card_html = home.split(f'href="/restaurants/?area={area_slug}"', 1)[1].split("</a>", 1)[0]
-    check('class="ph"' in card_html, f"{area_slug} homepage card should use a placeholder until an area photo is added")
+for area in areas:
+    slug = area["slug"]
+    check(area.get("image") == f"/images/areas/{slug}.jpg", f"{slug} should use its area cover")
+    card_html = home.split(f'href="/restaurants/?area={slug}"', 1)[1].split("</a>", 1)[0]
+    check(f'src="/images/areas/{slug}.jpg"' in card_html, f"{slug} homepage card should use its area photo")
+    check('class="mono"' not in card_html, f"{slug} homepage card should not use a monogram")
+    areas_card = areas_index.split(f'href="/areas/{slug}/"', 1)[1].split("</a>", 1)[0]
+    check(f'src="/images/areas/{slug}.jpg"' in areas_card, f"{slug} areas page card should use its area photo")
+    check('class="mono"' not in areas_card, f"{slug} areas page card should not use a monogram")
+    area_page = (ROOT / "areas" / slug / "index.html").read_text(encoding="utf-8")
+    area_hero = area_page.split('class="profile-hero"', 1)[1].split('class="wrap page-intro"', 1)[0]
+    check(f'src="/images/areas/{slug}.jpg"' in area_hero, f"{slug} area page should use its cover")
+    check('class="ph"' not in area_hero, f"{slug} area page hero should not use a monogram")
 
 shared_header = (ROOT / "includes" / "header.html").read_text(encoding="utf-8")
 shared_footer = (ROOT / "includes" / "footer.html").read_text(encoding="utf-8")

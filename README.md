@@ -71,9 +71,9 @@ Columns that show up on the site:
 - `Facebook URL`, `Instagram`
 - `Status` must be `PUBLISHED`
 
-`data/locations.csv` supplies area names and short descriptions. Areas that exist only on restaurants still appear. A `Location Image` that starts with `/images/` is a file in the repo. When that cell is empty, the build uses `images/areas/<slug>.jpg` if the file is there. Area photos are not in this repo yet, so the cards use the monogram frame.
+`data/locations.csv` supplies area names and short descriptions. Areas that exist only on restaurants still appear. A `Location Image` that starts with `/images/` is a file in the repo. When that cell is empty, the build uses `images/areas/<slug>.jpg` if the file is there. Those covers are in the repo, so the area cards use the photos.
 
-Image columns are `List Image`, `Detail Image`, and `Logo`. This export leaves them empty. The supplied photo set lives in `images/restaurants/<slug>/`. `01` is the cover on the card, the profile hero, the map popup, and the Open Graph image. `02` and `03` show in a strip under the hero when they exist. A single file named with the site slug (`images/restaurants/harbor-docks-destin-harbor.jpg`, `.jpeg`, `.webp`, or `.png`) still works as a cover when that folder is absent. A listing with neither keeps the monogram. Sundries General Market, JuJu Boba, Cosmo's Robo Diner, and Moo La-La Ice Cream & Desserts had no usable photos in that set, so those four stay monograms. The build does not call Google Places.
+Image columns are `List Image`, `Detail Image`, and `Logo`. This export leaves them empty. The supplied photo set lives in `images/restaurants/<slug>/`. `01` is the cover on the card, the profile hero, the map popup, and the Open Graph image. `02` and `03` show in a strip under the hero when they exist. A single file named with the site slug (`images/restaurants/harbor-docks-destin-harbor.jpg`, `.jpeg`, `.webp`, or `.png`) still works as a cover when that folder is absent. A listing with neither keeps the monogram. Sundries General Market and Cosmo's Robo Diner stay monograms. The build does not call Google Places.
 
 The raw CSV is not uploaded with the site (see `.assetsignore`). It includes export columns such as owner ids and `googlePlaceId`. Those columns are not read into the public JSON and are not sent to Google.
 
