@@ -9,6 +9,7 @@
       "Lunch"
     ],
     "cuisines": [
+      "Cafe",
       "American"
     ],
     "foods": [
@@ -20,7 +21,7 @@
     "lng": -86.36778100000001,
     "address": "80 Seascape Dr, Miramar Beach, FL 32550",
     "phone": "(850) 279-3375",
-    "search": "2 birds coffee + cafe miramar beach  miramar beach american breakfast lunch coffee cafe cafe / coffee 2 birds coffee + cafe is a casual cafe in miramar beach, useful for coffee, breakfast, or a quick daytime stop. 2 birds coffee + cafe coffee cafe american casual dining miramar beach miramar beach $$",
+    "search": "2 birds coffee + cafe miramar beach  miramar beach cafe american breakfast lunch coffee cafe cafe / coffee 2 birds coffee + cafe is a casual cafe in miramar beach, useful for coffee, breakfast, or a quick daytime stop. 2 birds coffee + cafe coffee cafe american casual dining miramar beach miramar beach $$",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -250,6 +251,7 @@
       "Desserts"
     ],
     "cuisines": [
+      "Dessert",
       "American"
     ],
     "foods": [
@@ -261,7 +263,7 @@
     "lng": -86.3480443,
     "address": "10406 Emerald Coast Pkwy W #103, Miramar Beach, FL 32550",
     "phone": "(850) 837-1190",
-    "search": "auntie anne's silver sands miramar beach  miramar beach | silver sands american lunch desserts cookies & sweets market dessert auntie anne's silver sands serves sweets and treats in miramar beach | silver sands. it is best suited for a quick dessert stop or a snack while exploring the area. auntie anne's silver sands cookies & sweets market american fast casual miramar beach miramar beach | silver sands $",
+    "search": "auntie anne's silver sands miramar beach  miramar beach | silver sands dessert american lunch desserts cookies & sweets market dessert auntie anne's silver sands serves sweets and treats in miramar beach | silver sands. it is best suited for a quick dessert stop or a snack while exploring the area. auntie anne's silver sands cookies & sweets market dessert american fast casual miramar beach miramar beach | silver sands $",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -332,6 +334,7 @@
       "Lunch"
     ],
     "cuisines": [
+      "Cafe",
       "American"
     ],
     "foods": [
@@ -343,7 +346,7 @@
     "lng": -86.3766168,
     "address": "1708 Scenic Gulf Dr Ste. A, Miramar Beach, FL 32550",
     "phone": "(850) 424-7804",
-    "search": "bad ass coffee of hawaii miramar beach  miramar beach | us 98 american breakfast lunch coffee cafe cafe / coffee bad ass coffee of hawaii is a casual cafe in miramar beach | us 98, useful for coffee, breakfast, or a quick daytime stop. bad ass coffee of hawaii coffee cafe american fast casual miramar beach miramar beach | us 98 $",
+    "search": "bad ass coffee of hawaii miramar beach  miramar beach | us 98 cafe american breakfast lunch coffee cafe cafe / coffee bad ass coffee of hawaii is a casual cafe in miramar beach | us 98, useful for coffee, breakfast, or a quick daytime stop. bad ass coffee of hawaii coffee cafe american fast casual miramar beach miramar beach | us 98 $",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -525,6 +528,7 @@
       "Lunch"
     ],
     "cuisines": [
+      "Cafe",
       "American"
     ],
     "foods": [
@@ -537,7 +541,7 @@
     "lng": -86.3179627,
     "address": "325 Grand Blvd Suite 100, Miramar Beach, FL 32550",
     "phone": "(850) 706-1300",
-    "search": "black bear bread co. grand boulevard  grand boulevard | sandestin american breakfast lunch bakery coffee cafe cafe / coffee black bear bread co. is a bakery and coffee stop in grand boulevard | sandestin, good for breakfast, pastries, and a casual daytime bite. google currently lists this business as permanently closed; verify before publishing. black bear bread co. bakery coffee cafe american casual dining grand boulevard grand boulevard | sandestin $$",
+    "search": "black bear bread co. grand boulevard  grand boulevard | sandestin cafe american breakfast lunch bakery coffee cafe cafe / coffee black bear bread co. is a bakery and coffee stop in grand boulevard | sandestin, good for breakfast, pastries, and a casual daytime bite. google currently lists this business as permanently closed; verify before publishing. black bear bread co. bakery coffee cafe american casual dining grand boulevard grand boulevard | sandestin $$",
     "outdoor": true,
     "kids": true,
     "music": false,
@@ -878,6 +882,7 @@
       "Lunch"
     ],
     "cuisines": [
+      "Cafe",
       "American"
     ],
     "foods": [
@@ -889,7 +894,7 @@
     "lng": -86.5121123,
     "address": "34 Harbor Blvd, Destin, FL 32541",
     "phone": "(850) 353-2039",
-    "search": "cafe cafe destin harbor  harborwalk village | destin american breakfast lunch coffee breakfast spot cafe / coffee cafe cafe is the coffee and breakfast counter at harborwalk village, with lattes, refreshers, and breakfast sandwiches on destin harbor. cafe cafe coffee breakfast spot american fast casual destin harbor harborwalk village | destin $",
+    "search": "cafe cafe destin harbor  harborwalk village | destin cafe american breakfast lunch coffee breakfast spot cafe / coffee cafe cafe is the coffee and breakfast counter at harborwalk village, with lattes, refreshers, and breakfast sandwiches on destin harbor. cafe cafe coffee breakfast spot american fast casual destin harbor harborwalk village | destin $",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -959,6 +964,7 @@
       "Lunch"
     ],
     "cuisines": [
+      "Cafe",
       "American"
     ],
     "foods": [
@@ -971,7 +977,7 @@
     "lng": -86.4265666,
     "address": "2931 Scenic Hwy 98, Destin, FL 32541",
     "phone": "(850) 337-8860",
-    "search": "camille's sidewalk cafe crystal beach  crystal beach | scenic 98 american breakfast lunch coffee cafe sandwiches cafe / coffee camille's sidewalk cafe is a casual cafe in crystal beach | scenic 98, useful for coffee, breakfast, or a quick daytime stop. camille's sidewalk cafe coffee cafe sandwiches american casual dining crystal beach crystal beach | scenic 98 $$",
+    "search": "camille's sidewalk cafe crystal beach  crystal beach | scenic 98 cafe american breakfast lunch coffee cafe sandwiches cafe / coffee camille's sidewalk cafe is a casual cafe in crystal beach | scenic 98, useful for coffee, breakfast, or a quick daytime stop. camille's sidewalk cafe coffee cafe sandwiches american casual dining crystal beach crystal beach | scenic 98 $$",
     "outdoor": true,
     "kids": true,
     "music": false,
@@ -1121,6 +1127,7 @@
       "Lunch"
     ],
     "cuisines": [
+      "Cafe",
       "American"
     ],
     "foods": [
@@ -1133,7 +1140,7 @@
     "lng": -86.3243167,
     "address": "9100 Baytowne Wharf Blvd # B4, Destin, FL 32550",
     "phone": "(850) 424-6459",
-    "search": "charlie's cafe baytowne sandestin  baytowne wharf | sandestin american breakfast lunch coffee donuts sandwiches cafe / coffee charlie's cafe baytowne is a casual cafe in baytowne wharf | sandestin, useful for coffee, breakfast, or a quick daytime stop. charlie's cafe baytowne coffee donuts sandwiches american fast casual sandestin baytowne wharf | sandestin $",
+    "search": "charlie's cafe baytowne sandestin  baytowne wharf | sandestin cafe american breakfast lunch coffee donuts sandwiches cafe / coffee charlie's cafe baytowne is a casual cafe in baytowne wharf | sandestin, useful for coffee, breakfast, or a quick daytime stop. charlie's cafe baytowne coffee donuts sandwiches american fast casual sandestin baytowne wharf | sandestin $",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -1285,6 +1292,7 @@
       "Lunch"
     ],
     "cuisines": [
+      "Cafe",
       "American"
     ],
     "foods": [
@@ -1297,7 +1305,7 @@
     "lng": -86.43083539999999,
     "address": "100 Matthew Blvd #1, Destin, FL 32541",
     "phone": "(850) 424-1688",
-    "search": "cissy's scenic 98 cafe crystal beach  crystal beach | scenic 98 american breakfast lunch coffee pizza bakery cafe / coffee cissy's scenic 98 cafe is a bakery and coffee stop in crystal beach | scenic 98, good for breakfast, pastries, and a casual daytime bite. google currently lists this business as permanently closed; verify before publishing. cissy's scenic 98 cafe coffee pizza bakery american casual dining crystal beach crystal beach | scenic 98 $$",
+    "search": "cissy's scenic 98 cafe crystal beach  crystal beach | scenic 98 cafe american breakfast lunch coffee pizza bakery cafe / coffee cissy's scenic 98 cafe is a bakery and coffee stop in crystal beach | scenic 98, good for breakfast, pastries, and a casual daytime bite. google currently lists this business as permanently closed; verify before publishing. cissy's scenic 98 cafe coffee pizza bakery american casual dining crystal beach crystal beach | scenic 98 $$",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -1683,21 +1691,21 @@
     "areaSlug": "sandestin",
     "meals": [
       "Lunch",
-      "Dinner"
+      "Dinner",
+      "Drinks"
     ],
     "cuisines": [
       "American"
     ],
     "foods": [
-      "Grill",
-      "Market"
+      "Grill"
     ],
     "price": "$$",
     "lat": 30.389836,
     "lng": -86.325374,
     "address": "132 Fisherman's Cove, Miramar Beach, FL 32550",
     "phone": "(850) 351-1809",
-    "search": "fat tuesday daiquiri bar sandestin  baytowne wharf | sandestin american lunch dinner grill market bar & restaurant fat tuesday daiquiri bar is a bar and restaurant in baytowne wharf | sandestin, good for drinks, casual food, and a relaxed meal with friends. fat tuesday daiquiri bar grill market american bar sandestin baytowne wharf | sandestin $$",
+    "search": "fat tuesday daiquiri bar sandestin  baytowne wharf | sandestin american lunch dinner drinks grill bar & restaurant fat tuesday daiquiri bar is a bar and restaurant in baytowne wharf | sandestin, good for drinks, casual food, and a relaxed meal with friends. fat tuesday daiquiri bar grill american bar sandestin baytowne wharf | sandestin $$",
     "outdoor": false,
     "kids": false,
     "music": false,
@@ -1953,6 +1961,7 @@
       "Desserts"
     ],
     "cuisines": [
+      "Dessert",
       "American"
     ],
     "foods": [
@@ -1964,7 +1973,7 @@
     "lng": -86.425113,
     "address": "34940 Emerald Coast Pkwy #181, Destin, FL 32541",
     "phone": "(850) 865-2591",
-    "search": "frozen bloom creamery mid-destin  destin | us 98 american desserts ice cream dessert dessert frozen bloom creamery is an ice cream and coffee cafe at 34940 emerald coast parkway in destin, with gelato, sorbets, shakes, and bubble waffles. frozen bloom creamery ice cream gelato destin us 98 mid-destin $",
+    "search": "frozen bloom creamery mid-destin  destin | us 98 dessert american desserts ice cream dessert dessert frozen bloom creamery is an ice cream and coffee cafe at 34940 emerald coast parkway in destin, with gelato, sorbets, shakes, and bubble waffles. frozen bloom creamery ice cream gelato destin us 98 mid-destin dessert $",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -2166,6 +2175,7 @@
       "Desserts"
     ],
     "cuisines": [
+      "Dessert",
       "American"
     ],
     "foods": [
@@ -2177,7 +2187,7 @@
     "lng": -86.34818729999999,
     "address": "Silver Sands Premium Outlets, 10406 US-98 Ste 30, Miramar Beach, FL 32550",
     "phone": "(850) 461-2704",
-    "search": "haagen-dazs silver sands miramar beach  miramar beach | silver sands american desserts ice cream dessert dessert haagen-dazs silver sands is a dessert stop in miramar beach | silver sands known for ice cream and sweet treats. a good family-friendly option after the beach or dinner. haagen-dazs silver sands ice cream dessert american fast casual miramar beach miramar beach | silver sands $",
+    "search": "haagen-dazs silver sands miramar beach  miramar beach | silver sands dessert american desserts ice cream dessert dessert haagen-dazs silver sands is a dessert stop in miramar beach | silver sands known for ice cream and sweet treats. a good family-friendly option after the beach or dinner. haagen-dazs silver sands ice cream dessert american fast casual miramar beach miramar beach | silver sands $",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -2307,9 +2317,11 @@
       "Dinner"
     ],
     "cuisines": [
+      "Indian",
       "Asian"
     ],
     "foods": [
+      "Grill",
       "Noodles"
     ],
     "price": "$$",
@@ -2317,7 +2329,7 @@
     "lng": -86.35507,
     "address": "10859 Emerald Coast Pkwy W Suite 103, Miramar Beach, FL 32550",
     "phone": "(850) 353-2630",
-    "search": "holi indian kitchen miramar beach  miramar beach | us 98 asian lunch dinner noodles restaurant holi indian kitchen is an asian restaurant in miramar beach | us 98, included as part of the destin dining corridor draft for further verification. holi indian kitchen noodles asian casual dining miramar beach miramar beach | us 98 $$",
+    "search": "holi indian kitchen miramar beach  miramar beach | us 98 indian asian lunch dinner grill noodles restaurant holi indian kitchen is an asian restaurant in miramar beach | us 98, included as part of the destin dining corridor draft for further verification. holi indian kitchen grill noodles indian asian casual dining miramar beach miramar beach | us 98 $$",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -2412,6 +2424,7 @@
       "Desserts"
     ],
     "cuisines": [
+      "Dessert",
       "American"
     ],
     "foods": [
@@ -2423,7 +2436,7 @@
     "lng": -86.51216,
     "address": "10 Harbor Blvd, Destin, FL 32541",
     "phone": "(850) 376-9199",
-    "search": "ice cream on the harbor destin harbor  harborwalk village | destin american desserts ice cream dessert dessert ice cream on the harbor is the ice cream and shake stand at harborwalk village, at 10 harbor boulevard. ice cream on the harbor destin harbor harborwalk village | destin $ $",
+    "search": "ice cream on the harbor destin harbor  harborwalk village | destin dessert american desserts ice cream dessert dessert ice cream on the harbor is the ice cream and shake stand at harborwalk village, at 10 harbor boulevard. ice cream on the harbor destin harbor harborwalk village | destin $ dessert $",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -2465,6 +2478,7 @@
       "Desserts"
     ],
     "cuisines": [
+      "Dessert",
       "American"
     ],
     "foods": [
@@ -2476,7 +2490,7 @@
     "lng": -86.423599,
     "address": "4341 Legendary Dr B114, Destin, FL 32541",
     "phone": "(850) 517-3773",
-    "search": "it'sugar destin commons destin commons  destin commons american desserts cookies & sweets dessert dessert it'sugar destin commons serves sweets and treats in destin commons. it is best suited for a quick dessert stop or a snack while exploring the area. it'sugar destin commons cookies & sweets dessert american fast casual destin commons destin commons $",
+    "search": "it'sugar destin commons destin commons  destin commons dessert american desserts cookies & sweets dessert dessert it'sugar destin commons serves sweets and treats in destin commons. it is best suited for a quick dessert stop or a snack while exploring the area. it'sugar destin commons cookies & sweets dessert american fast casual destin commons destin commons $",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -2544,21 +2558,21 @@
     "areaSlug": "destin-harbor",
     "meals": [
       "Lunch",
-      "Dinner"
+      "Dinner",
+      "Drinks"
     ],
     "cuisines": [
       "American"
     ],
     "foods": [
-      "Grill",
-      "Tapas"
+      "Pizza"
     ],
     "price": "$$",
     "lat": 30.3946077,
     "lng": -86.5128257,
     "address": "34 Harbor Blvd #106, Destin, FL 32541",
     "phone": "(850) 650-3615",
-    "search": "jester mardi gras daiquiris destin harbor  harborwalk village | destin american lunch dinner grill tapas bar & restaurant jester mardi gras daiquiris is a bar and restaurant in harborwalk village | destin, good for drinks, casual food, and a relaxed meal with friends. jester mardi gras daiquiris grill tapas american bar destin harbor harborwalk village | destin $$",
+    "search": "jester mardi gras daiquiris destin harbor  harborwalk village | destin american lunch dinner drinks pizza bar & restaurant jester mardi gras daiquiris is a bar and restaurant in harborwalk village | destin, good for drinks, casual food, and a relaxed meal with friends. jester mardi gras daiquiris pizza american bar destin harbor harborwalk village | destin $$",
     "outdoor": true,
     "kids": false,
     "music": false,
@@ -2708,6 +2722,7 @@
       "Desserts"
     ],
     "cuisines": [
+      "Dessert",
       "American"
     ],
     "foods": [
@@ -2719,7 +2734,7 @@
     "lng": -86.4240824,
     "address": "4142 Legendary Dr B106, Destin, FL 32541",
     "phone": "(850) 460-7868",
-    "search": "kilwins destin commons destin commons  destin commons american desserts ice cream cookies & sweets dessert kilwins destin commons is a dessert stop in destin commons known for ice cream and sweet treats. a good family-friendly option after the beach or dinner. kilwins destin commons ice cream cookies & sweets american fast casual destin commons destin commons $",
+    "search": "kilwins destin commons destin commons  destin commons dessert american desserts ice cream cookies & sweets dessert kilwins destin commons is a dessert stop in destin commons known for ice cream and sweet treats. a good family-friendly option after the beach or dinner. kilwins destin commons ice cream cookies & sweets dessert american fast casual destin commons destin commons $",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -2734,6 +2749,7 @@
       "Desserts"
     ],
     "cuisines": [
+      "Dessert",
       "American"
     ],
     "foods": [
@@ -2745,7 +2761,7 @@
     "lng": -86.31220650000002,
     "address": "625 Grand Blvd #102, Sandestin, FL 32550",
     "phone": "(850) 608-2028",
-    "search": "kilwins grand boulevard grand boulevard  grand boulevard | sandestin american desserts ice cream cookies & sweets dessert kilwins grand boulevard is a dessert stop in grand boulevard | sandestin known for ice cream and sweet treats. a good family-friendly option after the beach or dinner. kilwins grand boulevard ice cream cookies & sweets american fast casual grand boulevard grand boulevard | sandestin $",
+    "search": "kilwins grand boulevard grand boulevard  grand boulevard | sandestin dessert american desserts ice cream cookies & sweets dessert kilwins grand boulevard is a dessert stop in grand boulevard | sandestin known for ice cream and sweet treats. a good family-friendly option after the beach or dinner. kilwins grand boulevard ice cream cookies & sweets dessert american fast casual grand boulevard grand boulevard | sandestin $",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -2760,6 +2776,7 @@
       "Desserts"
     ],
     "cuisines": [
+      "Dessert",
       "American"
     ],
     "foods": [
@@ -2771,7 +2788,7 @@
     "lng": -86.5121123,
     "address": "34 Harbor Blvd, Destin, FL 32541",
     "phone": "(850) 855-2387",
-    "search": "kona ice harborwalk destin harbor  harborwalk village | destin american desserts snowcones dessert dessert kona ice harborwalk is a dessert-focused stop in harborwalk village | destin, offering quick sweets and snacks for visitors and families. google matched this row to harborwalk village rather than a distinct restaurant listing. verify before publishing. kona ice harborwalk snowcones dessert american fast casual destin harbor harborwalk village | destin $",
+    "search": "kona ice harborwalk destin harbor  harborwalk village | destin dessert american desserts snowcones dessert dessert kona ice harborwalk is a dessert-focused stop in harborwalk village | destin, offering quick sweets and snacks for visitors and families. google matched this row to harborwalk village rather than a distinct restaurant listing. verify before publishing. kona ice harborwalk snowcones dessert american fast casual destin harbor harborwalk village | destin $",
     "outdoor": true,
     "kids": true,
     "music": false,
@@ -3168,6 +3185,7 @@
       "Dinner"
     ],
     "cuisines": [
+      "Irish",
       "American"
     ],
     "foods": [
@@ -3179,7 +3197,7 @@
     "lng": -86.512016,
     "address": "33 US-98, Destin, FL 32541",
     "phone": "(850) 650-0000",
-    "search": "mcguire's irish pub destin harbor  destin harbor | us 98 american lunch dinner steak grill bar & restaurant mcguire's irish pub is a bar and restaurant in destin harbor | us 98, good for drinks, casual food, and a relaxed meal with friends. mcguire's irish pub steak grill american casual dining bar destin harbor destin harbor | us 98 $$",
+    "search": "mcguire's irish pub destin harbor  destin harbor | us 98 irish american lunch dinner steak grill bar & restaurant mcguire's irish pub is a bar and restaurant in destin harbor | us 98, good for drinks, casual food, and a relaxed meal with friends. mcguire's irish pub steak grill irish american casual dining bar destin harbor destin harbor | us 98 $$",
     "outdoor": true,
     "kids": true,
     "music": true,
@@ -3352,6 +3370,7 @@
       "Desserts"
     ],
     "cuisines": [
+      "Dessert",
       "American"
     ],
     "foods": [
@@ -3363,7 +3382,7 @@
     "lng": -86.32440369999999,
     "address": "101 Cannery Ln, Miramar Beach, FL 32550",
     "phone": "(850) 654-3333",
-    "search": "moo la-la ice cream & desserts sandestin  baytowne wharf | sandestin american desserts ice cream dessert dessert moo la-la ice cream & desserts is a dessert stop in baytowne wharf | sandestin known for ice cream and sweet treats. a good family-friendly option after the beach or dinner. moo la-la ice cream & desserts ice cream dessert american fast casual sandestin baytowne wharf | sandestin $",
+    "search": "moo la-la ice cream & desserts sandestin  baytowne wharf | sandestin dessert american desserts ice cream dessert dessert moo la-la ice cream & desserts is a dessert stop in baytowne wharf | sandestin known for ice cream and sweet treats. a good family-friendly option after the beach or dinner. moo la-la ice cream & desserts ice cream dessert american fast casual sandestin baytowne wharf | sandestin $",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -3379,6 +3398,7 @@
       "Dinner"
     ],
     "cuisines": [
+      "Chinese",
       "Asian"
     ],
     "foods": [
@@ -3389,7 +3409,7 @@
     "lng": -86.42843500000001,
     "address": "34904 Emerald Coast Pkwy #102, Destin, FL 32541",
     "phone": "(850) 650-1288",
-    "search": "new dragon chinese buffet & mongolian grill mid-destin  destin | us 98 asian lunch dinner grill restaurant new dragon chinese buffet & mongolian grill is an asian restaurant in destin | us 98, included as part of the destin dining corridor draft for further verification. google currently lists this business as permanently closed; verify before publishing. new dragon chinese buffet & mongolian grill grill asian casual dining mid-destin destin | us 98 $$",
+    "search": "new dragon chinese buffet & mongolian grill mid-destin  destin | us 98 chinese asian lunch dinner grill restaurant new dragon chinese buffet & mongolian grill is an asian restaurant in destin | us 98, included as part of the destin dining corridor draft for further verification. google currently lists this business as permanently closed; verify before publishing. new dragon chinese buffet & mongolian grill grill chinese asian casual dining mid-destin destin | us 98 $$",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -3673,6 +3693,7 @@
       "Dinner"
     ],
     "cuisines": [
+      "Vietnamese",
       "Asian",
       "French"
     ],
@@ -3686,7 +3707,7 @@
     "lng": -86.3525916,
     "address": "10676 Emerald Coast Pkwy W Suite 146, Miramar Beach, FL 32550",
     "phone": "(850) 866-5270",
-    "search": "paris banh mi miramar beach miramar beach  miramar beach | silver sands asian french breakfast lunch dinner sandwiches smoothies bakery cafe / coffee paris banh mi miramar beach is a bakery and coffee stop in miramar beach | silver sands, good for breakfast, pastries, and a casual daytime bite. paris banh mi miramar beach sandwiches smoothies bakery asian french fast casual miramar beach miramar beach | silver sands $",
+    "search": "paris banh mi miramar beach miramar beach  miramar beach | silver sands vietnamese asian french breakfast lunch dinner sandwiches smoothies bakery cafe / coffee paris banh mi miramar beach is a bakery and coffee stop in miramar beach | silver sands, good for breakfast, pastries, and a casual daytime bite. paris banh mi miramar beach sandwiches smoothies bakery vietnamese asian french fast casual miramar beach miramar beach | silver sands $",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -3782,6 +3803,7 @@
       "Lunch"
     ],
     "cuisines": [
+      "Cafe",
       "American"
     ],
     "foods": [
@@ -3794,7 +3816,7 @@
     "lng": -86.3182325,
     "address": "325 Grand Blvd suite 100, Destin, FL 32550",
     "phone": "(850) 213-2093",
-    "search": "perla baking co. grand boulevard  grand boulevard | sandestin american breakfast lunch bakery coffee cafe cafe / coffee perla baking co. is a bakery and coffee stop in grand boulevard | sandestin, good for breakfast, pastries, and a casual daytime bite. perla baking co. bakery coffee cafe american casual dining grand boulevard grand boulevard | sandestin $$",
+    "search": "perla baking co. grand boulevard  grand boulevard | sandestin cafe american breakfast lunch bakery coffee cafe cafe / coffee perla baking co. is a bakery and coffee stop in grand boulevard | sandestin, good for breakfast, pastries, and a casual daytime bite. perla baking co. bakery coffee cafe american casual dining grand boulevard grand boulevard | sandestin $$",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -3919,6 +3941,7 @@
       "Dinner"
     ],
     "cuisines": [
+      "Thai",
       "Asian"
     ],
     "foods": [
@@ -3929,7 +3952,7 @@
     "lng": -86.36158879999999,
     "address": "11275 US-98 Suite 11, Miramar Beach, FL 32550",
     "phone": "(850) 837-5344",
-    "search": "real thai fusion miramar beach  miramar beach | us 98 asian lunch dinner noodles restaurant real thai fusion is an asian restaurant in miramar beach | us 98, included as part of the destin dining corridor draft for further verification. real thai fusion noodles asian casual dining miramar beach miramar beach | us 98 $$",
+    "search": "real thai fusion miramar beach  miramar beach | us 98 thai asian lunch dinner noodles restaurant real thai fusion is an asian restaurant in miramar beach | us 98, included as part of the destin dining corridor draft for further verification. real thai fusion noodles thai asian casual dining miramar beach miramar beach | us 98 $$",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -3996,6 +4019,7 @@
       "Desserts"
     ],
     "cuisines": [
+      "Dessert",
       "American"
     ],
     "foods": [
@@ -4007,7 +4031,7 @@
     "lng": -86.4251293,
     "address": "4279 Legendary Dr J113, Destin, FL 32541",
     "phone": "(850) 424-5670",
-    "search": "riviera creamery destin commons  destin commons american desserts ice cream dessert dessert riviera creamery is a dessert stop in destin commons known for ice cream and sweet treats. a good family-friendly option after the beach or dinner. riviera creamery ice cream dessert american fast casual destin commons destin commons $",
+    "search": "riviera creamery destin commons  destin commons dessert american desserts ice cream dessert dessert riviera creamery is a dessert stop in destin commons known for ice cream and sweet treats. a good family-friendly option after the beach or dinner. riviera creamery ice cream dessert american fast casual destin commons destin commons $",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -4048,6 +4072,7 @@
       "Desserts"
     ],
     "cuisines": [
+      "Dessert",
       "American"
     ],
     "foods": [
@@ -4059,7 +4084,7 @@
     "lng": -86.350045,
     "address": "Silver Sands Factory Stores, 10562 US-98 #117, Miramar Beach, FL 32550",
     "phone": "(850) 654-9777",
-    "search": "rocky mountain chocolate factory silver sands miramar beach  miramar beach | silver sands american desserts cookies & sweets dessert dessert rocky mountain chocolate factory silver sands serves sweets and treats in miramar beach | silver sands. it is best suited for a quick dessert stop or a snack while exploring the area. rocky mountain chocolate factory silver sands cookies & sweets dessert american fast casual miramar beach miramar beach | silver sands $",
+    "search": "rocky mountain chocolate factory silver sands miramar beach  miramar beach | silver sands dessert american desserts cookies & sweets dessert dessert rocky mountain chocolate factory silver sands serves sweets and treats in miramar beach | silver sands. it is best suited for a quick dessert stop or a snack while exploring the area. rocky mountain chocolate factory silver sands cookies & sweets dessert american fast casual miramar beach miramar beach | silver sands $",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -4288,6 +4313,7 @@
       "Desserts"
     ],
     "cuisines": [
+      "Dessert",
       "American"
     ],
     "foods": [
@@ -4299,7 +4325,7 @@
     "lng": -86.4683676,
     "address": "1065 US-98 E, Destin, FL 32541",
     "phone": "(850) 269-1111",
-    "search": "shake's frozen custard mid-destin  destin | us 98 american desserts ice cream dessert dessert shake's frozen custard is a dessert stop in destin | us 98 known for ice cream and sweet treats. a good family-friendly option after the beach or dinner. shake's frozen custard ice cream dessert american fast casual mid-destin destin | us 98 $",
+    "search": "shake's frozen custard mid-destin  destin | us 98 dessert american desserts ice cream dessert dessert shake's frozen custard is a dessert stop in destin | us 98 known for ice cream and sweet treats. a good family-friendly option after the beach or dinner. shake's frozen custard ice cream dessert american fast casual mid-destin destin | us 98 $",
     "outdoor": true,
     "kids": true,
     "music": false,
@@ -4395,6 +4421,7 @@
       "Desserts"
     ],
     "cuisines": [
+      "Dessert",
       "American"
     ],
     "foods": [
@@ -4406,7 +4433,7 @@
     "lng": -86.4240988,
     "address": "4300 Legendary Dr, Destin, FL 32541",
     "phone": "(850) 269-7669",
-    "search": "snowbiz by ray destin commons  destin commons american desserts snowcones dessert dessert snowbiz by ray is a dessert-focused stop in destin commons, offering quick sweets and snacks for visitors and families. snowbiz by ray snowcones dessert american fast casual destin commons destin commons $",
+    "search": "snowbiz by ray destin commons  destin commons dessert american desserts snowcones dessert dessert snowbiz by ray is a dessert-focused stop in destin commons, offering quick sweets and snacks for visitors and families. snowbiz by ray snowcones dessert american fast casual destin commons destin commons $",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -4449,6 +4476,7 @@
       "Desserts"
     ],
     "cuisines": [
+      "Cafe",
       "American"
     ],
     "foods": [
@@ -4460,7 +4488,7 @@
     "lng": -86.4314956,
     "address": "200 Henderson Resort Way, Destin, FL 32541",
     "phone": "(855) 741-2777",
-    "search": "sprinkles caf\u00e9 crystal beach  crystal beach | henderson beach resort american breakfast lunch desserts coffee cafe cafe / coffee sprinkles caf\u00e9 is the cafe at henderson beach resort, for a casual bite on the crystal beach resort grounds. sprinkles caf\u00e9 crystal beach crystal beach | henderson beach resort $ $",
+    "search": "sprinkles caf\u00e9 crystal beach  crystal beach | henderson beach resort cafe american breakfast lunch desserts coffee cafe cafe / coffee sprinkles caf\u00e9 is the cafe at henderson beach resort, for a casual bite on the crystal beach resort grounds. sprinkles caf\u00e9 crystal beach crystal beach | henderson beach resort $ cafe $",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -4501,6 +4529,7 @@
       "Lunch"
     ],
     "cuisines": [
+      "Cafe",
       "American"
     ],
     "foods": [
@@ -4512,7 +4541,7 @@
     "lng": -86.4241196,
     "address": "4140 Legendary Dr, Suite B105, Destin, FL 32541",
     "phone": "(850) 650-0333",
-    "search": "starbucks destin commons destin commons  destin commons american breakfast lunch coffee cafe cafe / coffee starbucks destin commons is a casual cafe in destin commons, useful for coffee, breakfast, or a quick daytime stop. starbucks destin commons coffee cafe american fast casual destin commons destin commons $",
+    "search": "starbucks destin commons destin commons  destin commons cafe american breakfast lunch coffee cafe cafe / coffee starbucks destin commons is a casual cafe in destin commons, useful for coffee, breakfast, or a quick daytime stop. starbucks destin commons coffee cafe american fast casual destin commons destin commons $",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -4528,6 +4557,7 @@
       "Lunch"
     ],
     "cuisines": [
+      "Cafe",
       "American"
     ],
     "foods": [
@@ -4539,7 +4569,7 @@
     "lng": -86.430086,
     "address": "34881 Emerald Coast Pkwy, Destin, FL 32541",
     "phone": "(850) 269-1052",
-    "search": "starbucks emerald coast mid-destin  destin | us 98 american breakfast lunch coffee cafe cafe / coffee starbucks emerald coast is the cafe at 34881 emerald coast parkway, across from destin commons. starbucks emerald coast mid-destin destin | us 98 $ $",
+    "search": "starbucks emerald coast mid-destin  destin | us 98 cafe american breakfast lunch coffee cafe cafe / coffee starbucks emerald coast is the cafe at 34881 emerald coast parkway, across from destin commons. starbucks emerald coast mid-destin destin | us 98 $ cafe $",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -4555,6 +4585,7 @@
       "Lunch"
     ],
     "cuisines": [
+      "Cafe",
       "American"
     ],
     "foods": [
@@ -4566,7 +4597,7 @@
     "lng": -86.31020000000001,
     "address": "780 Grand Blvd, Miramar Beach, FL 32550",
     "phone": "(850) 622-0215",
-    "search": "starbucks grand boulevard grand boulevard  grand boulevard | sandestin american breakfast lunch coffee cafe cafe / coffee starbucks grand boulevard is a casual cafe in grand boulevard | sandestin, useful for coffee, breakfast, or a quick daytime stop. starbucks grand boulevard coffee cafe american fast casual grand boulevard grand boulevard | sandestin $",
+    "search": "starbucks grand boulevard grand boulevard  grand boulevard | sandestin cafe american breakfast lunch coffee cafe cafe / coffee starbucks grand boulevard is a casual cafe in grand boulevard | sandestin, useful for coffee, breakfast, or a quick daytime stop. starbucks grand boulevard coffee cafe american fast casual grand boulevard grand boulevard | sandestin $",
     "outdoor": true,
     "kids": true,
     "music": false,
@@ -4582,6 +4613,7 @@
       "Lunch"
     ],
     "cuisines": [
+      "Cafe",
       "American"
     ],
     "foods": [
@@ -4593,7 +4625,7 @@
     "lng": -86.3490535,
     "address": "10410 Emerald Coast Pkwy W, Miramar Beach, FL 32550",
     "phone": "(850) 650-2340",
-    "search": "starbucks miramar beach miramar beach  miramar beach | us 98 american breakfast lunch coffee cafe cafe / coffee starbucks miramar beach is a casual cafe in miramar beach | us 98, useful for coffee, breakfast, or a quick daytime stop. starbucks miramar beach coffee cafe american fast casual miramar beach miramar beach | us 98 $",
+    "search": "starbucks miramar beach miramar beach  miramar beach | us 98 cafe american breakfast lunch coffee cafe cafe / coffee starbucks miramar beach is a casual cafe in miramar beach | us 98, useful for coffee, breakfast, or a quick daytime stop. starbucks miramar beach coffee cafe american fast casual miramar beach miramar beach | us 98 $",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -4662,6 +4694,7 @@
       "Lunch"
     ],
     "cuisines": [
+      "Cafe",
       "American"
     ],
     "foods": [
@@ -4673,7 +4706,7 @@
     "lng": -86.3248835,
     "address": "1 Grand Sandestin Blvd, Miramar Beach, FL 32550",
     "phone": "(850) 351-3031",
-    "search": "sweetbay coffee sandestin  sandestin | hotel effie american breakfast lunch coffee cafe cafe / coffee sweetbay coffee is a casual cafe in sandestin | hotel effie, useful for coffee, breakfast, or a quick daytime stop. sweetbay coffee coffee cafe american fast casual sandestin sandestin | hotel effie $",
+    "search": "sweetbay coffee sandestin  sandestin | hotel effie cafe american breakfast lunch coffee cafe cafe / coffee sweetbay coffee is a casual cafe in sandestin | hotel effie, useful for coffee, breakfast, or a quick daytime stop. sweetbay coffee coffee cafe american fast casual sandestin sandestin | hotel effie $",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -4744,6 +4777,7 @@
       "Dinner"
     ],
     "cuisines": [
+      "Thai",
       "Asian"
     ],
     "foods": [
@@ -4754,7 +4788,7 @@
     "lng": -86.38757299999999,
     "address": "12889 Emerald Coast Pkwy W STE 105B, Miramar Beach, FL 32550",
     "phone": "(850) 424-6344",
-    "search": "talay thai cuisine miramar beach  miramar beach | us 98 asian lunch dinner noodles restaurant talay thai cuisine is an asian restaurant in miramar beach | us 98, included as part of the destin dining corridor draft for further verification. talay thai cuisine noodles asian casual dining miramar beach miramar beach | us 98 $$",
+    "search": "talay thai cuisine miramar beach  miramar beach | us 98 thai asian lunch dinner noodles restaurant talay thai cuisine is an asian restaurant in miramar beach | us 98, included as part of the destin dining corridor draft for further verification. talay thai cuisine noodles thai asian casual dining miramar beach miramar beach | us 98 $$",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -4770,6 +4804,7 @@
       "Dinner"
     ],
     "cuisines": [
+      "Thai",
       "Asian"
     ],
     "foods": [
@@ -4780,7 +4815,7 @@
     "lng": -86.3558346,
     "address": "10916 US-98, Miramar Beach, FL 32550",
     "phone": "(850) 842-4686",
-    "search": "thai 9 cuisine miramar beach  miramar beach | us 98 asian lunch dinner noodles restaurant thai 9 cuisine is an asian restaurant in miramar beach | us 98, included as part of the destin dining corridor draft for further verification. thai 9 cuisine noodles asian casual dining miramar beach miramar beach | us 98 $$",
+    "search": "thai 9 cuisine miramar beach  miramar beach | us 98 thai asian lunch dinner noodles restaurant thai 9 cuisine is an asian restaurant in miramar beach | us 98, included as part of the destin dining corridor draft for further verification. thai 9 cuisine noodles thai asian casual dining miramar beach miramar beach | us 98 $$",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -5120,6 +5155,7 @@
       "Desserts"
     ],
     "cuisines": [
+      "Dessert",
       "American"
     ],
     "foods": [
@@ -5131,7 +5167,7 @@
     "lng": -86.511856,
     "address": "34 Harbor Blvd #153, Destin, FL 32541",
     "phone": "(850) 353-2775",
-    "search": "the fudgery destin harbor  harborwalk village | destin american desserts cookies & sweets dessert dessert the fudgery serves sweets and treats in harborwalk village | destin. it is best suited for a quick dessert stop or a snack while exploring the area. the fudgery cookies & sweets dessert american fast casual destin harbor harborwalk village | destin $",
+    "search": "the fudgery destin harbor  harborwalk village | destin dessert american desserts cookies & sweets dessert dessert the fudgery serves sweets and treats in harborwalk village | destin. it is best suited for a quick dessert stop or a snack while exploring the area. the fudgery cookies & sweets dessert american fast casual destin harbor harborwalk village | destin $",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -5415,6 +5451,7 @@
       "Desserts"
     ],
     "cuisines": [
+      "Dessert",
       "American"
     ],
     "foods": [
@@ -5426,7 +5463,7 @@
     "lng": -86.5119347,
     "address": "60 Harbor Blvd Unit I, Destin, FL 32541",
     "phone": "(850) 347-6121",
-    "search": "tiki time destin harbor  harborwalk village | destin american desserts ice cream juice & bowls dessert tiki time is a dessert stop in harborwalk village | destin known for ice cream and sweet treats. a good family-friendly option after the beach or dinner. tiki time ice cream juice & bowls american fast casual destin harbor harborwalk village | destin $",
+    "search": "tiki time destin harbor  harborwalk village | destin dessert american desserts ice cream juice & bowls dessert tiki time is a dessert stop in harborwalk village | destin known for ice cream and sweet treats. a good family-friendly option after the beach or dinner. tiki time ice cream juice & bowls dessert american fast casual destin harbor harborwalk village | destin $",
     "outdoor": true,
     "kids": true,
     "music": false,
@@ -5469,6 +5506,7 @@
       "Desserts"
     ],
     "cuisines": [
+      "Dessert",
       "American"
     ],
     "foods": [
@@ -5480,7 +5518,7 @@
     "lng": -86.324984,
     "address": "115 Cannery Ln, Miramar Beach, FL 32550",
     "phone": "(850) 424-6934",
-    "search": "tony larue's new orleans snoballs sandestin  baytowne wharf | sandestin american desserts snowcones market dessert tony larue's new orleans snoballs is a dessert-focused stop in baytowne wharf | sandestin, offering quick sweets and snacks for visitors and families. google currently lists this business as permanently closed; verify before publishing. tony larue's new orleans snoballs snowcones market american fast casual sandestin baytowne wharf | sandestin $",
+    "search": "tony larue's new orleans snoballs sandestin  baytowne wharf | sandestin dessert american desserts snowcones market dessert tony larue's new orleans snoballs is a dessert-focused stop in baytowne wharf | sandestin, offering quick sweets and snacks for visitors and families. google currently lists this business as permanently closed; verify before publishing. tony larue's new orleans snoballs snowcones market dessert american fast casual sandestin baytowne wharf | sandestin $",
     "outdoor": false,
     "kids": true,
     "music": false,
@@ -5687,6 +5725,7 @@
       "Desserts"
     ],
     "cuisines": [
+      "Dessert",
       "American"
     ],
     "foods": [
@@ -5698,7 +5737,7 @@
     "lng": -86.4249808,
     "address": "4100 Legendary Dr Kiosk #A + F124, Destin, FL 32541",
     "phone": "(347) 459-5854",
-    "search": "wetzel's pretzels destin commons  destin commons american lunch desserts cookies & sweets market dessert wetzel's pretzels serves sweets and treats in destin commons. it is best suited for a quick dessert stop or a snack while exploring the area. wetzel's pretzels cookies & sweets market american fast casual destin commons destin commons $",
+    "search": "wetzel's pretzels destin commons  destin commons dessert american lunch desserts cookies & sweets market dessert wetzel's pretzels serves sweets and treats in destin commons. it is best suited for a quick dessert stop or a snack while exploring the area. wetzel's pretzels cookies & sweets market dessert american fast casual destin commons destin commons $",
     "outdoor": false,
     "kids": true,
     "music": false,
