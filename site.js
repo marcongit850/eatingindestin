@@ -145,6 +145,35 @@ export function stepFeatured(index, delta, count) {
   return ((current + move) % total + total) % total;
 }
 
+/** How often the homepage featured cover advances on its own. */
+export const FEATURED_ROTATE_MS = 8000;
+
+/**
+ * Auto-rotate stays off for reduced motion, a single slide, and while
+ * the pointer, keyboard focus, or a hidden tab is holding the cover.
+ * Manual arrows still step in those cases.
+ */
+export function shouldAutoRotateFeatured({
+  reducedMotion = false,
+  hovering = false,
+  focused = false,
+  hidden = false,
+  count = 0,
+} = {}) {
+  if (reducedMotion || hovering || focused || hidden) return false;
+  return (Number(count) || 0) > 1;
+}
+
+/** Live-region text for a featured step. Null leaves the region untouched. */
+export function featuredStatusForStep(name, index, count, { announce = false } = {}) {
+  if (!announce) return null;
+  const label = String(name || "").trim();
+  if (!label) return "";
+  const total = Number(count) || 0;
+  const position = Math.trunc(Number(index) || 0) + 1;
+  return `${label}, ${position} of ${total}`;
+}
+
 export function describeFilters(filters, areaNames, emptyLabel = "Where to eat") {
   const parts = [];
   if (filters.meal) parts.push(filters.meal);
@@ -404,20 +433,56 @@ function bootFeatured() {
     slots.forEach((slot, position) => {
       slot.hidden = position !== index;
     });
-    if (!announce || !status) return;
+    if (!status) return;
     const heading = slots[index].querySelector("h2");
     const name = heading ? heading.textContent.trim() : "";
-    status.textContent = name ? `${name}, ${index + 1} of ${slots.length}` : "";
+    const message = featuredStatusForStep(name, index, slots.length, { announce });
+    if (message === null) return;
+    status.textContent = message;
   };
 
   show(index, false);
+
+  const motionQuery = typeof window.matchMedia === "function"
+    ? window.matchMedia("(prefers-reduced-motion: reduce)")
+    : null;
+  let hovering = root.matches(":hover");
+  let focused = root.contains(document.activeElement);
+  let timer = 0;
+
+  const reducedMotion = () => Boolean(motionQuery && motionQuery.matches);
+
+  const clearTimer = () => {
+    if (!timer) return;
+    window.clearInterval(timer);
+    timer = 0;
+  };
+
+  const syncTimer = () => {
+    clearTimer();
+    if (!shouldAutoRotateFeatured({
+      reducedMotion: reducedMotion(),
+      hovering,
+      focused,
+      hidden: document.hidden,
+      count: slots.length,
+    })) return;
+    timer = window.setInterval(() => {
+      show(stepFeatured(index, 1, slots.length), false);
+    }, FEATURED_ROTATE_MS);
+  };
+
+  const stepFromUser = (delta) => {
+    show(stepFeatured(index, delta, slots.length), true);
+    syncTimer();
+  };
 
   root.addEventListener("click", (event) => {
     const target = event.target;
     if (!(target instanceof Element)) return;
     const button = target.closest("[data-featured-step]");
     if (!button || !root.contains(button)) return;
-    show(stepFeatured(index, Number(button.getAttribute("data-featured-step")), slots.length), true);
+    stepFromUser(Number(button.getAttribute("data-featured-step")));
   });
 
   root.addEventListener("keydown", (event) => {
@@ -426,9 +491,36 @@ function bootFeatured() {
     const target = event.target;
     if (!(target instanceof Element) || !target.closest(".cover-arrow")) return;
     event.preventDefault();
-    const delta = event.key === "ArrowLeft" ? -1 : 1;
-    show(stepFeatured(index, delta, slots.length), true);
+    stepFromUser(event.key === "ArrowLeft" ? -1 : 1);
   });
+
+  root.addEventListener("mouseenter", () => {
+    hovering = true;
+    syncTimer();
+  });
+  root.addEventListener("mouseleave", () => {
+    hovering = false;
+    syncTimer();
+  });
+  root.addEventListener("focusin", () => {
+    focused = true;
+    syncTimer();
+  });
+  root.addEventListener("focusout", (event) => {
+    const next = event.relatedTarget;
+    if (next instanceof Node && root.contains(next)) return;
+    focused = false;
+    syncTimer();
+  });
+
+  document.addEventListener("visibilitychange", syncTimer);
+  window.addEventListener("pagehide", clearTimer);
+  window.addEventListener("pageshow", syncTimer);
+  if (motionQuery && typeof motionQuery.addEventListener === "function") {
+    motionQuery.addEventListener("change", syncTimer);
+  }
+
+  syncTimer();
 }
 
 function boot() {
