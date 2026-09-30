@@ -14,7 +14,7 @@ import re
 import shutil
 import unicodedata
 from pathlib import Path
-from urllib.parse import unquote
+from urllib.parse import unquote, urlencode
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
@@ -96,6 +96,17 @@ TOWNS = (
 
 def e(value) -> str:
     return html.escape("" if value is None else str(value), quote=True)
+
+
+def claim_href(name: str) -> str:
+    """Contact URL that names the listing for a claim or a correction."""
+    query = urlencode(
+        {
+            "restaurant": name,
+            "subject": f"Claim or correct: {name}",
+        }
+    )
+    return f"/contact/?{query}"
 
 
 def slugify(value: str) -> str:
@@ -1167,15 +1178,21 @@ def build_detail(restaurant: dict, restaurants: list[dict]) -> None:
     price_bit = f' · {e(restaurant["price"])}' if restaurant["price"] else ""
     category_bit = f' · {e(restaurant["category"])}' if restaurant["category"] else ""
     map_block = f'<div class="wrap profile-map">{map_html}</div>' if map_html else ""
+    claim_link = (
+        f'<p class="profile-claim"><a href="{e(claim_href(restaurant["name"]))}">'
+        "Claim or correct this listing</a></p>"
+    )
     if nearby_html:
         more = (
             f'<section class="wrap more"><h2>Also in {e(restaurant["area"])}</h2>'
             f'<div class="map-list">{nearby_html}</div>'
-            f'<p><a class="text-link" href="{e(area_href)}">All of {e(restaurant["area"])}</a></p></section>'
+            f'<p><a class="text-link" href="{e(area_href)}">All of {e(restaurant["area"])}</a></p>'
+            f"{claim_link}</section>"
         )
     else:
         more = (
-            f'<section class="wrap more"><p><a class="text-link" href="{e(area_href)}">{e(restaurant["area"])} in the guide</a></p></section>'
+            f'<section class="wrap more"><p><a class="text-link" href="{e(area_href)}">{e(restaurant["area"])} in the guide</a></p>'
+            f"{claim_link}</section>"
         )
     body = (
         '<article class="profile">'

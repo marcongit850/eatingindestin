@@ -69,6 +69,12 @@ for restaurant in restaurants:
     check(f"<h1>{build.e(restaurant['name'])}</h1>" in page, f"detail h1 missing {restaurant['name']}")
     check('class="profile"' in page and 'class="profile-hero"' in page, f"detail page left the shared profile template {restaurant['slug']}")
     check("maps.googleapis" not in page and "airtable" not in page.lower(), f"detail page calls a paid API {restaurant['slug']}")
+    claim = build.e(build.claim_href(restaurant["name"]))
+    check(
+        f'class="profile-claim"><a href="{claim}">Claim or correct this listing</a>' in page,
+        f"detail page missing claim link {restaurant['slug']}",
+    )
+    check("Claim+or+correct%3A+" in claim, f"claim subject should name the restaurant with a colon {restaurant['slug']}")
 
 check(f"Sitemap: {build.ORIGIN}/sitemap.xml" in robots, "robots missing sitemap")
 check("User-agent: *" in robots and "Allow: /" in robots, "robots should allow crawlers")
@@ -167,6 +173,11 @@ check('src="/listing.js"' in contact, "contact page should load the listing form
 listing_js = (ROOT / "listing.js").read_text(encoding="utf-8")
 check("/api/listing" in listing_js, "listing script should post to the worker")
 check("town" not in listing_js, "listing script should not send a town")
+check(
+    'queryValue(params, "restaurant", 160)' in listing_js and 'queryValue(params, "subject", 4000)' in listing_js,
+    "listing script should read restaurant and subject from the query string",
+)
+check('class="profile-claim"' not in directory, "directory cards should not repeat the claim link")
 check("Marc" not in listing_js and "Thanks. We have your note." in listing_js, "listing script should thank without a personal name")
 check(".listing-form" in styles and ".listing-status" in styles, "listing form should use the site styles")
 check("See the restaurants" in about and "Open the directory" not in about, "about button should invite visitors in")
