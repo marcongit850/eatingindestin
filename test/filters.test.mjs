@@ -5,7 +5,7 @@ import { FEATURED_ROTATE_MS, describeFilters, featuredIndex, featuredStatusForSt
 
 const restaurants = JSON.parse(readFileSync(new URL("../data/restaurants.json", import.meta.url), "utf8"));
 
-const blank = { meal: "", area: "", cuisine: "", q: "", outdoor: "", kids: "", music: "" };
+const blank = { meal: "", area: "", cuisine: "", q: "", outdoor: "", kids: "", music: "", laurens: "" };
 
 test("empty filters keep the full directory", () => {
   assert.equal(restaurants.filter((item) => matches(item, blank)).length, restaurants.length);
@@ -46,6 +46,27 @@ test("amenity filters require a yes flag", () => {
   assert.ok(outdoor.length > 0);
   assert.ok(outdoor.every((item) => item.outdoor));
   assert.ok(outdoor.length < restaurants.length);
+});
+
+test("Lauren's Favorites shows only the tagged restaurants", () => {
+  const favorites = restaurants.filter((item) => matches(item, { ...blank, laurens: "yes" }));
+  assert.deepEqual(
+    favorites.map((item) => item.name).sort(),
+    [
+      "McGuire's Irish Pub",
+      "Ruth's Chris Steak House",
+      "Seagar's Prime Steaks & Seafood",
+      "The Crab Trap Destin",
+      "The Melting Pot",
+    ]
+  );
+  assert.equal(restaurants.filter((item) => item.laurensFavorite).length, favorites.length);
+  assert.ok(favorites.every((item) => item.laurensFavorite === true));
+  const sandestin = restaurants.filter((item) => matches(item, { ...blank, laurens: "yes", area: "sandestin" }));
+  assert.deepEqual(sandestin.map((item) => item.slug), ["seagar-s-prime-steaks-and-seafood-sandestin"]);
+  const fromUrl = filtersFromParams(new URLSearchParams("laurens=yes"));
+  assert.equal(fromUrl.laurens, "yes");
+  assert.equal(describeFilters({ ...blank, laurens: "yes" }, {}), "Lauren's Favorites");
 });
 
 test("every restaurant with coordinates gets its own map pin", () => {
