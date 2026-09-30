@@ -950,7 +950,7 @@ def build_home(restaurants: list[dict], areas: list[dict], hero: str | None) -> 
         '<div class="hero-veil" aria-hidden="true"></div>'
         '<div class="hero-copy"><div class="wrap">'
         '<p class="issue-line">A restaurant guide for the Emerald Coast.</p>'
-        '<p class="eyebrow">Destin Harbor · Miramar Beach</p>'
+        '<p class="eyebrow">Destin · Miramar Beach</p>'
         "<h1>Where to eat<br> in Destin.</h1>"
         '<p class="lede">Find breakfast, lunch, and dinner in Destin and Miramar Beach.</p>'
         '<form class="search-form" action="/restaurants/" method="get">'
