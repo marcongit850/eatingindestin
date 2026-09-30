@@ -1,6 +1,7 @@
+# Public site: https://www.eatingindestin.com/
 # Search and AI crawlers may read this site.
-# https://eatingindestin.352marc.workers.dev/llms.txt
-# https://eatingindestin.352marc.workers.dev/llms-full.txt
+# https://www.eatingindestin.com/llms.txt
+# https://www.eatingindestin.com/llms-full.txt
 
 User-agent: *
 Allow: /
@@ -44,4 +45,4 @@ Allow: /
 User-agent: FacebookBot
 Allow: /
 
-Sitemap: https://eatingindestin.352marc.workers.dev/sitemap.xml
+Sitemap: https://www.eatingindestin.com/sitemap.xml

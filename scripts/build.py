@@ -699,25 +699,253 @@ def photo_alt(restaurant: dict) -> str:
     return f"{restaurant['name']} in {restaurant['area']}, Destin"
 
 
-def fit_meta(lead: str, identity: str) -> str:
-    """Build a unique description in the same length range as the sibling guide."""
-    lead = clean_text(lead).rstrip(".")
-    identity = clean_text(identity)
-    text = f"{lead}. {identity}" if lead else identity
-    if len(text) > 165:
-        room = 165 - len(identity) - 2
-        cut = lead[:room].rsplit(" ", 1)[0].rstrip(".,;:") if room > 24 else ""
-        text = f"{cut}. {identity}" if cut else identity
-    if len(text) < 110:
-        text = f"{text} Hours, address, and map are on the profile."
-    if len(text) > 165:
-        text = text[:165].rsplit(" ", 1)[0].rstrip(".,;:")
-    return text
+def oxford(items: list[str]) -> str:
+    items = [clean_text(item) for item in items if clean_text(item)]
+    if not items:
+        return ""
+    if len(items) == 1:
+        return items[0]
+    if len(items) == 2:
+        return f"{items[0]} and {items[1]}"
+    return ", ".join(items[:-1]) + ", and " + items[-1]
+
+
+def sentence(text: str) -> str:
+    text = clean_text(text).rstrip(".")
+    return f"{text}." if text else ""
+
+
+def within_meta(text: str) -> str | None:
+    """Search snippets stay in the range the rest of the guide already uses."""
+    text = clean_text(text)
+    if 110 <= len(text) <= 165 and "Destin" in text:
+        return text
+    return None
+
+
+def place_phrase(restaurant: dict) -> str:
+    area = restaurant["area"]
+    city = restaurant["city"] or "Destin"
+    if area.lower() == city.lower():
+        loc = f"{city}, Florida"
+    else:
+        loc = f"{area} in {city}, Florida"
+    if "Destin" not in loc and "Destin" not in area:
+        loc += ", on the Destin coast"
+    return loc
 
 
 def listing_description(restaurant: dict) -> str:
-    identity = f"{restaurant['name']} in {restaurant['area']}, Destin, Florida."
-    return fit_meta(restaurant["notes"], identity)
+    """Unique snippet from the listing's own notes, cuisine, area, and city."""
+    name = restaurant["name"]
+    where = place_phrase(restaurant)
+    cuisine = oxford(restaurant["cuisines"][:3])
+    meals = oxford([meal.lower() for meal in restaurant["meals"][:3]])
+    note = sentence(restaurant["notes"])
+    coast = "On the Destin coast in Florida."
+    if cuisine and meals:
+        primary = f"{name} in {where} serves {cuisine} for {meals}."
+    elif cuisine:
+        primary = f"{name} in {where} serves {cuisine}."
+    else:
+        primary = f"{name} is a restaurant in {where}."
+    options = []
+    if note and "Destin" in note:
+        options.append(note)
+        if len(note) < 110:
+            options.append(f"{note} Hours, the address, and a map are on this page.")
+    if note:
+        options.append(f"{note} {coast}")
+    options.append(primary)
+    foods = oxford(restaurant["foods"][:2])
+    if foods and foods.lower() not in primary.lower():
+        options.append(primary[:-1] + f", including {foods}.")
+    street = restaurant["street"]
+    if street:
+        options.append(primary[:-1] + f" Address: {street}.")
+    options.append(primary[:-1] + " Hours, the address, and a map are on this page.")
+    for option in options:
+        fitted = within_meta(option)
+        if fitted:
+            return fitted
+    raise SystemExit(f"meta description out of range for {restaurant['slug']}")
+
+
+def restaurant_title(restaurant: dict) -> str:
+    """Lead with the restaurant name, then the area, without dropping either when it fits."""
+    name = restaurant["name"]
+    area = restaurant["area"]
+    city = restaurant["city"] or "Destin"
+    place = area if area.lower() == city.lower() else f"{area}, {city}"
+    cuisine = restaurant["cuisines"][0] if restaurant["cuisines"] else ""
+    candidates = [
+        f"{name} in {place} | Eating in Destin",
+        f"{name} | {place} | Eating in Destin",
+        f"{name} in {place}",
+        f"{name} | {cuisine}, {city}" if cuisine else "",
+        f"{name} | Eating in Destin",
+        f"{name} | {place}",
+        f"{name} in {city}",
+    ]
+    for candidate in candidates:
+        title = clean_text(candidate)
+        if 20 <= len(title) <= 70:
+            return title
+    raise SystemExit(f"title out of range for {restaurant['slug']}")
+
+
+def area_description(area: dict) -> str:
+    name = area["fullName"]
+    blurb = sentence(area["description"])
+    if "Destin" in name:
+        lead = f"Restaurants in {name}, Florida."
+    else:
+        lead = f"{name} restaurants on the Destin coast in Florida."
+    count = area["count"]
+    word = restaurant_count_word(count)
+    options = [
+        f"{lead} {blurb}",
+        f"{lead} {count} {word}, with hours and addresses.",
+        f"Find restaurants and food in {name}, Florida, on the Destin coast. {blurb}",
+        lead,
+    ]
+    for option in options:
+        fitted = within_meta(option)
+        if fitted:
+            return fitted
+    raise SystemExit(f"area meta out of range for {area['slug']}")
+
+
+DAY_CODES = {
+    "mon": "Mo",
+    "tue": "Tu",
+    "wed": "We",
+    "thu": "Th",
+    "fri": "Fr",
+    "sat": "Sa",
+    "sun": "Su",
+}
+
+
+def clock_24(token: str) -> str | None:
+    match = re.fullmatch(r"(\d{1,2}):(\d{2})\s*(AM|PM)", clean_text(token), re.I)
+    if not match:
+        return None
+    hour = int(match.group(1))
+    minute = int(match.group(2))
+    meridiem = match.group(3).upper()
+    if hour < 1 or hour > 12 or minute > 59:
+        return None
+    if meridiem == "AM":
+        hour = 0 if hour == 12 else hour
+    elif hour != 12:
+        hour += 12
+    return f"{hour:02d}:{minute:02d}"
+
+
+def opening_hours(raw: str) -> list[str]:
+    """Schema.org openingHours from the listing's own hours string. Skip anything we cannot parse."""
+    text = clean_text(raw).replace("–", "-").replace("—", "-")
+    if not text:
+        return []
+    slots = []
+    for part in text.split(";"):
+        part = part.strip()
+        if not part:
+            continue
+        match = re.fullmatch(r"(Mon|Tue|Wed|Thu|Fri|Sat|Sun):\s*(.+)", part)
+        if not match:
+            return []
+        if match.group(2).strip().lower() == "closed":
+            continue
+        times = re.fullmatch(
+            r"(\d{1,2}:\d{2}\s*[AP]M)\s*-\s*(\d{1,2}:\d{2}\s*[AP]M)",
+            match.group(2).strip(),
+            re.I,
+        )
+        if not times:
+            return []
+        start = clock_24(times.group(1))
+        end = clock_24(times.group(2))
+        if not start or not end:
+            return []
+        slots.append(f"{DAY_CODES[match.group(1).lower()]} {start}-{end}")
+    return slots
+
+
+def postal_address(restaurant: dict) -> dict:
+    address = {
+        "@type": "PostalAddress",
+        "streetAddress": restaurant["street"] or restaurant["address"],
+        "addressLocality": restaurant["city"] or restaurant["area"],
+        "addressRegion": restaurant["region"] or "FL",
+        "postalCode": restaurant["postal"],
+        "addressCountry": "US",
+    }
+    return {key: value for key, value in address.items() if value}
+
+
+def restaurant_schema(restaurant: dict) -> dict:
+    page_url = f"{ORIGIN}/restaurants/{restaurant['slug']}/"
+    schema = {
+        "@type": ["Restaurant", "LocalBusiness"],
+        "@id": page_url + "#restaurant",
+        "name": restaurant["name"],
+        "url": page_url,
+        "description": restaurant["notes"] or listing_description(restaurant),
+        "servesCuisine": restaurant["cuisines"],
+        "address": postal_address(restaurant),
+        "containedInPlace": {
+            "@type": "Place",
+            "name": restaurant["area"],
+            "url": f"{ORIGIN}/areas/{restaurant['areaSlug']}/",
+        },
+        "isPartOf": {"@id": ORIGIN + "/#website"},
+    }
+    if restaurant["price"]:
+        schema["priceRange"] = restaurant["price"]
+    if restaurant["phone"]:
+        schema["telephone"] = restaurant["phone"]
+    if restaurant["lat"] is not None and restaurant["lng"] is not None:
+        schema["geo"] = {
+            "@type": "GeoCoordinates",
+            "latitude": restaurant["lat"],
+            "longitude": restaurant["lng"],
+        }
+    if restaurant["heroImage"]:
+        image = restaurant["heroImage"]
+        schema["image"] = image if image.startswith(("http://", "https://")) else ORIGIN + image
+    hours = opening_hours(restaurant["hours"])
+    if hours:
+        schema["openingHours"] = hours
+    same_as = [url for url in (restaurant["website"], restaurant["instagram"], restaurant["facebook"]) if url]
+    if same_as:
+        schema["sameAs"] = same_as
+    return schema
+
+
+USED_TITLES: set[str] = set()
+USED_DESCRIPTIONS: set[str] = set()
+
+
+def claim_title(title: str) -> str:
+    title = clean_text(title)
+    if not (20 <= len(title) <= 70):
+        raise SystemExit(f"title length {len(title)}: {title}")
+    if title in USED_TITLES:
+        raise SystemExit(f"duplicate title: {title}")
+    USED_TITLES.add(title)
+    return title
+
+
+def claim_description(description: str) -> str:
+    description = clean_text(description)
+    if not (110 <= len(description) <= 165) or "Destin" not in description:
+        raise SystemExit(f"description out of range ({len(description)}): {description}")
+    if description in USED_DESCRIPTIONS:
+        raise SystemExit(f"duplicate description: {description}")
+    USED_DESCRIPTIONS.add(description)
+    return description
 
 
 def local_image_info(path: Path) -> tuple[int, int, str] | None:
@@ -806,6 +1034,32 @@ def breadcrumbs(crumbs: list[tuple[str, str]]) -> dict:
     }
 
 
+def crumb_nav(crumbs: list[tuple[str, str]]) -> str:
+    parts = []
+    last = len(crumbs) - 1
+    for index, (name, path) in enumerate(crumbs):
+        if index:
+            parts.append(' <span aria-hidden="true">/</span> ')
+        if index == last:
+            parts.append(f'<span aria-current="page">{e(name)}</span>')
+        else:
+            parts.append(f'<a href="{e(path)}">{e(name)}</a>')
+    return f'<nav class="crumbs" aria-label="Breadcrumb">{"".join(parts)}</nav>'
+
+
+def area_link_nav(areas: list[dict], current: str = "", label: str = "Areas") -> str:
+    links = []
+    for area in areas:
+        if area["slug"] == current:
+            continue
+        links.append(
+            f'<a class="text-link" href="/areas/{e(area["slug"])}/">{e(area["fullName"])} restaurants</a>'
+        )
+    if not links:
+        return ""
+    return f'<nav class="section-links" aria-label="{e(label)}">{"".join(links)}</nav>'
+
+
 def graph(*nodes: dict) -> dict:
     return {"@context": "https://schema.org", "@graph": list(nodes)}
 
@@ -824,6 +1078,8 @@ def layout(
     extra_scripts: str = "",
 ) -> str:
     canonical = ORIGIN + path
+    title = claim_title(title)
+    description = claim_description(description)
     scripts = '<script src="/header.js"></script>\n<script src="/footer.js"></script>\n'
     if include_js:
         scripts += '<script type="module" src="/site.js"></script>'
@@ -1022,7 +1278,7 @@ def build_home(restaurants: list[dict], areas: list[dict], hero: str | None) -> 
             photo = placeholder("gulf", area["name"], area["name"])
         word = restaurant_count_word(area["count"], label=True)
         towns.append(
-            f'<a class="town" href="/restaurants/?area={e(area["slug"])}">'
+            f'<a class="town" href="/areas/{e(area["slug"])}/">'
             f'<span class="town-frame">{photo}</span>'
             f'<span class="town-copy"><strong>{e(area["name"])}</strong><small>{area["count"]} {word}</small></span>'
             "</a>"
@@ -1059,17 +1315,24 @@ def build_home(restaurants: list[dict], areas: list[dict], hero: str | None) -> 
         f"{cover}"
         '<section class="section band"><div class="wrap">'
         '<div class="section-head"><div><p class="kicker">Neighborhoods</p><h2>The areas</h2></div>'
-        "<p>Select an area to explore restaurants in Destin and Miramar Beach.</p></div>"
+        "<p>Each area has its own page of restaurants in Destin and Miramar Beach.</p></div>"
         f'<div class="town-grid">{"".join(towns)}</div>'
-        '<p class="section-links"><a class="text-link" href="/areas/">Area notes</a><a class="text-link" href="/map/">The map</a></p>'
+        '<p class="section-links"><a class="text-link" href="/areas/">Restaurant areas</a><a class="text-link" href="/map/">The map</a></p>'
         "</div></section>"
         '<section class="section"><div class="wrap essay-grid">'
         '<div><p class="kicker">The coast</p><h2>A guide for Destin and Miramar Beach.</h2></div>'
         f'<div class="prose"><p>{e(ABOUT)}</p>'
+        "<p>Search for a restaurant by name, or browse food in "
+        '<a href="/areas/miramar-beach/">Miramar Beach</a>, '
+        '<a href="/areas/sandestin/">Sandestin</a>, '
+        '<a href="/areas/destin-harbor/">Destin Harbor</a>, and the rest of Destin.</p>'
         '<p><a class="button" href="/restaurants/">Browse the directory</a></p></div>'
         "</div></section>"
     )
-    description = "Find restaurants in Destin and Miramar Beach, Florida, by meal, area, or cuisine, with a directory and a map of the coast."
+    description = (
+        "Find restaurants and food in Destin and Miramar Beach, Florida, by meal, area, or cuisine, "
+        "with a directory and a map of the coast."
+    )
     extra = json_ld(
         graph(
             {
@@ -1095,7 +1358,7 @@ def build_home(restaurants: list[dict], areas: list[dict], hero: str | None) -> 
             },
             {
                 "@type": "ItemList",
-                "name": "Areas in Destin",
+                "name": "Restaurant areas in Destin",
                 "numberOfItems": len(areas),
                 "itemListElement": [
                     {
@@ -1112,7 +1375,7 @@ def build_home(restaurants: list[dict], areas: list[dict], hero: str | None) -> 
     write(
         ROOT / "index.html",
         layout(
-            "Eating in Destin | Restaurant guide for Destin and Miramar Beach",
+            "Eating in Destin | Restaurants and food in Destin, FL",
             description,
             "/",
             "home",
@@ -1132,9 +1395,12 @@ def build_directory(restaurants: list[dict], areas: list[dict], cuisines: list[s
     )
     cards = "".join(card(restaurant) for restaurant in restaurants)
     body = (
-        '<div class="wrap page-intro"><p class="kicker">Directory</p>'
-        '<h1 id="listing-title">Where to eat</h1>'
-        "<p class=\"lede\">Filter by area, meal, or a few words.</p>"
+        '<div class="wrap page-intro">'
+        f'{crumb_nav([("Home", "/"), ("Restaurants", "/restaurants/")])}'
+        '<p class="kicker">Directory</p>'
+        '<h1 id="listing-title">Restaurants in Destin</h1>'
+        '<p class="lede">Food in Destin and Miramar Beach, Florida. Filter by area, meal, or a few words.</p>'
+        f'{area_link_nav(areas)}'
         f"{filter_form(areas, cuisines)}"
         f'<p id="result-count" class="count" aria-live="polite">{len(restaurants)} restaurants</p>'
         f'<p id="empty" class="empty" hidden>No restaurants match. <a href="/restaurants/">Clear the filters</a>.</p>'
@@ -1148,7 +1414,10 @@ def build_directory(restaurants: list[dict], areas: list[dict], cuisines: list[s
                 "name": "Restaurants in Destin",
                 "url": ORIGIN + "/restaurants/",
                 "isPartOf": {"@id": ORIGIN + "/#website"},
-                "description": f"Search restaurants in Destin and Miramar Beach, Florida, by area, meal, and cuisine. All {len(restaurants)} listings are here.",
+                "description": (
+                    f"Restaurants in Destin and Miramar Beach, Florida. "
+                    f"Search all {len(restaurants)} listings for food by area, meal, and cuisine, with hours and addresses."
+                ),
             },
             {
                 "@type": "ItemList",
@@ -1170,8 +1439,11 @@ def build_directory(restaurants: list[dict], areas: list[dict], cuisines: list[s
     write(
         ROOT / "restaurants" / "index.html",
         layout(
-            "Restaurants in Destin | Eating in Destin",
-            f"Search restaurants in Destin and Miramar Beach, Florida, by area, meal, and cuisine. All {len(restaurants)} listings are here.",
+            "Restaurants in Destin, FL | Eating in Destin",
+            (
+                f"Restaurants in Destin and Miramar Beach, Florida. "
+                f"Search all {len(restaurants)} listings for food by area, meal, and cuisine, with hours and addresses."
+            ),
             "/restaurants/",
             "restaurants",
             body,
@@ -1262,6 +1534,7 @@ def build_detail(restaurant: dict, restaurants: list[dict]) -> None:
             '<script src="/vendor/leaflet/leaflet.js"></script>'
         )
     area_href = f'/restaurants/?area={restaurant["areaSlug"]}'
+    area_page = f'/areas/{restaurant["areaSlug"]}/'
     area_line = restaurant["label"] or restaurant["area"]
     price_bit = f' · {e(restaurant["price"])}' if restaurant["price"] else ""
     category_bit = f' · {e(restaurant["category"])}' if restaurant["category"] else ""
@@ -1274,20 +1547,26 @@ def build_detail(restaurant: dict, restaurants: list[dict]) -> None:
         more = (
             f'<section class="wrap more"><h2>Also in {e(restaurant["area"])}</h2>'
             f'<div class="map-list">{nearby_html}</div>'
-            f'<p><a class="text-link" href="{e(area_href)}">All of {e(restaurant["area"])}</a></p>'
+            f'<p><a class="text-link" href="{e(area_page)}">Restaurants in {e(restaurant["area"])}</a></p>'
             f"{claim_link}</section>"
         )
     else:
         more = (
-            f'<section class="wrap more"><p><a class="text-link" href="{e(area_href)}">{e(restaurant["area"])} in the guide</a></p>'
+            f'<section class="wrap more"><p><a class="text-link" href="{e(area_page)}">Restaurants in {e(restaurant["area"])}</a></p>'
             f"{claim_link}</section>"
         )
+    profile_crumbs = [
+        ("Home", "/"),
+        ("Restaurants", "/restaurants/"),
+        (restaurant["area"], area_page),
+        (restaurant["name"], f"/restaurants/{restaurant['slug']}/"),
+    ]
     body = (
         '<article class="profile">'
         f'<div class="profile-hero">{media_block(restaurant["heroImage"], photo_alt(restaurant), restaurant["tone"], shot_label(restaurant), eager=True, name=restaurant["name"])}</div>'
         f"{filmstrip(restaurant)}"
         '<div class="wrap profile-head">'
-        f'<p class="crumbs"><a href="/">Home</a> <span aria-hidden="true">/</span> <a href="/restaurants/">Restaurants</a> <span aria-hidden="true">/</span> {e(restaurant["name"])}</p>'
+        f"{crumb_nav(profile_crumbs)}"
         f'<p class="eyebrow"><a href="{e(area_href)}">{e(area_line)}</a>{price_bit}{category_bit}</p>'
         f"<h1>{e(restaurant['name'])}</h1>"
         f'<ul class="chips">{"".join(chips)}</ul>'
@@ -1300,51 +1579,8 @@ def build_detail(restaurant: dict, restaurants: list[dict]) -> None:
         "</article>"
     )
     description = listing_description(restaurant)
-    page_url = f"{ORIGIN}/restaurants/{restaurant['slug']}/"
-    same_as = [url for url in (restaurant["website"], restaurant["instagram"], restaurant["facebook"]) if url]
-    schema = {
-        "@type": "Restaurant",
-        "@id": page_url + "#restaurant",
-        "name": restaurant["name"],
-        "url": page_url,
-        "description": restaurant["notes"] or description,
-        "servesCuisine": restaurant["cuisines"],
-        "address": {
-            "@type": "PostalAddress",
-            "streetAddress": restaurant["street"] or restaurant["address"],
-            "addressLocality": restaurant["city"] or restaurant["area"],
-            "addressRegion": restaurant["region"] or "FL",
-            "postalCode": restaurant["postal"],
-            "addressCountry": "US",
-        },
-        "isPartOf": {"@id": ORIGIN + "/#website"},
-    }
-    if restaurant["price"]:
-        schema["priceRange"] = restaurant["price"]
-    if restaurant["phone"]:
-        schema["telephone"] = restaurant["phone"]
-    if restaurant["lat"] is not None:
-        schema["geo"] = {"@type": "GeoCoordinates", "latitude": restaurant["lat"], "longitude": restaurant["lng"]}
-    if restaurant["heroImage"]:
-        image = restaurant["heroImage"]
-        schema["image"] = image if image.startswith(("http://", "https://")) else ORIGIN + image
-    if same_as:
-        schema["sameAs"] = same_as
-    extra = json_ld(
-        graph(
-            schema,
-            breadcrumbs(
-                [
-                    ("Home", "/"),
-                    ("Restaurants", "/restaurants/"),
-                    (restaurant["name"], f"/restaurants/{restaurant['slug']}/"),
-                ]
-            ),
-        )
-    )
-    title = f'{restaurant["name"]} · {restaurant["area"]} | Eating in Destin'
-    if len(title) > 70:
-        title = f'{restaurant["name"]} | Eating in Destin'
+    extra = json_ld(graph(restaurant_schema(restaurant), breadcrumbs(profile_crumbs)))
+    title = restaurant_title(restaurant)
     write(
         ROOT / "restaurants" / restaurant["slug"] / "index.html",
         layout(
@@ -1362,9 +1598,11 @@ def build_detail(restaurant: dict, restaurants: list[dict]) -> None:
 
 def build_map(areas: list[dict], cuisines: list[str]) -> None:
     body = (
-        '<div class="wrap page-intro"><p class="kicker">The map</p>'
+        '<div class="wrap page-intro">'
+        f'{crumb_nav([("Home", "/"), ("Map", "/map/")])}'
+        '<p class="kicker">The map</p>'
         '<h1 id="listing-title">Around Destin</h1>'
-        "<p class=\"lede\">Explore restaurants on the map using the same filters as the directory. Tap a pin to see the restaurant name, street address, and full profile.</p>"
+        "<p class=\"lede\">Explore restaurants and food on the map of Destin and Miramar Beach. Tap a pin to see the restaurant name, street address, and full profile.</p>"
         + filter_form(areas, cuisines).replace('action="/restaurants/"', 'action="/map/"').replace('href="/restaurants/"', 'href="/map/"')
         + '<p id="result-count" class="count">Loading the map…</p>'
         '<p id="map-note" class="empty" hidden></p>'
@@ -1382,7 +1620,7 @@ def build_map(areas: list[dict], cuisines: list[str]) -> None:
                     "name": "Restaurant map of Destin",
                     "url": ORIGIN + "/map/",
                     "isPartOf": {"@id": ORIGIN + "/#website"},
-                    "description": "Map of restaurants in Destin and Miramar Beach, Florida.",
+                    "description": "Map of restaurants and food in Destin and Miramar Beach, Florida.",
                 },
                 breadcrumbs([("Home", "/"), ("Map", "/map/")]),
             )
@@ -1392,7 +1630,7 @@ def build_map(areas: list[dict], cuisines: list[str]) -> None:
         ROOT / "map" / "index.html",
         layout(
             "Restaurant map of Destin | Eating in Destin",
-            "Map of restaurants in Destin and Miramar Beach, Florida, using each listing’s address and coordinates on OpenStreetMap.",
+            "Map of restaurants and food in Destin and Miramar Beach, Florida, using each listing’s address on OpenStreetMap.",
             "/map/",
             "map",
             body,
@@ -1415,15 +1653,22 @@ def build_areas(areas: list[dict], restaurants: list[dict]) -> None:
             f'<span class="town-copy"><strong>{e(area["fullName"])}</strong><small>{area["count"]} {word}</small></span></a>'
         )
     body = (
-        '<div class="wrap page-intro"><p class="kicker">Neighborhoods</p><h1>Areas in Destin</h1>'
-        '<p class="lede">Explore the neighborhoods in the guide, including Miramar Beach, Sandestin, Destin Harbor, and Crystal Beach.</p>'
+        '<div class="wrap page-intro">'
+        f'{crumb_nav([("Home", "/"), ("Areas", "/areas/")])}'
+        '<p class="kicker">Neighborhoods</p><h1>Restaurant areas in Destin</h1>'
+        "<p class=\"lede\">Find restaurants in Destin, Florida, by area. "
+        "Explore the neighborhoods in the guide, including Miramar Beach, Sandestin, Destin Harbor, and Crystal Beach.</p>"
         f'<div class="town-grid">{"".join(cards)}</div></div>'
+    )
+    areas_description = (
+        "Restaurant areas in Destin and Miramar Beach, Florida, including Miramar Beach, Sandestin, "
+        "Destin Harbor, Destin Commons, and Crystal Beach."
     )
     write(
         ROOT / "areas" / "index.html",
         layout(
-            "Areas in Destin | Eating in Destin",
-            "Restaurant areas in Destin and Miramar Beach, Florida, including Miramar Beach, the Harbor, and Crystal Beach.",
+            "Restaurant areas in Destin, FL | Eating in Destin",
+            areas_description,
             "/areas/",
             "areas",
             body,
@@ -1431,13 +1676,14 @@ def build_areas(areas: list[dict], restaurants: list[dict]) -> None:
                 graph(
                     {
                         "@type": "CollectionPage",
-                        "name": "Areas in Destin",
+                        "name": "Restaurant areas in Destin",
                         "url": ORIGIN + "/areas/",
+                        "description": areas_description,
                         "isPartOf": {"@id": ORIGIN + "/#website"},
                     },
                     {
                         "@type": "ItemList",
-                        "name": "Areas in Destin",
+                        "name": "Restaurant areas in Destin",
                         "numberOfItems": len(areas),
                         "itemListElement": [
                             {
@@ -1459,26 +1705,35 @@ def build_areas(areas: list[dict], restaurants: list[dict]) -> None:
         photo = ""
         if area["image"]:
             photo = f'<img src="{e(area["image"])}" alt="{e(area["fullName"])}" loading="eager">'
+        name = area["fullName"]
+        if "Destin" in name:
+            food_line = f"Find restaurants and food in {name}, Florida."
+        else:
+            food_line = f"Find restaurants and food in {name}, on the Destin coast in Florida."
+        lede = f"{sentence(area['description'])} {food_line}"
+        area_crumbs = [
+            ("Home", "/"),
+            ("Areas", "/areas/"),
+            (name, f"/areas/{area['slug']}/"),
+        ]
         body = (
             '<article class="profile">'
             f'<div class="profile-hero">{photo or placeholder("gulf", area["name"], area["name"])}</div>'
             '<div class="wrap page-intro">'
-            f'<p class="crumbs"><a href="/areas/">Areas</a> <span aria-hidden="true">/</span> {e(area["fullName"])}</p>'
-            f"<h1>{e(area['fullName'])}</h1>"
-            f'<p class="lede">{e(area["description"])}</p>'
+            f"{crumb_nav(area_crumbs)}"
+            f"<h1>Restaurants in {e(name)}</h1>"
+            f'<p class="lede">{e(lede)}</p>'
             f'<p class="action-row"><a class="button" href="/restaurants/?area={e(area["slug"])}">Show {area["count"]} {restaurant_count_word(area["count"], label=True)}</a> '
             f'<a class="button secondary" href="/map/?area={e(area["slug"])}">Map this area</a></p>'
             f'<div class="card-grid">{"".join(card(restaurant, "h2") for restaurant in group)}</div>'
+            f'{area_link_nav(areas, current=area["slug"], label="More areas")}'
             "</div></article>"
         )
-        description = fit_meta(
-            area["description"],
-            f"Restaurants in {area['fullName']}, Destin, Florida.",
-        )
+        description = area_description(area)
         write(
             ROOT / "areas" / area["slug"] / "index.html",
             layout(
-                f'{area["fullName"]} restaurants | Eating in Destin',
+                f"Restaurants in {name}, FL | Eating in Destin",
                 description,
                 f'/areas/{area["slug"]}/',
                 "areas",
@@ -1487,7 +1742,7 @@ def build_areas(areas: list[dict], restaurants: list[dict]) -> None:
                     graph(
                         {
                             "@type": "CollectionPage",
-                            "name": f'{area["fullName"]} restaurants',
+                            "name": f"Restaurants in {name}",
                             "url": f'{ORIGIN}/areas/{area["slug"]}/',
                             "description": description,
                             "isPartOf": {"@id": ORIGIN + "/#website"},
@@ -1506,13 +1761,7 @@ def build_areas(areas: list[dict], restaurants: list[dict]) -> None:
                                 for index, restaurant in enumerate(group, start=1)
                             ],
                         },
-                        breadcrumbs(
-                            [
-                                ("Home", "/"),
-                                ("Areas", "/areas/"),
-                                (area["fullName"], f"/areas/{area['slug']}/"),
-                            ]
-                        ),
+                        breadcrumbs(area_crumbs),
                     )
                 ),
                 image=area["image"],
@@ -1534,7 +1783,9 @@ def print_cover(cover: dict) -> str:
 def build_about() -> None:
     covers = "".join(print_cover(cover) for cover in PRINT_COVERS)
     body = (
-        '<div class="wrap page-intro"><div class="prose"><p class="kicker">About</p>'
+        '<div class="wrap page-intro"><div class="prose">'
+        f'{crumb_nav([("Home", "/"), ("About", "/about/")])}'
+        '<p class="kicker">About</p>'
         "<h1>The Destin restaurant guide</h1>"
         f"<p>{e(ABOUT_LEAD)}</p>"
         f"<p>{e(ABOUT_TOWNS)}</p>"
@@ -1575,7 +1826,9 @@ def build_about() -> None:
 def build_contact() -> None:
     body = (
         '<div class="wrap page-intro">'
-        '<div class="prose"><p class="kicker">Contact</p>'
+        '<div class="prose">'
+        f'{crumb_nav([("Home", "/"), ("Contact", "/contact/")])}'
+        '<p class="kicker">Contact</p>'
         "<h1>Corrections and new listings</h1>"
         "<p>Restaurant hours, phone numbers, websites, and other details are listed on each restaurant page. "
         "If something needs to be updated, a restaurant has closed, or we’re missing a place you think should be included, let us know.</p>"
@@ -1655,17 +1908,26 @@ def build_404() -> None:
     )
 
 
+def newest_date(dates: list[str]) -> str:
+    found = [date for date in dates if date]
+    return max(found) if found else ""
+
+
 def build_sitemap(restaurants: list[dict], areas: list[dict]) -> None:
+    site_date = newest_date([restaurant["updated"] for restaurant in restaurants])
     urls = [
-        ("/", ""),
-        ("/restaurants/", ""),
-        ("/map/", ""),
-        ("/areas/", ""),
-        ("/about/", ""),
-        ("/contact/", ""),
+        ("/", site_date),
+        ("/restaurants/", site_date),
+        ("/map/", site_date),
+        ("/areas/", site_date),
+        ("/about/", site_date),
+        ("/contact/", site_date),
     ]
     for area in areas:
-        urls.append((f"/areas/{area['slug']}/", ""))
+        area_date = newest_date(
+            restaurant["updated"] for restaurant in restaurants if restaurant["areaSlug"] == area["slug"]
+        )
+        urls.append((f"/areas/{area['slug']}/", area_date or site_date))
     for restaurant in restaurants:
         urls.append((f"/restaurants/{restaurant['slug']}/", restaurant["updated"]))
     lines = [
@@ -1700,6 +1962,7 @@ def build_robots() -> None:
         "FacebookBot",
     ]
     blocks = [
+        f"# Public site: {ORIGIN}/",
         "# Search and AI crawlers may read this site.",
         f"# {ORIGIN}/llms.txt",
         f"# {ORIGIN}/llms-full.txt",
@@ -1719,6 +1982,8 @@ def build_llms(restaurants: list[dict], areas: list[dict]) -> None:
         ABOUT,
         "",
         TOWNS,
+        "",
+        "Search by restaurant name, or look for restaurants and food in Destin, Miramar Beach, Sandestin, Destin Harbor, and nearby areas.",
         "",
         f"- [Home]({ORIGIN}/)",
         f"- [Restaurants]({ORIGIN}/restaurants/)",
@@ -1740,8 +2005,14 @@ def build_llms(restaurants: list[dict], areas: list[dict]) -> None:
         ]
     )
     for restaurant in restaurants:
+        cuisine = ", ".join(restaurant["cuisines"][:3]) or "Restaurant"
+        city = restaurant["city"] or "Destin"
+        area = restaurant["area"]
+        place = city if area.lower() == city.lower() else f"{area}, {city}"
+        if "Destin" not in place:
+            place = f"{place}, near Destin"
         lines.append(
-            f"- [{restaurant['name']}]({ORIGIN}/restaurants/{restaurant['slug']}/): {restaurant['area']} in Destin and Miramar Beach."
+            f"- [{restaurant['name']}]({ORIGIN}/restaurants/{restaurant['slug']}/): {cuisine} in {place}, Florida."
         )
     lines.extend(
         [
