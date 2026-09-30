@@ -15,7 +15,18 @@ const sheetsEnv = {
 const bothEnv = { ...resendEnv, ...sheetsEnv };
 
 function okResponse() {
-  return Promise.resolve(new Response("{}", { status: 200 }));
+  return Promise.resolve(new Response(JSON.stringify({ ok: true }), {
+    status: 200,
+    headers: { "content-type": "application/json" },
+  }));
+}
+
+function sheetResponse(body, status = 200, contentType = "application/json") {
+  const text = typeof body === "string" ? body : JSON.stringify(body);
+  return Promise.resolve(new Response(text, {
+    status,
+    headers: { "content-type": contentType },
+  }));
 }
 
 test("parseSubscribe rejects a bad email and an unknown audience", () => {
@@ -214,6 +225,37 @@ test("POST JSON stays successful when Sheets fails after Resend succeeds", async
   });
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { ok: true, delivered: true, recorded: false });
+});
+
+test("an Apps Script HTML 200 is not recorded", async () => {
+  const result = await deliverSubscribe(signup, bothEnv, (url) => {
+    if (url === "https://api.resend.com/emails") return okResponse();
+    return sheetResponse("Script function not found: doPost", 200, "text/html; charset=utf-8");
+  });
+  assert.deepEqual(result, { ok: true, delivered: true, recorded: false });
+});
+
+test("a Sheets JSON body with ok false is not recorded", async () => {
+  const result = await deliverSubscribe(signup, bothEnv, (url) => {
+    if (url === "https://api.resend.com/emails") return okResponse();
+    return sheetResponse({ ok: false });
+  });
+  assert.deepEqual(result, { ok: true, delivered: true, recorded: false });
+});
+
+test("a Sheets JSON body without ok true is not recorded", async () => {
+  const result = await deliverSubscribe(signup, sheetsEnv, () => sheetResponse({}));
+  assert.deepEqual(result, { ok: true, delivered: false, recorded: false });
+});
+
+test("a non-JSON Sheets body is not recorded", async () => {
+  const result = await deliverSubscribe(signup, sheetsEnv, () => sheetResponse("recorded", 200, "text/plain"));
+  assert.deepEqual(result, { ok: true, delivered: false, recorded: false });
+});
+
+test("Sheets JSON ok true is recorded without changing a Resend miss", async () => {
+  const result = await deliverSubscribe(signup, sheetsEnv, () => sheetResponse({ ok: true, row: 4 }));
+  assert.deepEqual(result, { ok: true, delivered: false, recorded: true });
 });
 
 test("a form post still returns HTML when Sheets is configured", async () => {
