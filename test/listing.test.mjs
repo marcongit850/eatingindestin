@@ -10,17 +10,27 @@ const note = {
   email: "jamie@example.com",
 };
 
-test("parseListing requires a restaurant, a known request type, details, a name, and an email", () => {
-  assert.equal(parseListing({}).error, "Enter the restaurant name.");
-  assert.equal(parseListing({ restaurant: "Cafe" }).error, "Choose update, edit, deletion, or new listing.");
-  assert.equal(parseListing({ restaurant: "Cafe", type: "closed" }).error, "Choose update, edit, deletion, or new listing.");
+test("parseListing requires a known request type, details, a name, and an email", () => {
+  assert.equal(parseListing({}).error, "Choose update, edit, deletion, new listing, or other.");
+  assert.equal(parseListing({ restaurant: "Cafe" }).error, "Choose update, edit, deletion, new listing, or other.");
+  assert.equal(parseListing({ restaurant: "Cafe", type: "closed" }).error, "Choose update, edit, deletion, new listing, or other.");
   assert.equal(parseListing({ restaurant: "Cafe", type: "edit" }).error, "Tell us what should change.");
   assert.equal(parseListing({ restaurant: "Cafe", type: "edit", details: "Hours" }).error, "Enter your name.");
   assert.equal(parseListing({ restaurant: "Cafe", type: "new", details: "Add it", name: "Jamie", email: "nope" }).error, "Enter a valid email.");
   assert.equal(parseListing({ ...note, details: "x".repeat(4001) }).error, "Keep the details under 4,000 characters.");
+  assert.equal(parseListing({ ...note, restaurant: "x".repeat(161) }).error, "Keep the restaurant name under 160 characters.");
   assert.deepEqual(parseListing(note).value, { ...note, town: "" });
   assert.deepEqual(parseListing({ ...note, town: "" }).value, { ...note, town: "" });
   assert.deepEqual(parseListing({ ...note, town: "Seaside" }).value, { ...note, town: "Seaside" });
+  const question = {
+    restaurant: "",
+    type: "other",
+    details: "Do you cover food trucks?",
+    name: "Jamie Cook",
+    email: "jamie@example.com",
+  };
+  assert.deepEqual(parseListing(question).value, { ...question, town: "" });
+  assert.deepEqual(parseListing({ ...question, restaurant: "   " }).value, { ...question, town: "" });
 });
 
 test("missing secrets accept the listing note and do not call Resend", async () => {
@@ -62,6 +72,29 @@ test("all three secrets post the listing note to CONTACT_EMAIL", async () => {
   assert.match(body.text, /Town: Not specified/);
   assert.match(body.text, /Jamie Cook/);
   assert.match(body.text, /phone number/);
+});
+
+test("an Other request can omit the restaurant name", async () => {
+  let init = null;
+  const result = await deliverListing(
+    { ...note, restaurant: "", type: "other", details: "Do you cover food trucks?" },
+    {
+      RESEND_API_KEY: "re_test",
+      CONTACT_EMAIL: "marc@example.com",
+      SUBSCRIBE_FROM: "Eating in Destin <listings@example.com>",
+    },
+    (_url, nextInit) => {
+      init = nextInit;
+      return Promise.resolve(new Response("{}", { status: 200 }));
+    },
+  );
+  assert.equal(result.ok, true);
+  assert.equal(result.delivered, true);
+  const body = JSON.parse(init.body);
+  assert.match(body.subject, /Other — Not specified/);
+  assert.match(body.text, /Request: Other/);
+  assert.match(body.text, /Restaurant: Not specified/);
+  assert.match(body.text, /food trucks/);
 });
 
 test("a Resend error on a listing note is not reported as delivered", async () => {
