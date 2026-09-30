@@ -43,6 +43,26 @@ check("full restaurant CSV" not in home.lower(), "homepage should not say the CS
 check("<h1>Where to eat<br> in Destin.</h1>" in home, "homepage headline should say where to eat in Destin")
 check('<h1 id="listing-title">Where to eat</h1>' in directory, "directory heading should be Where to eat")
 check("Filter by area, meal, or a few words." in directory, "directory intro should name the filters")
+check(
+    'name="laurens" value="yes"' in directory and ">Lauren's Favorites</span>" in directory,
+    "directory filter should include Lauren's Favorites",
+)
+map_page = (ROOT / "map" / "index.html").read_text(encoding="utf-8")
+check(">Lauren's Favorites</span>" in map_page, "map filter should include Lauren's Favorites")
+favorite_names = sorted(item["name"] for item in restaurants if item.get("laurensFavorite") is True)
+check(
+    favorite_names
+    == [
+        "McGuire's Irish Pub",
+        "Ruth's Chris Steak House",
+        "Seagar's Prime Steaks & Seafood",
+        "The Crab Trap Destin",
+        "The Melting Pot",
+    ],
+    f"Lauren's favorites should be the five tagged listings, got {favorite_names}",
+)
+check(directory.count('data-laurens="yes"') == 5, "directory should mark exactly five Lauren's favorites")
+check("laurens" in site_js and "laurensFavorite" in site_js, "site.js should filter Lauren's favorites")
 check("The table" not in directory and "Narrow the guide" not in directory, "directory should drop the old heading and intro")
 build_src = (ROOT / "scripts" / "build.py").read_text(encoding="utf-8")
 check(build_src.count("def build_detail(") == 1, "restaurant profiles should come from one template function")
