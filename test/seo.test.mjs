@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { CANONICAL_HOST, canonicalRedirect } from "../worker.js";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const config = JSON.parse(readFileSync(join(root, "site.config.json"), "utf8"));
@@ -29,6 +30,11 @@ function jsonLd(html) {
   const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
   assert.equal(blocks.length, 1, "expected one JSON-LD block");
   return JSON.parse(blocks[0][1]);
+}
+
+function typesOf(node) {
+  const value = node["@type"];
+  return Array.isArray(value) ? value : [value];
 }
 
 function walk(dir, out = []) {
@@ -59,7 +65,8 @@ for (const path of htmlPages) {
   assert.match(description, /Destin/);
   const canonical = attr(html, /<link rel="canonical" href="([^"]+)">/);
   assert.ok(canonical.startsWith(ORIGIN), rel + " canonical " + canonical);
-  assert.equal(canonical.includes("eatingindestin.com"), false);
+  assert.equal(canonical.startsWith(`https://${CANONICAL_HOST}`), true, rel);
+  assert.equal(canonical.includes("workers.dev"), false, rel);
   assert.equal(attr(html, /<meta property="og:title" content="([^"]+)">/), title);
   assert.equal(attr(html, /<meta property="og:description" content="([^"]+)">/), description);
   assert.equal(attr(html, /<meta property="og:url" content="([^"]+)">/), canonical);
@@ -92,19 +99,54 @@ assert.equal(list.numberOfItems, 215);
 assert.equal(directory["@graph"].some((node) => node["@type"] === "BreadcrumbList"), true);
 
 const profile = jsonLd(read("restaurants/harbor-docks-destin-harbor/index.html"));
-const restaurant = profile["@graph"].find((node) => node["@type"] === "Restaurant");
+const restaurant = profile["@graph"].find((node) => typesOf(node).includes("Restaurant"));
+assert.ok(typesOf(restaurant).includes("LocalBusiness"));
 assert.equal(restaurant.name, "Harbor Docks");
 assert.equal(restaurant.url, `${ORIGIN}/restaurants/harbor-docks-destin-harbor/`);
 assert.equal(restaurant.address.addressCountry, "US");
 assert.ok(restaurant.address.streetAddress);
+assert.equal(restaurant.containedInPlace.name, "Destin Harbor");
+assert.equal(restaurant.containedInPlace.url, `${ORIGIN}/areas/destin-harbor/`);
+assert.ok(restaurant.servesCuisine.includes("Seafood"));
+assert.ok(restaurant.openingHours.includes("Mo 11:00-22:30"));
 assert.equal(typeof restaurant.geo.latitude, "number");
 assert.equal(typeof restaurant.geo.longitude, "number");
 assert.ok(restaurant.telephone);
 assert.equal(profile["@graph"].some((node) => node["@type"] === "BreadcrumbList"), true);
+assert.equal(profile["@graph"].find((node) => node["@type"] === "BreadcrumbList").itemListElement[2].name, "Destin Harbor");
 assert.match(restaurant.image, /\/images\/restaurants\/harbor-docks-destin-harbor\/01\.jpg$/);
 
+const profilePages = walk(join(root, "restaurants")).filter(
+  (path) => path.endsWith(`${join("index.html")}`) && !path.endsWith(`${join("restaurants", "index.html")}`),
+);
+assert.equal(profilePages.length, 215);
+for (const path of profilePages) {
+  const data = jsonLd(readFileSync(path, "utf8"));
+  const listing = data["@graph"].find((node) => typesOf(node).includes("Restaurant"));
+  assert.ok(listing, path);
+  assert.ok(typesOf(listing).includes("LocalBusiness"), path);
+  assert.ok(listing.name, path);
+  assert.ok(listing.url.startsWith(`${ORIGIN}/restaurants/`), path);
+  assert.ok(listing.address.streetAddress, path);
+  assert.ok(listing.address.addressLocality, path);
+  assert.equal(listing.address.addressCountry, "US");
+  assert.ok(listing.servesCuisine.length, path);
+  assert.ok(listing.containedInPlace.name, path);
+  assert.ok(listing.containedInPlace.url.includes("/areas/"), path);
+}
+
+for (const path of walk(join(root, "areas")).filter((entry) => entry.endsWith(".html"))) {
+  const html = readFileSync(path, "utf8");
+  if (path.endsWith(`${join("areas", "index.html")}`)) {
+    assert.match(html, /<h1>Restaurant areas in Destin<\/h1>/);
+  } else {
+    assert.match(html, /<h1>Restaurants in [^<]+<\/h1>/);
+    assert.match(html, /Find restaurants and food in /);
+  }
+}
+
 const sundries = jsonLd(read("restaurants/sundries-general-market-sandestin/index.html"));
-const sundriesRestaurant = sundries["@graph"].find((node) => node["@type"] === "Restaurant");
+const sundriesRestaurant = sundries["@graph"].find((node) => typesOf(node).includes("Restaurant"));
 assert.equal(JSON.stringify(sundriesRestaurant).includes('"image"'), false);
 
 const town = jsonLd(read("areas/destin-harbor/index.html"));
@@ -156,6 +198,19 @@ for (const url of [`${ORIGIN}/`, `${ORIGIN}/restaurants/`, `${ORIGIN}/map/`, `${
 }
 assert.equal(llms.includes("<"), false);
 assert.equal(llmsFull.includes("<"), false);
+assert.match(llms, /Search by restaurant name/);
+assert.match(llms, /Miramar Beach/);
+
+const apex = canonicalRedirect(new URL("https://eatingindestin.com/restaurants/harbor-docks-destin-harbor/?q=1"), "GET");
+assert.equal(apex.status, 301);
+assert.equal(apex.location, `${ORIGIN}/restaurants/harbor-docks-destin-harbor/?q=1`);
+const preview = canonicalRedirect(new URL("https://eatingindestin.352marc.workers.dev/map/"), "HEAD");
+assert.equal(preview.status, 301);
+assert.equal(preview.location, `${ORIGIN}/map/`);
+assert.equal(canonicalRedirect(new URL(`${ORIGIN}/`), "GET"), null);
+assert.equal(canonicalRedirect(new URL("https://eatingindestin.com/api/listing"), "POST"), null);
+assert.equal(canonicalRedirect(new URL("https://eatingindestin.com/restaurants/"), "POST").status, 308);
+assert.equal(config.origin.replace(/\/$/, ""), `https://${CANONICAL_HOST}`);
 
 for (const path of walk(root)) {
   if (!path.endsWith(".html") && path !== join(root, "site.js")) continue;

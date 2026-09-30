@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { FEATURED_ROTATE_MS, describeFilters, featuredIndex, featuredStatusForStep, filtersFromParams, framePins, inGuideFrame, mapListCard, markerPopup, matches, monogram, shouldAutoRotateFeatured, spreadOverlaps, stepFeatured } from "../site.js";
+import { FEATURED_ROTATE_MS, describeFilters, featuredIndex, featuredStatusForStep, filtersAreBlank, filtersFromParams, framePins, inGuideFrame, mapListCard, markerPopup, matches, monogram, shouldAutoRotateFeatured, spreadOverlaps, stepFeatured } from "../site.js";
 
 const restaurants = JSON.parse(readFileSync(new URL("../data/restaurants.json", import.meta.url), "utf8"));
 
@@ -183,8 +183,18 @@ test("filter label names the town", () => {
     { "destin-harbor": "Destin Harbor" }
   );
   assert.equal(label, "Breakfast in Destin Harbor");
-  assert.equal(describeFilters(blank, {}), "Where to eat");
+  assert.equal(describeFilters(blank, {}), "Restaurants in Destin");
+  assert.equal(
+    describeFilters({ ...blank, area: "destin-harbor" }, { "destin-harbor": "Destin Harbor" }),
+    "Restaurants in Destin Harbor",
+  );
+  assert.equal(
+    describeFilters({ ...blank, area: "miramar-beach" }, { "miramar-beach": "Miramar Beach" }, "Around Destin"),
+    "Around Miramar Beach",
+  );
   assert.equal(describeFilters(blank, {}, "Along the coast"), "Along the coast");
+  assert.equal(filtersAreBlank(blank), true);
+  assert.equal(filtersAreBlank({ ...blank, q: "oysters" }), false);
 });
 
 test("public json does not carry place ids or owner ids", () => {

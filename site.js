@@ -176,7 +176,11 @@ export function featuredStatusForStep(name, index, count, { announce = false } =
   return `${label}, ${position} of ${total}`;
 }
 
-export function describeFilters(filters, areaNames, emptyLabel = "Where to eat") {
+export function filtersAreBlank(filters) {
+  return FILTER_KEYS.every((key) => !filters || !filters[key]);
+}
+
+export function describeFilters(filters, areaNames, emptyLabel = "Restaurants in Destin") {
   const parts = [];
   if (filters.meal) parts.push(filters.meal);
   if (filters.cuisine) parts.push(filters.cuisine);
@@ -185,12 +189,14 @@ export function describeFilters(filters, areaNames, emptyLabel = "Where to eat")
   if (filters.kids === "yes") parts.push("Kid friendly");
   if (filters.music === "yes") parts.push("Live music");
   if (filters.laurens === "yes") parts.push("Lauren's Favorites");
-  let label = parts.length ? parts.join(" · ") : emptyLabel;
-  if (filters.area) {
-    const town = areaNames[filters.area] || filters.area;
-    label += ` in ${town}`;
+  const town = filters.area ? (areaNames[filters.area] || filters.area) : "";
+  if (!parts.length) {
+    if (!town) return emptyLabel;
+    if (emptyLabel.startsWith("Restaurants in ")) return `Restaurants in ${town}`;
+    if (emptyLabel.startsWith("Around ")) return `Around ${town}`;
+    return `${emptyLabel} in ${town}`;
   }
-  return label;
+  return town ? `${parts.join(" · ")} in ${town}` : parts.join(" · ");
 }
 
 function recordFromCard(card) {
@@ -258,6 +264,7 @@ function bootDirectory() {
   const title = document.querySelector("#listing-title");
   const empty = document.querySelector("#empty");
   const areaNames = readAreaNames();
+  const baseTitle = document.title;
 
   const apply = (filters, pushUrl) => {
     let shown = 0;
@@ -272,7 +279,7 @@ function bootDirectory() {
       count.textContent = shown === 1 ? "1 restaurant" : `${shown} restaurants`;
     }
     if (empty) empty.hidden = shown !== 0;
-    document.title = `${label} | Eating in Destin`;
+    document.title = filtersAreBlank(filters) ? baseTitle : `${label} | Eating in Destin`;
     if (pushUrl) syncUrl(filters);
     document.documentElement.classList.remove("js-filter");
   };
@@ -319,6 +326,7 @@ function bootMap() {
   const title = document.querySelector("#listing-title");
   const note = document.querySelector("#map-note");
   const areaNames = readAreaNames();
+  const baseTitle = document.title;
   if (typeof L === "undefined") {
     if (note) note.textContent = "The map library did not load.";
     return;
@@ -361,7 +369,7 @@ function bootMap() {
       note.hidden = visible.length !== 0;
       note.textContent = visible.length === 0 ? "No restaurants match these filters." : "";
     }
-    document.title = `${label} map | Eating in Destin`;
+    document.title = filtersAreBlank(filters) ? baseTitle : `${label} map | Eating in Destin`;
     const framed = framePins(visible).map((item) => [item.pinLat, item.pinLng]);
     if (framed.length === 1) map.setView(framed[0], 15);
     else if (framed.length > 1) map.fitBounds(framed, { padding: [32, 32], maxZoom: 14 });

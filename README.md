@@ -6,13 +6,13 @@ The visual direction matches Eating on 30A: full-bleed hero, serif display type,
 
 There is no Airtable base and no Google Places or Google Maps API.
 
-The Cloudflare Worker name is `eatingindestin`. Do not attach `eatingindestin.com` or any other custom domain to this Worker. Vanity DNS stays where it is until someone moves it on purpose.
+The Cloudflare Worker name is `eatingindestin`. Do not add a custom domain binding in `wrangler.jsonc`. The live site is already [https://www.eatingindestin.com](https://www.eatingindestin.com). The apex host and the workers.dev hostname redirect there.
 
-Preview (workers.dev only):
+Worker hostname:
 
 https://eatingindestin.352marc.workers.dev
 
-That hostname is the workers.dev preview. Do not attach a custom domain. The first visit can show a short Cloudflare “verify you are human” check. `site.config.json` sets `origin` to this same URL for canonical links, Open Graph URLs, the sitemap, and `llms.txt`. Override it for one build with `SITE_ORIGIN` if the preview host changes.
+Requests to that hostname redirect to www. The first visit can show a short Cloudflare “verify you are human” check. `site.config.json` sets `origin` to `https://www.eatingindestin.com` for canonical links, Open Graph URLs, JSON-LD, the sitemap, and `llms.txt`. Override it for one build with `SITE_ORIGIN` only when a different canonical host is required.
 
 ## Preview locally
 
@@ -94,7 +94,7 @@ If any secret is missing, the worker still accepts the signup or listing note an
 npx wrangler deploy
 ```
 
-Leave the custom domain empty. `eatingindestin.com` is not configured in this repo.
+Leave the custom domain out of `wrangler.jsonc`. Canonical URLs use `https://www.eatingindestin.com`. The worker redirects the apex host and the workers.dev hostname to www before it serves a page.
 
 Homepage meal and area links go to `/restaurants/?meal=Dinner` and `/restaurants/?area=destin-harbor`. The directory reads those query parameters and hides the other cards. The map page honors the same parameters.
 

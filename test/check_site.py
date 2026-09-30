@@ -41,8 +41,9 @@ check(len(detail_pages) == len(restaurants), f"generated {len(detail_pages)} det
 check("not on the site yet" not in home and "Design preview" not in home, "homepage should not say the catalog is still a sample")
 check("full restaurant CSV" not in home.lower(), "homepage should not say the CSV is withheld")
 check("<h1>Where to eat<br> in Destin.</h1>" in home, "homepage headline should say where to eat in Destin")
-check('<h1 id="listing-title">Where to eat</h1>' in directory, "directory heading should be Where to eat")
+check('<h1 id="listing-title">Restaurants in Destin</h1>' in directory, "directory heading should target restaurants in Destin")
 check("Filter by area, meal, or a few words." in directory, "directory intro should name the filters")
+check("Food in Destin and Miramar Beach, Florida." in directory, "directory intro should name Destin and Miramar Beach")
 check(
     'name="laurens" value="yes"' in directory and ">Lauren's Favorites</span>" in directory,
     "directory filter should include Lauren's Favorites",
@@ -77,7 +78,7 @@ for meal in ("Breakfast", "Lunch", "Dinner", "Desserts", "Drinks"):
 areas = json.loads((ROOT / "data" / "locations.json").read_text(encoding="utf-8"))
 check(len(areas) == len({item["areaSlug"] for item in restaurants}), f"town pages should match listed areas, got {len(areas)}")
 for area in areas:
-    check(f'href="/restaurants/?area={area["slug"]}"' in home, f"homepage missing area filter {area['slug']}")
+    check(f'href="/areas/{area["slug"]}/"' in home, f"homepage missing area page {area['slug']}")
     check((ROOT / "areas" / area["slug"] / "index.html").exists(), f"missing town page {area['slug']}")
 
 for restaurant in restaurants:
@@ -150,7 +151,7 @@ check("images/restaurants/" in readme and "`01` is the cover" in readme, "README
 check("does not call Google Places" in readme, "README should keep Google Places off")
 check("popup-address" in site_js and "markerPopup" in site_js, "map popups should include the street address")
 check('>View restaurant</a>' in site_js and "View profile" not in site_js, "map popup CTA should say View restaurant")
-check('emptyLabel = "Where to eat"' in site_js, "unfiltered directory title should be Where to eat")
+check('emptyLabel = "Restaurants in Destin"' in site_js, "unfiltered directory title should name restaurants in Destin")
 pin_rule = styles.split(".leaflet-marker-icon.pin", 1)
 check(len(pin_rule) == 2 and "background:" in pin_rule[1][:400], "map pins must paint a fill on Leaflet's marker class")
 check(".leaflet-div-icon.pin" not in styles, "pin styles must not depend on the class Leaflet drops")
@@ -242,7 +243,7 @@ check(
 )
 check("de29ed_1473adbe1b4b4c068a746d2bd7c0fc46" not in home, "homepage should drop the old Wix hero")
 check(
-    'property="og:image" content="https://eatingindestin.352marc.workers.dev/images/hero-beachside-dining.jpg"' in home,
+    'property="og:image" content="https://www.eatingindestin.com/images/hero-beachside-dining.jpg"' in home,
     "homepage share image should be the harbor dining photo",
 )
 for hero_name in ("images/hero-beachside-dining.jpg", "images/hero-beachside-dining.webp"):
@@ -252,7 +253,7 @@ for hero_name in ("images/hero-beachside-dining.jpg", "images/hero-beachside-din
 check("editorial" not in home.lower() and "already filtered" not in home, "homepage should not sound like a product or an editorial")
 check("a feel for the place" in home, "homepage essay should use the visitor guide")
 areas_index = (ROOT / "areas" / "index.html").read_text(encoding="utf-8")
-check("<h1>Areas in Destin</h1>" in areas_index, "areas page heading should name Destin")
+check("<h1>Restaurant areas in Destin</h1>" in areas_index, "areas page heading should name restaurants in Destin")
 check(
     "Explore the neighborhoods in the guide, including Miramar Beach, Sandestin, Destin Harbor, and Crystal Beach." in areas_index,
     "areas page intro should name neighborhoods without a geographic order",
@@ -342,7 +343,10 @@ check("Read the profile" not in home, "featured cover should not put the profile
 check("View restaurant" in home, "featured cover CTA should say View restaurant")
 llms = (ROOT / "llms.txt").read_text(encoding="utf-8")
 check("CSV" not in llms and "custom domain" not in llms, "llms.txt should stay visitor-facing")
-check("https://eatingindestin.352marc.workers.dev" in (ROOT / "site.config.json").read_text(encoding="utf-8"), "public origin should be the current workers.dev host")
+check(
+    '"origin": "https://www.eatingindestin.com"' in (ROOT / "site.config.json").read_text(encoding="utf-8"),
+    "public origin should be the live www host",
+)
 check("openstreetmap.org" in site_js, "map tiles must be OpenStreetMap")
 check("OpenStreetMap" in (ROOT / "map" / "index.html").read_text(encoding="utf-8"), "map page missing OpenStreetMap")
 check("leaflet.js" in (ROOT / "map" / "index.html").read_text(encoding="utf-8"), "map page missing Leaflet")
@@ -384,7 +388,7 @@ check("static.wixstatic.com" not in home and "static.wixstatic.com" not in harbo
 for area in areas:
     slug = area["slug"]
     check(area.get("image") == f"/images/areas/{slug}.jpg", f"{slug} should use its area cover")
-    card_html = home.split(f'href="/restaurants/?area={slug}"', 1)[1].split("</a>", 1)[0]
+    card_html = home.split(f'href="/areas/{slug}/"', 1)[1].split("</a>", 1)[0]
     check(f'src="/images/areas/{slug}.jpg"' in card_html, f"{slug} homepage card should use its area photo")
     check('class="mono"' not in card_html, f"{slug} homepage card should not use a monogram")
     areas_card = areas_index.split(f'href="/areas/{slug}/"', 1)[1].split("</a>", 1)[0]

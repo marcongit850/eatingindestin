@@ -101,6 +101,25 @@ export async function deliverListing(payload, env, fetchImpl = fetch) {
   );
 }
 
+export const CANONICAL_HOST = "www.eatingindestin.com";
+
+const ALTERNATE_HOSTS = new Set([
+  "eatingindestin.com",
+  "eatingindestin.352marc.workers.dev",
+]);
+
+export function canonicalRedirect(url, method = "GET") {
+  const host = String(url.hostname || "").toLowerCase();
+  if (!ALTERNATE_HOSTS.has(host)) return null;
+  if (String(url.pathname || "").startsWith("/api/")) return null;
+  const target = new URL(url.toString());
+  target.protocol = "https:";
+  target.hostname = CANONICAL_HOST;
+  target.port = "";
+  const status = method === "GET" || method === "HEAD" ? 301 : 308;
+  return { location: target.toString(), status };
+}
+
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -109,7 +128,7 @@ function json(body, status = 200) {
 }
 
 function thanksPage(message, status) {
-  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${message} | Eating in Destin</title></head><body style="margin:0;background:#fbf7f1;color:#172421;font-family:Georgia,serif"><main style="max-width:36rem;margin:4rem auto;padding:0 1.25rem"><h1>${message}</h1><p><a href="/">Back to the guide</a></p></main></body></html>`;
+  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>${message} | Eating in Destin</title></head><body style="margin:0;background:#fbf7f1;color:#172421;font-family:Georgia,serif"><main style="max-width:36rem;margin:4rem auto;padding:0 1.25rem"><h1>${message}</h1><p><a href="/">Back to the guide</a></p></main></body></html>`;
   return new Response(html, {
     status,
     headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
@@ -188,6 +207,16 @@ export async function handleListing(request, env, fetchImpl = fetch) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    const redirect = canonicalRedirect(url, request.method);
+    if (redirect) {
+      return new Response(null, {
+        status: redirect.status,
+        headers: {
+          location: redirect.location,
+          "cache-control": "public, max-age=3600",
+        },
+      });
+    }
     if (url.pathname === "/api/subscribe") return handleSubscribe(request, env);
     if (url.pathname === "/api/listing") return handleListing(request, env);
     return env.ASSETS.fetch(request);
