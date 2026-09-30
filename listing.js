@@ -32,7 +32,28 @@
     return null;
   }
 
+  function queryValue(params, key, max) {
+    var raw = params.get(key);
+    if (!raw) return "";
+    return raw.replace(/\s+/g, " ").trim().slice(0, max);
+  }
+
+  function prefill(form) {
+    var params = new URLSearchParams(window.location.search);
+    var restaurant = queryValue(params, "restaurant", 160);
+    var subject = queryValue(params, "subject", 4000);
+    var restaurantField = form.querySelector('[name="restaurant"]');
+    var detailsField = form.querySelector('[name="details"]');
+    if (restaurant && restaurantField && !String(restaurantField.value || "").trim()) {
+      restaurantField.value = restaurant;
+    }
+    if (subject && detailsField && !String(detailsField.value || "").trim()) {
+      detailsField.value = subject;
+    }
+  }
+
   function bind(form) {
+    prefill(form);
     form.addEventListener("submit", function (event) {
       event.preventDefault();
       var body = payload(form);

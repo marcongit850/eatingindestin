@@ -627,6 +627,17 @@ button:hover, .button:hover { background: #1a3c38; color: #f7f2ea; }
 .logo { width: 72px; height: 72px; object-fit: contain; margin: 0 0 0.8rem; background: transparent; border: 0; }
 .more { padding-bottom: 3.5rem; }
 .more h2 { margin-bottom: 0.4rem; }
+.profile-claim {
+  margin: 1.5rem 0 0;
+  font-size: 0.82rem;
+  font-weight: 300;
+}
+.profile-claim a {
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+}
+.profile-claim a:hover { color: var(--ink); }
 .profile-map { padding-bottom: 2.2rem; }
 #detail-map, #map {
   height: 380px;
