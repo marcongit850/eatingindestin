@@ -294,6 +294,9 @@ check(
     "listing form should include a hidden honeypot",
 )
 check("Seasonal / subject to change." in listing_main and ">Live music*</legend>" in listing_main, "live music should keep the seasonal note")
+check("already online" not in listing_main and "as a file" not in listing_main, "listing form should not tell people to email photo files")
+for media_name in ("facebook", "instagram", "logoUrl", "listPhotoUrl", "detailPhotoUrl", "videoUrl"):
+    check(f'name="{media_name}"' in listing_page and 'type="url"' in listing_page, f"listing form should keep the {media_name} URL field")
 check("\u2014" not in listing_main and "\u2013" not in listing_main, "listing form copy should not use dashes")
 check("Own or manage a restaurant in the Destin area?" in listing_main, "listing form should use Destin area wording")
 check('href="/contact/">contact form</a>' in listing_main, "listing form should keep a path back to the short note")
