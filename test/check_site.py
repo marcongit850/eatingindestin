@@ -251,6 +251,10 @@ check('action="/api/listing"' in contact and 'data-listing' in contact, "contact
 check('name="restaurant"' in contact and 'name="details"' in contact, "contact form is missing restaurant fields")
 check('name="town"' not in contact, "contact form should not ask for a town")
 check('name="name"' in contact and 'name="email"' in contact, "contact form should ask for a reply name and email")
+check(
+    'class="hp"' in contact and 'name="company"' in contact and 'tabindex="-1"' in contact,
+    "contact form should include a hidden honeypot",
+)
 contact_form = contact.split("<form", 1)[1].split("</form>", 1)[0]
 contact_fields = ["name", "email", "restaurant", "type", "details"]
 contact_order = [contact_form.find(f'name="{field}"') for field in contact_fields]
@@ -667,6 +671,22 @@ check("CONTACT_EMAIL" in worker_js and "RESEND_API_KEY" in worker_js and "SUBSCR
 check("GOOGLE_SHEETS_WEBHOOK_URL" in worker_js and "GOOGLE_SHEETS_WEBHOOK_TOKEN" in worker_js, "signup sheet should name its env vars")
 check('pathname === "/api/listing"' in worker_js and "reply_to" in worker_js, "listing mail should use the same Resend secrets and a reply address")
 check("run_worker_first" in wrangler and '"main": "worker.js"' in wrangler, "api subscribe should be served by the worker")
+check("honeypot" in worker_js and "cf-connecting-ip" in worker_js and "MAX_BODY = 16000" in worker_js, "forms should cap body size, rate limit by IP, and trap a honeypot")
+headers = (ROOT / "_headers").read_text(encoding="utf-8")
+check("X-Content-Type-Options: nosniff" in headers, "headers should keep nosniff")
+check("Referrer-Policy: strict-origin-when-cross-origin" in headers, "headers should keep the referrer policy")
+check("X-Frame-Options: SAMEORIGIN" in headers, "headers should keep same-origin framing")
+check("Permissions-Policy: camera=(), microphone=(), geolocation=()" in headers, "headers should disable camera, microphone, and geolocation")
+check("Strict-Transport-Security: max-age=31536000; includeSubDomains" in headers, "headers should set HSTS for a year including subdomains")
+check("Content-Security-Policy:" in headers and "https://tile.openstreetmap.org" in headers, "headers should allow OpenStreetMap tiles in the content security policy")
+check("https://fonts.googleapis.com" in headers and "https://fonts.gstatic.com" in headers, "headers should still allow the Google fonts the pages load")
+check("'unsafe-inline'" in headers, "headers should allow the inline scripts and Leaflet styles already on the pages")
+check('class="hp"' in shared_footer and shared_footer.count('name="company"') == 2, "both subscribe forms should include a honeypot")
+check('data.get("company")' in subscribe_js, "subscribe script should send the honeypot field")
+listing_js = (ROOT / "listing.js").read_text(encoding="utf-8")
+check('data.get("company")' in listing_js, "listing script should send the honeypot field")
+hp_css = styles.split(".hp {", 1)
+check(len(hp_css) == 2 and "overflow: hidden" in hp_css[1][:240], "honeypot field should stay visually hidden")
 html_pages = [
     path
     for path in ROOT.rglob("*.html")

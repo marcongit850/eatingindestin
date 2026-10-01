@@ -49,6 +49,17 @@ h2 { font-size: clamp(2.2rem, 4vw, 3.3rem); }
   white-space: nowrap;
   border: 0;
 }
+.hp {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 .skip {
   position: absolute;
   left: 1rem;

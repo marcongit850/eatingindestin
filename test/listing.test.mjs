@@ -156,3 +156,121 @@ test("the worker routes /api/listing without touching static assets", async () =
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { ok: true, delivered: false });
 });
+
+const mailEnv = {
+  RESEND_API_KEY: "re_test",
+  CONTACT_EMAIL: "marc@example.com",
+  SUBSCRIBE_FROM: "Eating in Destin <listings@example.com>",
+};
+
+function postNote(body, ip) {
+  return new Request("https://www.eatingindestin.com/api/listing", {
+    method: "POST",
+    headers: { "content-type": "application/json", "cf-connecting-ip": ip },
+    body: typeof body === "string" ? body : JSON.stringify(body),
+  });
+}
+
+test("a filled honeypot looks successful and does not send the listing note", async () => {
+  let called = false;
+  const response = await handleListing(
+    postNote({ ...note, company: "Acme Bots" }, "198.51.100.20"),
+    mailEnv,
+    () => {
+      called = true;
+      return Promise.resolve(new Response("{}", { status: 200 }));
+    },
+  );
+  assert.equal(called, false);
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { ok: true, delivered: false });
+});
+
+test("a honeypot on an incomplete listing note still looks successful", async () => {
+  let called = false;
+  const response = await handleListing(
+    postNote({ hp_field: "bot" }, "198.51.100.21"),
+    mailEnv,
+    () => {
+      called = true;
+      return Promise.resolve(new Response("{}", { status: 200 }));
+    },
+  );
+  assert.equal(called, false);
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { ok: true, delivered: false });
+});
+
+test("a blank honeypot still sends the listing note", async () => {
+  let called = false;
+  const response = await handleListing(
+    postNote({ ...note, company: "" }, "198.51.100.22"),
+    mailEnv,
+    () => {
+      called = true;
+      return Promise.resolve(new Response("{}", { status: 200 }));
+    },
+  );
+  assert.equal(called, true);
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { ok: true, delivered: true });
+});
+
+test("a filled honeypot on a listing form post returns the HTML thanks page", async () => {
+  let called = false;
+  const request = new Request("https://www.eatingindestin.com/api/listing", {
+    method: "POST",
+    headers: {
+      "content-type": "application/x-www-form-urlencoded",
+      "cf-connecting-ip": "198.51.100.23",
+    },
+    body: new URLSearchParams({ ...note, company: "Acme Bots" }),
+  });
+  const response = await handleListing(request, mailEnv, () => {
+    called = true;
+    return Promise.resolve(new Response("{}", { status: 200 }));
+  });
+  assert.equal(called, false);
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type"), /text\/html/);
+  assert.match(await response.text(), /Thanks\. We have your note\./);
+});
+
+test("an oversized listing note is rejected before mail is sent", async () => {
+  let called = false;
+  const body = JSON.stringify({ ...note, details: "x".repeat(16000) });
+  assert.ok(body.length > 16000);
+  const response = await handleListing(postNote(body, "198.51.100.24"), mailEnv, () => {
+    called = true;
+    return Promise.resolve(new Response("{}", { status: 200 }));
+  });
+  assert.equal(called, false);
+  assert.equal(response.status, 413);
+  const payload = await response.json();
+  assert.equal(payload.ok, false);
+  assert.match(payload.error, /too long/i);
+});
+
+test("the sixth listing note from one IP in a minute is rate limited", async () => {
+  const ip = "198.51.100.25";
+  let calls = 0;
+  const send = () => handleListing(postNote(note, ip), mailEnv, () => {
+    calls += 1;
+    return Promise.resolve(new Response("{}", { status: 200 }));
+  });
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const response = await send();
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { ok: true, delivered: true });
+  }
+  const blocked = await send();
+  assert.equal(blocked.status, 429);
+  assert.match((await blocked.json()).error, /wait a minute/i);
+  assert.equal(calls, 5);
+  const other = await handleListing(postNote(note, "198.51.100.26"), mailEnv, () => {
+    calls += 1;
+    return Promise.resolve(new Response("{}", { status: 200 }));
+  });
+  assert.equal(other.status, 200);
+  assert.equal(calls, 6);
+});

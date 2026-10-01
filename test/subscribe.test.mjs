@@ -277,3 +277,115 @@ test("a form post still returns HTML when Sheets is configured", async () => {
   assert.equal(calls[1].body.coupons, true);
   assert.equal(calls[1].body.audience, "local");
 });
+
+function postSignup(body, ip, headers = {}) {
+  return new Request("https://www.eatingindestin.com/api/subscribe", {
+    method: "POST",
+    headers: { "content-type": "application/json", "cf-connecting-ip": ip, ...headers },
+    body: typeof body === "string" ? body : JSON.stringify(body),
+  });
+}
+
+test("a filled honeypot looks successful and does not send the signup", async () => {
+  let called = false;
+  const response = await handleSubscribe(
+    postSignup({ ...signup, company: "Acme Bots" }, "198.51.100.10"),
+    bothEnv,
+    () => {
+      called = true;
+      return okResponse();
+    },
+  );
+  assert.equal(called, false);
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { ok: true, delivered: false, recorded: false });
+});
+
+test("a honeypot alias on an incomplete signup still looks successful", async () => {
+  let called = false;
+  const response = await handleSubscribe(
+    postSignup({ email: "nope", website: "https://spam.example" }, "198.51.100.11"),
+    bothEnv,
+    () => {
+      called = true;
+      return okResponse();
+    },
+  );
+  assert.equal(called, false);
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { ok: true, delivered: false, recorded: false });
+});
+
+test("a blank honeypot still sends the signup", async () => {
+  let called = false;
+  const response = await handleSubscribe(
+    postSignup({ ...signup, company: "   " }, "198.51.100.12"),
+    bothEnv,
+    () => {
+      called = true;
+      return okResponse();
+    },
+  );
+  assert.equal(called, true);
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { ok: true, delivered: true, recorded: true });
+});
+
+test("a filled honeypot on a form post returns the HTML thanks page", async () => {
+  let called = false;
+  const request = new Request("https://www.eatingindestin.com/api/subscribe", {
+    method: "POST",
+    headers: {
+      "content-type": "application/x-www-form-urlencoded",
+      "cf-connecting-ip": "198.51.100.13",
+    },
+    body: new URLSearchParams({ email: "guest@example.com", audience: "local", coupons: "yes", company: "Acme Bots" }),
+  });
+  const response = await handleSubscribe(request, bothEnv, () => {
+    called = true;
+    return okResponse();
+  });
+  assert.equal(called, false);
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type"), /text\/html/);
+  assert.match(await response.text(), /Thanks\. We have your signup\./);
+});
+
+test("an oversized signup is rejected before mail is sent", async () => {
+  let called = false;
+  const body = JSON.stringify({ ...signup, note: "x".repeat(16000) });
+  assert.ok(body.length > 16000);
+  const response = await handleSubscribe(postSignup(body, "198.51.100.14"), bothEnv, () => {
+    called = true;
+    return okResponse();
+  });
+  assert.equal(called, false);
+  assert.equal(response.status, 413);
+  const payload = await response.json();
+  assert.equal(payload.ok, false);
+  assert.match(payload.error, /too long/i);
+});
+
+test("the sixth signup from one IP in a minute is rate limited", async () => {
+  const ip = "198.51.100.15";
+  let calls = 0;
+  const send = () => handleSubscribe(postSignup(signup, ip), bothEnv, () => {
+    calls += 1;
+    return okResponse();
+  });
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const response = await send();
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { ok: true, delivered: true, recorded: true });
+  }
+  const blocked = await send();
+  assert.equal(blocked.status, 429);
+  assert.match((await blocked.json()).error, /wait a minute/i);
+  assert.equal(calls, 10);
+  const other = await handleSubscribe(postSignup(signup, "198.51.100.16"), bothEnv, () => {
+    calls += 1;
+    return okResponse();
+  });
+  assert.equal(other.status, 200);
+  assert.equal(calls, 12);
+});
