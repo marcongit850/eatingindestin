@@ -98,6 +98,19 @@ ABOUT_TOWNS = (
     "Explore the areas along this stretch of the Emerald Coast, including Miramar Beach, Sandestin, Grand Boulevard, "
     "Destin Commons, Mid-Destin, Destin Harbor, and Crystal Beach."
 )
+ABOUT_STORY = (
+    (
+        "Eating in Destin is backed by more than 20 years of experience in publishing, local marketing, and promotional products. "
+        "Over the years, our team has produced entertainment guides, restaurant and dining directories, apartment guides, community maps, and other local publications designed to connect people with the businesses and places around them."
+    ),
+    (
+        "That experience is now being brought to Eating in Destin, and the site is already gaining momentum. "
+        "Local vacation rental and property management companies are beginning to share Eating in Destin with their guests, while social media is helping introduce the site to more locals and visitors looking for places to eat in the Destin area."
+    ),
+    (
+        "Our goal is simple: build a useful, accurate, and easy-to-navigate dining resource that benefits visitors, locals, restaurants, and the businesses that serve the Destin community."
+    ),
+)
 PRINT_GUIDES = (
     "Looking ahead, we\u2019ll also be launching a printed version of the \"Eating In\" guides in 2027, "
     "bringing the same curated experience into a high-quality physical format you can bring along."
@@ -2071,6 +2084,7 @@ def build_about() -> None:
         "<h1>The Destin restaurant guide</h1>"
         f"<p>{e(ABOUT_LEAD)}</p>"
         f"<p>{e(ABOUT_TOWNS)}</p>"
+        f'{"".join(f"<p>{e(paragraph)}</p>" for paragraph in ABOUT_STORY)}'
         '<p><a class="button" href="/restaurants/">See the restaurants</a></p>'
         "</div>"
         f"{window_decal_aside()}"
