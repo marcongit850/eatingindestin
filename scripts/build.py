@@ -2032,10 +2032,13 @@ def window_decal_aside() -> str:
         f'<img src="{e(DECAL_IMAGE)}" width="720" height="720" alt="{e(DECAL_ALT)}" decoding="async">'
         "</picture>"
         '<p class="kicker">For restaurants</p>'
-        '<h2 id="window-decal-heading">A free window decal</h2>'
-        "<p>Restaurants in the guide can have a free window decal. "
-        f'<a class="text-link" href="{e(decal_contact_href())}">Contact us</a> '
-        "with the restaurant name and a mailing address, and we\u2019ll send one.</p>"
+        '<h2 id="window-decal-heading">Get a Free Window Decal</h2>'
+        "<p>Own or manage a restaurant in the Destin area? "
+        "We\u2019ll send you a free \u201cProudly Listed on Eating in Destin\u201d window decal "
+        "to display at your restaurant.</p>"
+        "<p>Just "
+        f'<a class="text-link" href="{e(decal_contact_href())}">contact us</a> '
+        "and we will personally drop one off!</p>"
         "</aside>"
     )
 

@@ -265,11 +265,18 @@ check('class="print-covers"' in about, "print covers should share one layout")
 check("about-intro" in about and 'class="window-decal"' in about, "about page should set the decal beside the intro")
 check(build.DECAL_IMAGE in about and build.DECAL_WEBP in about, "about page should use the window decal image")
 check(build.e(build.DECAL_ALT) in about, "about page should describe the window decal")
-check("A free window decal" in about, "about page should offer the free window decal")
+check("Get a Free Window Decal" in about, "about page should offer the free window decal")
+check("A free window decal" not in about, "about page should drop the old decal heading")
 check(
-    "Restaurants in the guide can have a free window decal." in about
-    and "with the restaurant name and a mailing address, and we’ll send one." in about,
-    "decal note should invite restaurants to ask for one",
+    "Own or manage a restaurant in the Destin area?" in about
+    and "We’ll send you a free “Proudly Listed on Eating in Destin” window decal to display at your restaurant." in about
+    and "and we will personally drop one off!" in about,
+    "decal note should use Marc's Destin wording",
+)
+check("Destin or Miramar Beach" not in about.split('class="window-decal"', 1)[-1], "decal note should say the Destin area")
+check(
+    '>contact us</a>' in about.split('class="window-decal"', 1)[-1],
+    "decal note should link the words contact us",
 )
 check(
     f'href="{build.e(build.decal_contact_href())}"' in about,
