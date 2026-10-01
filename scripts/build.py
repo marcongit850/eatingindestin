@@ -723,73 +723,343 @@ def within_meta(text: str) -> str | None:
     return None
 
 
-def place_phrase(restaurant: dict) -> str:
+WATER_AREA_SLUGS = {"destin-harbor", "sandestin", "crystal-beach"}
+BROAD_PLACES = {
+    "destin",
+    "miramar beach",
+    "sandestin",
+    "grand boulevard",
+    "destin commons",
+    "mid-destin",
+    "crystal beach",
+    "destin harbor",
+}
+
+
+def label_parts(label: str) -> tuple[str, str]:
+    label = clean_text(label)
+    if "|" not in label:
+        return label, ""
+    left, right = [clean_text(part) for part in label.split("|", 1)]
+    return left, right
+
+
+def is_road(text: str) -> bool:
+    lowered = text.lower()
+    return any(word in lowered for word in ("us 98", "scenic", "highway", "drive", "old 98", "hwy"))
+
+
+def place_in_name(name: str, place: str) -> bool:
+    return bool(place) and place.lower() in name.lower()
+
+
+def mentions_destin(text: str) -> bool:
+    return re.search(r"\bDestin\b", text) is not None
+
+
+def heading_cue(restaurant: dict) -> str:
+    """Neighborhood, road, or city from the listing. Nothing is invented."""
+    name = restaurant["name"]
     area = restaurant["area"]
     city = restaurant["city"] or "Destin"
-    if area.lower() == city.lower():
-        loc = f"{city}, Florida"
-    else:
-        loc = f"{area} in {city}, Florida"
-    if "Destin" not in loc and "Destin" not in area:
-        loc += ", on the Destin coast"
-    return loc
+    left, right = label_parts(restaurant["label"])
+
+    def fresh(part: str) -> bool:
+        if not part or place_in_name(name, part):
+            return False
+        return part.lower() not in {area.lower(), city.lower(), "destin"}
+
+    if area and not place_in_name(name, area):
+        if city.lower() == "destin" and "destin" not in area.lower() and "destin" not in name.lower():
+            return f"{area}, Destin"
+        if (
+            city.lower() not in {area.lower(), "destin"}
+            and city.lower() not in area.lower()
+            and not place_in_name(name, city)
+        ):
+            return f"{area}, {city}"
+        return area
+    for part in (left, right):
+        if fresh(part):
+            return part
+    if not place_in_name(name, "Destin") and not place_in_name(name, city):
+        if "destin" in city.lower():
+            return city
+        return f"{city}, Destin"
+    if "destin" not in name.lower():
+        return "Destin"
+    return "Destin"
+
+
+def cue_lead(cue: str) -> str:
+    return "on" if is_road(cue.split(",")[0]) else "in"
+
+
+def destin_place(name: str, place: str, city: str) -> str:
+    """Keep a real Destin cue in the meta description, including Miramar and Sandestin."""
+    if mentions_destin(f"{name} {place}"):
+        return place
+    if city.lower() == "destin":
+        return f"{place} in Destin"
+    return f"{place}, near Destin"
+
+
+def readable_label(label: str) -> str:
+    """Turn 'Area | Spot' into a phrase. Roads use on; a broader place uses in."""
+    left, right = label_parts(label)
+    if not left or not right:
+        return label.replace(" | ", ", ")
+    if is_road(right):
+        return f"{left} on {right}"
+    if is_road(left):
+        return f"{right} on {left}"
+    if right.lower() in BROAD_PLACES:
+        return f"{left} in {right}"
+    if left.lower() in BROAD_PLACES:
+        return f"{right} in {left}"
+    return f"{left}, {right}"
+
+
+def readable_note(restaurant: dict) -> str:
+    """The listing note, with the pipe in a location label turned into plain words."""
+    note = restaurant["notes"]
+    label = clean_text(restaurant["label"])
+    if label and label in note:
+        note = note.replace(label, readable_label(label))
+    elif " | " in note:
+        note = note.replace(" | ", ", ")
+    return sentence(note)
+
+
+def address_sentence(restaurant: dict) -> str:
+    address = restaurant["address"]
+    area = restaurant["area"]
+    city = restaurant["city"] or "Destin"
+    if not address:
+        if area.lower() == city.lower():
+            return f"It’s in {area}."
+        return f"It’s in {area}, {city}."
+    if area.lower() == city.lower() or area.lower() in address.lower():
+        return f"The address is {address}."
+    return f"The address is {address}, in {area}."
+
+
+def service_sentence(restaurant: dict) -> str:
+    meals = oxford([meal.lower() for meal in restaurant["meals"]])
+    cuisines = oxford(restaurant["cuisines"][:3])
+    if meals and cuisines:
+        noun = "cuisine" if len(restaurant["cuisines"][:3]) == 1 else "cuisines"
+        verb = "is" if noun == "cuisine" else "are"
+        return f"It’s listed for {meals}. {cuisines} {verb} the {noun} on the listing."
+    if meals:
+        return f"It’s listed for {meals}."
+    if cuisines:
+        return f"{cuisines} is on the listing."
+    return ""
+
+
+def detail_sentence(restaurant: dict) -> str:
+    """Only flags the listing itself marks yes. In Review and No stay unsaid."""
+    clauses = []
+    if restaurant["outdoor"]:
+        clauses.append("Outdoor dining is listed.")
+    if restaurant["kids"]:
+        clauses.append("It’s marked kid friendly.")
+    if restaurant["music"]:
+        clauses.append("Live music is listed.")
+    if restaurant["reservations"]:
+        clauses.append("They take reservations.")
+    if restaurant["happyDrinks"] and restaurant["happyFood"]:
+        clauses.append("A happy hour for drinks and food is listed.")
+    elif restaurant["happyDrinks"]:
+        clauses.append("A happy hour for drinks is listed.")
+    elif restaurant["happyFood"]:
+        clauses.append("A happy hour for food is listed.")
+    return " ".join(clauses)
+
+
+def hours_sentence(restaurant: dict) -> str:
+    if restaurant["hours"]:
+        return "Hours are on this page."
+    return "Hours aren’t listed on this page."
+
+
+def favorite_sentence(restaurant: dict) -> str:
+    if restaurant["laurensFavorite"]:
+        return "It’s on Lauren’s Favorites."
+    return ""
+
+
+def practical_paragraph(restaurant: dict) -> str:
+    parts = [
+        address_sentence(restaurant),
+        service_sentence(restaurant),
+        detail_sentence(restaurant),
+        favorite_sentence(restaurant),
+        hours_sentence(restaurant),
+    ]
+    return " ".join(part for part in parts if part)
+
+
+def related_guides(restaurant: dict) -> list[tuple[str, str]]:
+    """Guides this restaurant is actually on. Three is enough; the area page is linked separately."""
+    meals = set(restaurant["meals"])
+    cuisines = set(restaurant["cuisines"])
+    area = restaurant["areaSlug"]
+    links: list[tuple[str, str]] = []
+    seen: set[str] = set()
+
+    def add(href: str, label: str) -> None:
+        if href in seen or len(links) >= 3:
+            return
+        seen.add(href)
+        links.append((href, label))
+
+    if area == "destin-harbor":
+        add("/guides/destin-harbor-restaurants/", "Destin Harbor restaurants")
+    elif area == "miramar-beach":
+        add("/guides/miramar-beach-restaurants/", "Miramar Beach restaurants")
+    elif area == "sandestin" and "Dinner" in meals:
+        add("/guides/dinner-sandestin/", "Dinner near Sandestin")
+
+    if "Seafood" in cuisines:
+        add("/guides/best-seafood-destin/", "Best seafood in Destin")
+    elif "Cafe" in cuisines:
+        add("/guides/coffee-brunch-destin/", "Coffee and brunch in Destin")
+    elif "Breakfast" in meals:
+        add("/guides/breakfast-destin/", "Breakfast in Destin")
+
+    if restaurant["laurensFavorite"]:
+        add("/guides/laurens-favorites-destin/", "Lauren’s Favorites")
+    elif restaurant["outdoor"] and area in WATER_AREA_SLUGS:
+        add("/guides/waterfront-destin/", "Waterfront dining in Destin")
+    elif restaurant["kids"]:
+        add("/guides/kid-friendly-destin/", "Kid-friendly restaurants")
+
+    if restaurant["outdoor"] and area in WATER_AREA_SLUGS:
+        add("/guides/waterfront-destin/", "Waterfront dining in Destin")
+    if restaurant["kids"]:
+        add("/guides/kid-friendly-destin/", "Kid-friendly restaurants")
+    if "Breakfast" in meals:
+        add("/guides/breakfast-destin/", "Breakfast in Destin")
+    if "Cafe" in cuisines:
+        add("/guides/coffee-brunch-destin/", "Coffee and brunch in Destin")
+    return links
+
+
+def guide_nav(restaurant: dict) -> str:
+    links = related_guides(restaurant)
+    if not links:
+        return ""
+    items = "".join(f'<a class="text-link" href="{e(href)}">{e(label)}</a>' for href, label in links)
+    return f'<nav class="section-links profile-links" aria-label="Related guides">{items}</nav>'
+
+
+def listing_story(restaurant: dict) -> str:
+    """Note from the listing, then a practical paragraph built only from its fields."""
+    note = readable_note(restaurant)
+    practical = practical_paragraph(restaurant)
+    parts = []
+    if note:
+        parts.append(f"<p>{e(note)}</p>")
+    if practical and practical != note:
+        parts.append(f"<p>{e(practical)}</p>")
+    if not parts:
+        parts.append(f"<p>{e(practical_paragraph(restaurant))}</p>")
+    return "".join(parts) + guide_nav(restaurant)
+
+
+def heading_html(restaurant: dict) -> str:
+    cue = heading_cue(restaurant)
+    lead = cue_lead(cue)
+    return f'<h1>{e(restaurant["name"])}<span class="h1-place">{e(lead)} {e(cue)}</span></h1>'
+
+
+def nearby_listings(restaurant: dict, restaurants: list[dict], limit: int = 4) -> list[dict]:
+    cuisines = set(restaurant["cuisines"])
+    others = [
+        other
+        for other in restaurants
+        if other["areaSlug"] == restaurant["areaSlug"] and other["slug"] != restaurant["slug"]
+    ]
+    others.sort(key=lambda other: (-len(cuisines & set(other["cuisines"])), other["name"].lower()))
+    return others[:limit]
+
+
+def meta_tails(restaurant: dict) -> list[str]:
+    """Extra sentences that stay inside the listing. Used only to land the snippet length."""
+    street = restaurant["street"]
+    tails = [f"Address: {street}."]
+    if restaurant["hours"]:
+        tails.append("Hours, the address, and a map are on this page.")
+        tails.append(f"Address: {street}. Hours are on this page.")
+    tails.append(f"Address: {street}. The phone number and a map are on this page.")
+    tails.append("The address, phone number, and map are on this page, on the Destin coast in Florida.")
+    return tails
 
 
 def listing_description(restaurant: dict) -> str:
-    """Unique snippet from the listing's own notes, cuisine, area, and city."""
+    """Unique snippet: restaurant name, a real local cue, and facts from the listing."""
     name = restaurant["name"]
-    where = place_phrase(restaurant)
-    cuisine = oxford(restaurant["cuisines"][:3])
+    city = restaurant["city"] or "Destin"
+    place = destin_place(name, f"{cue_lead(heading_cue(restaurant))} {heading_cue(restaurant)}", city)
+    cuisine = oxford(restaurant["cuisines"][:2])
     meals = oxford([meal.lower() for meal in restaurant["meals"][:3]])
-    note = sentence(restaurant["notes"])
-    coast = "On the Destin coast in Florida."
-    if cuisine and meals:
-        primary = f"{name} in {where} serves {cuisine} for {meals}."
-    elif cuisine:
-        primary = f"{name} in {where} serves {cuisine}."
-    else:
-        primary = f"{name} is a restaurant in {where}."
-    options = []
-    if note and "Destin" in note:
-        options.append(note)
-        if len(note) < 110:
-            options.append(f"{note} Hours, the address, and a map are on this page.")
-    if note:
-        options.append(f"{note} {coast}")
-    options.append(primary)
-    foods = oxford(restaurant["foods"][:2])
-    if foods and foods.lower() not in primary.lower():
-        options.append(primary[:-1] + f", including {foods}.")
     street = restaurant["street"]
-    if street:
-        options.append(primary[:-1] + f" Address: {street}.")
-    options.append(primary[:-1] + " Hours, the address, and a map are on this page.")
+    note = readable_note(restaurant)
+    leads = []
+    if note and mentions_destin(note):
+        leads.append(note)
+    if note and not mentions_destin(f"{note} {name}"):
+        leads.append(f"{note} On the Destin coast in Florida.")
+    leads.extend(
+        [
+            f"{name}, {place}, serves {cuisine} for {meals}.",
+            f"{name}, {place}, serves {restaurant['cuisines'][0]}.",
+            f"{name}, {place}.",
+            f"{name} is at {street}, {place}.",
+        ]
+    )
+    options = []
+    for lead in leads:
+        options.append(lead)
+        for tail in meta_tails(restaurant):
+            if street and street in lead and street in tail:
+                continue
+            options.append(f"{lead} {tail}")
     for option in options:
         fitted = within_meta(option)
-        if fitted:
+        if fitted and fitted not in USED_DESCRIPTIONS:
             return fitted
     raise SystemExit(f"meta description out of range for {restaurant['slug']}")
 
 
 def restaurant_title(restaurant: dict) -> str:
-    """Lead with the restaurant name, then the area, without dropping either when it fits."""
+    """Restaurant name plus one local cue. The brand supplies Destin when the cue is a neighborhood."""
     name = restaurant["name"]
+    cue = heading_cue(restaurant)
+    phrase = f"{cue_lead(cue)} {cue}"
     area = restaurant["area"]
     city = restaurant["city"] or "Destin"
-    place = area if area.lower() == city.lower() else f"{area}, {city}"
-    cuisine = restaurant["cuisines"][0] if restaurant["cuisines"] else ""
+    brand = "Eating in Destin"
     candidates = [
-        f"{name} in {place} | Eating in Destin",
-        f"{name} | {place} | Eating in Destin",
-        f"{name} in {place}",
-        f"{name} | {cuisine}, {city}" if cuisine else "",
-        f"{name} | Eating in Destin",
-        f"{name} | {place}",
+        f"{name} {phrase} | {brand}",
+        f"{name} | {cue} | {brand}",
+        f"{name} in {area} | {brand}",
+        f"{name} in {city} | {brand}",
+        f"{name} | {area} | {brand}",
+        f"{name} | {brand}",
+        f"{name} {phrase}",
+        f"{name} | {area}",
         f"{name} in {city}",
     ]
+    seen: set[str] = set()
     for candidate in candidates:
         title = clean_text(candidate)
-        if 20 <= len(title) <= 70:
+        if not title or title in seen:
+            continue
+        seen.add(title)
+        if 20 <= len(title) <= 70 and title not in USED_TITLES:
             return title
     raise SystemExit(f"title out of range for {restaurant['slug']}")
 
@@ -885,15 +1155,15 @@ def postal_address(restaurant: dict) -> dict:
     return {key: value for key, value in address.items() if value}
 
 
-def restaurant_schema(restaurant: dict) -> dict:
+def restaurant_schema(restaurant: dict, description: str) -> dict:
+    """Restaurant and LocalBusiness facts taken from the listing. No hours, ratings, or reviews are invented."""
     page_url = f"{ORIGIN}/restaurants/{restaurant['slug']}/"
     schema = {
         "@type": ["Restaurant", "LocalBusiness"],
         "@id": page_url + "#restaurant",
         "name": restaurant["name"],
         "url": page_url,
-        "description": restaurant["notes"] or listing_description(restaurant),
-        "servesCuisine": restaurant["cuisines"],
+        "description": description,
         "address": postal_address(restaurant),
         "containedInPlace": {
             "@type": "Place",
@@ -902,10 +1172,14 @@ def restaurant_schema(restaurant: dict) -> dict:
         },
         "isPartOf": {"@id": ORIGIN + "/#website"},
     }
+    if restaurant["cuisines"]:
+        schema["servesCuisine"] = restaurant["cuisines"]
     if restaurant["price"]:
         schema["priceRange"] = restaurant["price"]
     if restaurant["phone"]:
         schema["telephone"] = restaurant["phone"]
+    if restaurant["reservations"]:
+        schema["acceptsReservations"] = True
     if restaurant["lat"] is not None and restaurant["lng"] is not None:
         schema["geo"] = {
             "@type": "GeoCoordinates",
@@ -1546,11 +1820,7 @@ def build_detail(restaurant: dict, restaurants: list[dict]) -> None:
         ]
     )
     logo = f'<img class="logo" src="{e(restaurant["logo"])}" alt="{e(restaurant["name"])} logo">' if restaurant["logo"] else ""
-    nearby = [
-        other
-        for other in restaurants
-        if other["areaSlug"] == restaurant["areaSlug"] and other["slug"] != restaurant["slug"]
-    ][:4]
+    nearby = nearby_listings(restaurant, restaurants)
     nearby_html = "".join(
         f'<a class="map-hit" href="/restaurants/{e(other["slug"])}/"><strong>{e(other["name"])}</strong><span>{e(other["price"])}</span></a>'
         for other in nearby
@@ -1600,18 +1870,18 @@ def build_detail(restaurant: dict, restaurants: list[dict]) -> None:
         '<div class="wrap profile-head">'
         f"{crumb_nav(profile_crumbs)}"
         f'<p class="eyebrow"><a href="{e(area_href)}">{e(area_line)}</a>{price_bit}{category_bit}</p>'
-        f"<h1>{e(restaurant['name'])}</h1>"
+        f"{heading_html(restaurant)}"
         f'<ul class="chips">{"".join(chips)}</ul>'
         "</div>"
         '<div class="wrap profile-grid">'
-        f'<div class="prose profile-story"><p>{e(restaurant["notes"])}</p></div>'
+        f'<div class="prose profile-story">{listing_story(restaurant)}</div>'
         f"<aside>{logo}<dl class=\"facts\">{facts}</dl></aside>"
         "</div>"
         f"{map_block}{more}"
         "</article>"
     )
     description = listing_description(restaurant)
-    extra = json_ld(graph(restaurant_schema(restaurant), breadcrumbs(profile_crumbs)))
+    extra = json_ld(graph(restaurant_schema(restaurant, description), breadcrumbs(profile_crumbs)))
     title = restaurant_title(restaurant)
     write(
         ROOT / "restaurants" / restaurant["slug"] / "index.html",
@@ -2116,6 +2386,8 @@ def build_guides(restaurants: list[dict], areas: list[dict]) -> list[dict]:
 
 
 def main() -> None:
+    USED_TITLES.clear()
+    USED_DESCRIPTIONS.clear()
     restaurants = published_restaurants()
     areas = load_areas(restaurants)
     hero = hero_image()

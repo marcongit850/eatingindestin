@@ -115,6 +115,28 @@ assert.ok(restaurant.telephone);
 assert.equal(profile["@graph"].some((node) => node["@type"] === "BreadcrumbList"), true);
 assert.equal(profile["@graph"].find((node) => node["@type"] === "BreadcrumbList").itemListElement[2].name, "Destin Harbor");
 assert.match(restaurant.image, /\/images\/restaurants\/harbor-docks-destin-harbor\/01\.jpg$/);
+assert.equal(restaurant.acceptsReservations, true);
+assert.equal(restaurant.aggregateRating, undefined);
+assert.equal(restaurant.review, undefined);
+assert.match(restaurant.description, /Harbor Docks/);
+assert.match(restaurant.description, /\bDestin\b/);
+
+const harborHtml = read("restaurants/harbor-docks-destin-harbor/index.html");
+assert.match(harborHtml, /<h1>Harbor Docks<span class="h1-place">in Destin Harbor<\/span><\/h1>/);
+assert.match(harborHtml, /href="\/guides\/destin-harbor-restaurants\/"/);
+assert.match(harborHtml, /href="\/guides\/best-seafood-destin\/"/);
+assert.match(harborHtml, /href="\/areas\/destin-harbor\/"/);
+assert.match(attr(harborHtml, /<title>([^<]+)<\/title>/), /Harbor Docks/);
+assert.match(attr(harborHtml, /<title>([^<]+)<\/title>/), /Destin Harbor/);
+
+const seaLevel = jsonLd(read("restaurants/sea-level-crystal-beach/index.html"));
+const seaLevelRestaurant = seaLevel["@graph"].find((node) => typesOf(node).includes("Restaurant"));
+assert.equal(seaLevelRestaurant.acceptsReservations, undefined);
+assert.equal(seaLevelRestaurant.openingHours, undefined);
+assert.equal(seaLevelRestaurant.aggregateRating, undefined);
+assert.ok(seaLevelRestaurant.telephone);
+assert.ok(seaLevelRestaurant.address.streetAddress);
+assert.match(read("restaurants/sea-level-crystal-beach/index.html"), /<h1>Sea Level<span class="h1-place">in Crystal Beach, Destin<\/span><\/h1>/);
 
 const profilePages = walk(join(root, "restaurants")).filter(
   (path) => path.endsWith(`${join("index.html")}`) && !path.endsWith(`${join("restaurants", "index.html")}`),
