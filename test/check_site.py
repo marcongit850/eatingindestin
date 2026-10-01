@@ -114,7 +114,6 @@ for area in areas:
     check(f'href="/areas/{area["slug"]}/"' in home, f"homepage missing area page {area['slug']}")
     check((ROOT / "areas" / area["slug"] / "index.html").exists(), f"missing town page {area['slug']}")
 
-full_listings = {item["slug"]: item for item in shown}
 for restaurant in restaurants:
     path = ROOT / "restaurants" / restaurant["slug"] / "index.html"
     check(path.exists(), f"missing detail page {restaurant['slug']}")
@@ -122,9 +121,10 @@ for restaurant in restaurants:
     check(f"{build.ORIGIN}/restaurants/{restaurant['slug']}/" in sitemap, f"sitemap missing {restaurant['slug']}")
     page = path.read_text(encoding="utf-8")
     h1 = page.split("<h1>", 1)[1].split("</h1>", 1)[0]
-    check(h1.startswith(build.e(restaurant["name"])), f"detail h1 missing {restaurant['name']}")
-    check('class="h1-place"' in h1, f"detail h1 missing local cue {restaurant['slug']}")
-    check(build.e(build.heading_cue(full_listings[restaurant["slug"]])) in h1, f"detail h1 cue drifted {restaurant['slug']}")
+    check(h1 == build.e(restaurant["name"]), f"detail h1 should be the restaurant name only {restaurant['slug']}")
+    check("h1-place" not in page, f"detail page should not add a place subtitle {restaurant['slug']}")
+    check('aria-label="Related guides"' not in page, f"listing should not add a related-guides nav {restaurant['slug']}")
+    check("Other locations" not in page, f"listing should not add an other-locations block {restaurant['slug']}")
     check('class="profile"' in page and 'class="profile-hero"' in page, f"detail page left the shared profile template {restaurant['slug']}")
     check("maps.googleapis" not in page and "airtable" not in page.lower(), f"detail page calls a paid API {restaurant['slug']}")
     claim = build.e(build.claim_href(restaurant["name"]))
@@ -499,23 +499,17 @@ for guide in picks:
     )
 cover_paths = [guide["teaser_image"] for guide in picks]
 check(len(cover_paths) == len(set(cover_paths)) == 9, "each guide needs a different cover image")
-guide_html = {guide["path"]: (ROOT / "guides" / guide["slug"] / "index.html").read_text(encoding="utf-8") for guide in picks}
+check(".h1-place" not in styles, "listing H1 should not style a place subtitle")
+check(".profile-links" not in styles, "listing pages should not style a related-guides nav")
 for restaurant in source:
     page = (ROOT / "restaurants" / restaurant["slug"] / "index.html").read_text(encoding="utf-8")
     story = page.split('class="prose profile-story"', 1)[1].split("</div>", 1)[0]
     check(story.count("<p>") >= 2, f"listing intro should have the note and a practical paragraph {restaurant['slug']}")
+    check("<nav" not in story, f"profile story should stay prose {restaurant['slug']}")
     check("aggregateRating" not in page and '"review"' not in page, f"listing schema should not invent reviews {restaurant['slug']}")
-    links = build.related_guides(restaurant)
-    if links:
-        check('aria-label="Related guides"' in page, f"related guides missing {restaurant['slug']}")
-        nav = page.split('aria-label="Related guides"', 1)[1].split("</nav>", 1)[0]
-        found = re.findall(r'href="(/guides/[^"]+)"', nav)
-        check(found == [href for href, _label in links], f"related guides drifted {restaurant['slug']}: {found}")
-        for href, _label in links:
-            check(f"/restaurants/{restaurant['slug']}/" in guide_html[href], f"{href} should list {restaurant['slug']}")
-    else:
-        check('aria-label="Related guides"' not in page, f"empty related guides nav {restaurant['slug']}")
+    check('aria-label="Related guides"' not in page, f"related guides nav should stay off the listing {restaurant['slug']}")
     check(f'href="/areas/{restaurant["areaSlug"]}/"' in page, f"area page link missing {restaurant['slug']}")
+    check(f"Also in {build.e(restaurant['area'])}" in page or f"Restaurants in {build.e(restaurant['area'])}" in page, f"nearby or area link missing {restaurant['slug']}")
 coffee_page = (ROOT / "guides" / "coffee-brunch-destin" / "index.html").read_text(encoding="utf-8")
 check("doesn’t list brunch as its own meal" in coffee_page, "coffee guide should say brunch is not its own meal")
 check("/restaurants/capriccio-cafe-mid-destin/" not in coffee_page, "coffee guide should follow the Cafe cuisine, not every coffee mention")
