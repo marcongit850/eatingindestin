@@ -222,6 +222,12 @@ for banned in ("CSV files", "Google Places", "OpenStreetMap tiles", "monogram in
 check("editorial" not in about.lower(), "about should not call the site an editorial guide")
 check("CSV" not in about and "OpenStreetMap" not in about and "Google Places" not in about, "about should stay free of build talk")
 check(f"<p>{build.ABOUT_LEAD}</p><p>{build.ABOUT_TOWNS}</p>" in about, "about page should use the two visitor paragraphs")
+about_story = "".join(f"<p>{build.e(paragraph)}</p>" for paragraph in build.ABOUT_STORY)
+check(
+    f"<p>{build.ABOUT_TOWNS}</p>{about_story}" in about.split('class="window-decal"', 1)[0],
+    "about page should add the publishing background under the visitor paragraphs and before the decal",
+)
+check("\u2013" not in about_story and "\u2014" not in about_story, "about background paragraphs should not use dashes")
 check("a feel for the place" not in about.split("<main", 1)[-1].split("</main>", 1)[0], "about body should use the new guide copy")
 contact = (ROOT / "contact" / "index.html").read_text(encoding="utf-8")
 for banned in ("github.com", "GitHub", "restaurants.csv", "locations.csv", "README", "CSV", "Wix", "custom domain"):
