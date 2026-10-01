@@ -485,6 +485,16 @@ for guide in picks:
             check(not present, f"{guide['slug']} should not list {restaurant['slug']}")
     check(f"{build.ORIGIN}{guide['path']}" in sitemap, f"sitemap missing {guide['slug']}")
     check(re.search(r"\b\d+\s+restaurants\b", prose, re.I) is None, f"{guide['slug']} hard-codes a restaurant count")
+    hero = page.split('class="profile-hero"', 1)[1].split('class="wrap page-intro"', 1)[0]
+    check(f'src="{guide["teaser_image"]}"' in hero, f"{guide['slug']} hero should use its own cover")
+    check(f'src="{guide["teaser_image"]}"' in guide_index, f"{guide['slug']} hub card should use its cover")
+    check((ROOT / guide["teaser_image"].lstrip("/")).is_file(), f"missing cover for {guide['slug']}")
+    check(
+        f'property="og:image" content="{build.ORIGIN}{guide["teaser_image"]}"' in page,
+        f"{guide['slug']} social image should use its cover",
+    )
+cover_paths = [guide["teaser_image"] for guide in picks]
+check(len(cover_paths) == len(set(cover_paths)) == 9, "each guide needs a different cover image")
 coffee_page = (ROOT / "guides" / "coffee-brunch-destin" / "index.html").read_text(encoding="utf-8")
 check("doesn’t list brunch as its own meal" in coffee_page, "coffee guide should say brunch is not its own meal")
 check("/restaurants/capriccio-cafe-mid-destin/" not in coffee_page, "coffee guide should follow the Cafe cuisine, not every coffee mention")

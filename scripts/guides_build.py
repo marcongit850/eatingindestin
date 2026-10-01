@@ -178,17 +178,38 @@ def show_label(count: int) -> str:
     return f"Show {count} {build.restaurant_count_word(count, label=True)}"
 
 
-def teaser_image(picked: list[dict], areas: list[dict], area_slug: str = "") -> tuple[str, str]:
+# One existing photo per guide, used as both the hub card and the page hero.
+# Restaurant covers are listings on that guide. Area covers are the area photos
+# already used on the area pages. None of these paths should be repeated.
+GUIDE_COVERS = {
+    "best-seafood-destin": ("restaurant", "brotula-s-seafood-house-and-steamer-destin-harbor"),
+    "breakfast-destin": ("restaurant", "another-broken-egg-cafe-grand-boulevard-grand-boulevard"),
+    "coffee-brunch-destin": ("restaurant", "camille-s-sidewalk-cafe-crystal-beach"),
+    "kid-friendly-destin": ("restaurant", "moo-la-la-ice-cream-and-desserts-sandestin"),
+    "dinner-sandestin": ("restaurant", "the-beach-house-sandestin"),
+    "destin-harbor-restaurants": ("restaurant", "dewey-destin-s-harborside-destin-harbor"),
+    "miramar-beach-restaurants": ("area", "miramar-beach"),
+    "waterfront-destin": ("area", "crystal-beach"),
+    "laurens-favorites-destin": ("restaurant", "mcguire-s-irish-pub-destin-harbor"),
+}
+
+
+def guide_cover(slug: str, restaurants: list[dict], areas: list[dict]) -> tuple[str, str]:
     import build
 
-    if area_slug:
-        area = area_record(areas, area_slug)
-        if area.get("image"):
-            return area["image"], f"{area['fullName']} in Destin"
-    for restaurant in picked:
-        if restaurant["cardImage"]:
-            return restaurant["cardImage"], build.photo_alt(restaurant)
-    return build.HERO_IMAGE, build.HERO_ALT
+    kind, key = GUIDE_COVERS[slug]
+    if kind == "area":
+        area = area_record(areas, key)
+        path = area.get("image") or ""
+        alt = f"{area['fullName']} in Destin"
+    else:
+        restaurant = next(item for item in restaurants if item["slug"] == key)
+        path = restaurant["cardImage"] or ""
+        alt = build.photo_alt(restaurant)
+    photo = build.ROOT / path.lstrip("/")
+    if not path or not photo.is_file():
+        raise SystemExit(f"{slug} cover is missing: {path}")
+    return path, alt
 
 
 def guide_spec(
@@ -468,7 +489,7 @@ def guide_picks(restaurants: list[dict], areas: list[dict]) -> list[dict]:
             ],
             "Seafood",
             "Oyster bars and seafood houses in Destin and Miramar Beach.",
-            teaser_image(seafood, areas),
+            guide_cover("best-seafood-destin", restaurants, areas),
             "Seafood restaurants in Destin and Miramar Beach.",
             extra=[(filter_href("/restaurants/", [("cuisine", "Seafood"), ("kids", "yes")]), "Kid-friendly seafood")],
             extra_label="Seafood filters",
@@ -515,7 +536,7 @@ def guide_picks(restaurants: list[dict], areas: list[dict]) -> list[dict]:
             ],
             "Breakfast",
             f"Morning in Destin. {widest_choice(breakfast_groups, _breakfast_ranked)}.",
-            teaser_image(breakfast, areas),
+            guide_cover("breakfast-destin", restaurants, areas),
             "Breakfast restaurants in Destin and Miramar Beach.",
             list_name="Breakfast in Destin",
         ),
@@ -560,7 +581,7 @@ def guide_picks(restaurants: list[dict], areas: list[dict]) -> list[dict]:
             ],
             "Coffee",
             "Cafes and coffee. Destin doesn’t list brunch as its own meal.",
-            teaser_image(cafes, areas),
+            guide_cover("coffee-brunch-destin", restaurants, areas),
             "Cafes and coffee in Destin and Miramar Beach. There isn’t a separate brunch meal.",
             list_name="Coffee and cafes in Destin",
         ),
@@ -604,7 +625,7 @@ def guide_picks(restaurants: list[dict], areas: list[dict]) -> list[dict]:
             ],
             "Kid friendly",
             "Family meals in Destin and Miramar Beach.",
-            teaser_image(kids, areas),
+            guide_cover("kid-friendly-destin", restaurants, areas),
             "Kid-friendly restaurants in Destin and Miramar Beach.",
             extra=[
                 (filter_href("/restaurants/", [("meal", "Breakfast"), ("kids", "yes")]), "Kid-friendly breakfast"),
@@ -653,7 +674,7 @@ def guide_picks(restaurants: list[dict], areas: list[dict]) -> list[dict]:
             ],
             "Sandestin",
             "Evening inside Sandestin: Baytowne Wharf, the marina, and the hotels.",
-            teaser_image(dinner, areas, "sandestin"),
+            guide_cover("dinner-sandestin", restaurants, areas),
             "Dinner restaurants in Sandestin, near Destin.",
             extra=[
                 ("/areas/sandestin/", "Sandestin area page"),
@@ -701,7 +722,7 @@ def guide_picks(restaurants: list[dict], areas: list[dict]) -> list[dict]:
             ],
             "Destin Harbor",
             "HarborWalk Village and the docks, with seafood houses and snack stops.",
-            teaser_image(harbor, areas, "destin-harbor"),
+            guide_cover("destin-harbor-restaurants", restaurants, areas),
             "Restaurants in Destin Harbor.",
             extra=[
                 ("/areas/destin-harbor/", "Destin Harbor area page"),
@@ -749,7 +770,7 @@ def guide_picks(restaurants: list[dict], areas: list[dict]) -> list[dict]:
             ],
             "Miramar Beach",
             "Scenic Gulf Drive, Silver Sands, and US 98.",
-            teaser_image(miramar, areas, "miramar-beach"),
+            guide_cover("miramar-beach-restaurants", restaurants, areas),
             "Restaurants in Miramar Beach, near Destin.",
             extra=[("/areas/miramar-beach/", "Miramar Beach area page")],
             list_name="Miramar Beach restaurants",
@@ -794,7 +815,7 @@ def guide_picks(restaurants: list[dict], areas: list[dict]) -> list[dict]:
             ],
             "Outdoors",
             "Outdoor seating at the harbor, in Sandestin, and at Crystal Beach. A patio is not a view.",
-            teaser_image(water, areas, "destin-harbor"),
+            guide_cover("waterfront-destin", restaurants, areas),
             "Outdoor dining at Destin Harbor, Sandestin, and Crystal Beach. Not a waterfront rating.",
             extra=[
                 (filter_href("/restaurants/", [("area", "sandestin"), ("outdoor", "yes")]), "Sandestin outdoors"),
@@ -847,16 +868,24 @@ def guide_picks(restaurants: list[dict], areas: list[dict]) -> list[dict]:
             ],
             "Favorites",
             "Lauren’s short list for Destin and Miramar Beach.",
-            teaser_image(favorites, areas),
+            guide_cover("laurens-favorites-destin", restaurants, areas),
             "Restaurants marked Lauren’s Favorites in Destin and Miramar Beach.",
             list_name="Lauren’s Favorites in Destin",
         ),
     ]
+    covers = [spec["teaser_image"] for spec in specs]
+    if len(covers) != len(set(covers)):
+        raise SystemExit(f"guide covers are not unique: {covers}")
     for spec in specs:
         check_meta(spec["title"], spec["description"])
         if not 2 <= len(spec["faqs"]) <= 4:
             raise SystemExit(f"{spec['slug']} needs 2 to 4 FAQ questions, got {len(spec['faqs'])}")
         guard_prose(spec, restaurants)
+        if "/images/restaurants/" in spec["teaser_image"]:
+            cover_slug = spec["teaser_image"].split("/images/restaurants/", 1)[1].split("/", 1)[0]
+            picked = {restaurant["slug"] for restaurant in spec["restaurants"]}
+            if cover_slug not in picked:
+                raise SystemExit(f"{spec['slug']} cover {cover_slug} is not on that guide")
     return specs
 
 
@@ -889,7 +918,7 @@ def write_guide_page(spec: dict) -> None:
     body = (
         '<article class="profile">'
         '<div class="profile-hero">'
-        f'<img src="{build.e(build.HERO_IMAGE)}" alt="{build.e(build.HERO_ALT)}" loading="eager">'
+        f'<img src="{build.e(spec["teaser_image"])}" alt="{build.e(spec["teaser_alt"])}" loading="eager">'
         "</div>"
         '<div class="wrap page-intro">'
         + build.crumb_nav([("Home", "/"), ("Guides", "/guides/"), (spec["h1"], spec["path"])])
@@ -939,8 +968,8 @@ def write_guide_page(spec: dict) -> None:
                     build.breadcrumbs([("Home", "/"), ("Guides", "/guides/"), (spec["h1"], spec["path"])]),
                 )
             ),
-            image=build.HERO_IMAGE,
-            image_alt=build.HERO_ALT,
+            image=spec["teaser_image"],
+            image_alt=spec["teaser_alt"],
         ),
     )
 
