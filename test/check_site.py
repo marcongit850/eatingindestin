@@ -438,6 +438,9 @@ check(
     'class="profile-film"' in harbor_page and "/images/restaurants/harbor-docks-destin-harbor/02.jpg" in harbor_page,
     "Harbor Docks profile should show the extra photos",
 )
+check('<ul class="chips">' in harbor_page and "Good for groups 12+" in harbor_page, "Harbor Docks should chip verified group dining")
+check("class=\"amenities\"" not in harbor_page, "listing amenities should stay in the existing chips")
+check("Takes reservations" not in (ROOT / "restaurants" / "captain-dave-s-on-the-gulf-crystal-beach" / "index.html").read_text(encoding="utf-8"), "Captain Dave's page should not claim reservations")
 sundries = (ROOT / "restaurants" / "sundries-general-market-sandestin" / "index.html").read_text(encoding="utf-8")
 sundries_hero = sundries.split('class="profile-hero"', 1)[1].split('class="wrap profile-head"', 1)[0]
 check('class="ph"' in sundries_hero and 'class="mono"' in sundries_hero, "a listing without a photo should keep the monogram")
