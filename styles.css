@@ -724,6 +724,9 @@ button:hover, .button:hover { background: #1a3c38; color: #f7f2ea; }
   margin: 1.5rem 0 0;
   font-size: 0.82rem;
   font-weight: 300;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.15rem;
 }
 .profile-claim a {
   color: var(--muted);
@@ -1100,7 +1103,7 @@ html.js-filter #cards .card { display: none; }
   max-width: 40rem;
   margin-top: 2rem;
 }
-.listing-form > label > span,
+.listing-form label > span,
 .listing-form legend {
   display: block;
   margin: 0 0 0.3rem;
@@ -1113,6 +1116,9 @@ html.js-filter #cards .card { display: none; }
 }
 .listing-form input[type="text"],
 .listing-form input[type="email"],
+.listing-form input[type="tel"],
+.listing-form input[type="url"],
+.listing-form select,
 .listing-form textarea {
   width: 100%;
   background: transparent;
@@ -1150,7 +1156,7 @@ html.js-filter #cards .card { display: none; }
   color: var(--ink);
   font-size: 1rem;
 }
-.listing-choice span {
+.listing-form .listing-choice > span {
   display: inline;
   margin: 0;
   font-size: 1rem;
@@ -1159,13 +1165,15 @@ html.js-filter #cards .card { display: none; }
   color: var(--ink);
   font-weight: 400;
 }
-.listing-form input[type="radio"] {
+.listing-form input[type="radio"],
+.listing-form input[type="checkbox"] {
   width: 1.05rem;
   height: 1.05rem;
   margin: 0;
   padding: 0;
   border: 0;
   accent-color: var(--gulf);
+  flex: 0 0 auto;
 }
 .listing-form button[type="submit"] {
   width: fit-content;
@@ -1186,3 +1194,45 @@ html.js-filter #cards .card { display: none; }
   color: var(--gulf);
 }
 .listing-status.is-error { color: var(--coral-deep); }
+
+.listing-form-full { max-width: 46rem; }
+.listing-form h2 {
+  margin: 1.45rem 0 0;
+  font-size: clamp(1.7rem, 3vw, 2.15rem);
+  line-height: 1.05;
+}
+.listing-form h2:first-of-type { margin-top: 0.15rem; }
+.listing-form select {
+  font: inherit;
+  min-height: 44px;
+}
+.listing-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+.listing-existing { display: none; }
+.listing-form:has(input[name="intent"][value="update"]:checked) .listing-existing {
+  display: grid;
+  gap: 0.45rem;
+}
+.listing-hours {
+  display: grid;
+  gap: 0.9rem 1.25rem;
+}
+.listing-form fieldset.listing-checks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
+  gap: 0.1rem 0.75rem;
+  align-items: stretch;
+}
+.listing-form fieldset.listing-yesno {
+  border-bottom: 1px solid var(--line);
+  padding: 0.35rem 0 0.55rem;
+}
+.listing-form fieldset.listing-yesno .listing-note { flex: 1 0 100%; }
+.listing-authorize { align-items: flex-start; }
+@media (min-width: 720px) {
+  .listing-hours { grid-template-columns: 1fr 1fr; }
+}

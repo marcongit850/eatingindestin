@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>List your restaurant | Eating in Destin</title>
+<meta name="description" content="Add or update a restaurant listing in the Destin area. Hours, cuisine, amenities, and photo links for Destin and Miramar Beach.">
+<link rel="canonical" href="https://www.eatingindestin.com/list-your-restaurant/">
+<meta property="og:title" content="List your restaurant | Eating in Destin">
+<meta property="og:description" content="Add or update a restaurant listing in the Destin area. Hours, cuisine, amenities, and photo links for Destin and Miramar Beach.">
+<meta property="og:url" content="https://www.eatingindestin.com/list-your-restaurant/">
+<meta property="og:image" content="https://www.eatingindestin.com/images/og-destin-harbor.jpg">
+<meta property="og:image:alt" content="Fishing boats in Destin Harbor with shrimp, oysters, and fresh fish on the dock.">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="675">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Eating in Destin">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="List your restaurant | Eating in Destin">
+<meta name="twitter:description" content="Add or update a restaurant listing in the Destin area. Hours, cuisine, amenities, and photo links for Destin and Miramar Beach.">
+<meta name="twitter:image" content="https://www.eatingindestin.com/images/og-destin-harbor.jpg">
+<meta name="twitter:image:alt" content="Fishing boats in Destin Harbor with shrimp, oysters, and fresh fish on the dock.">
+<meta name="theme-color" content="#102825">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon.png" type="image/png" sizes="32x32">
+<link rel="icon" href="/images/eating-favicon-512.png" type="image/png" sizes="512x512">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "WebPage", "name": "List your restaurant", "url": "https://www.eatingindestin.com/list-your-restaurant/", "isPartOf": {"@id": "https://www.eatingindestin.com/#website"}, "description": "Add or update a restaurant listing in the Destin area. Hours, cuisine, amenities, and photo links for Destin and Miramar Beach."}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.eatingindestin.com/"}, {"@type": "ListItem", "position": 2, "name": "List your restaurant", "item": "https://www.eatingindestin.com/list-your-restaurant/"}]}]}</script>
+</head>
+<body>
+<div id="site-header"></div>
+<main id="main">
+<div class="wrap page-intro">
+<div class="prose">
+<nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a> <span aria-hidden="true">/</span> <span aria-current="page">List your restaurant</span></nav>
+<p class="kicker">For restaurants</p>
+<h1>List your restaurant</h1>
+<p>Own or manage a restaurant in the Destin area? Use this form to add a new listing or to update one that is already on the site.</p>
+<p>We review every submission before it goes on the guide. For a short note, the <a class="text-link" href="/contact/">contact form</a> is enough.</p>
+</div>
+<form class="listing-form listing-form-full" action="/api/list-restaurant" method="post" data-list-restaurant>
+<div class="hp" aria-hidden="true"><label>Company <input name="company" type="text" tabindex="-1" autocomplete="off"></label></div>
+<h2>About you</h2>
+<label><span>Your name <abbr title="required">*</abbr></span><input name="name" type="text" required maxlength="120" autocomplete="name"></label>
+<fieldset><legend>Role <abbr title="required">*</abbr></legend><label class="listing-choice"><input type="radio" name="role" value="owner" required> <span>Owner</span></label><label class="listing-choice"><input type="radio" name="role" value="manager"> <span>Manager</span></label><label class="listing-choice"><input type="radio" name="role" value="marketing"> <span>Marketing</span></label><label class="listing-choice"><input type="radio" name="role" value="other"> <span>Other</span></label></fieldset>
+<label><span>Email <abbr title="required">*</abbr></span><input name="email" type="email" required maxlength="200" autocomplete="email" inputmode="email"></label>
+<label><span>Phone</span><input name="yourPhone" type="tel" maxlength="40" autocomplete="tel"></label>
+<label><span>Best time to reach you</span><input name="bestTime" type="text" maxlength="120" placeholder="Weekday mornings"></label>
+<h2>What is this for?</h2>
+<fieldset><legend>Request <abbr title="required">*</abbr></legend><label class="listing-choice"><input type="radio" name="intent" value="new" required> <span>New listing</span></label><label class="listing-choice"><input type="radio" name="intent" value="update"> <span>Update an existing listing</span></label></fieldset>
+<div class="listing-existing" data-existing>
+<label><span>Current listing URL or restaurant name</span><input name="existing" type="text" maxlength="300" placeholder="Listing URL or exact restaurant name"></label>
+<p class="listing-note">Required when you are updating a listing already on the site.</p>
+</div>
+<h2>Basics</h2>
+<label><span>Restaurant name <abbr title="required">*</abbr></span><input name="restaurant" type="text" required maxlength="160" autocomplete="organization"></label>
+<label><span>Area / town <abbr title="required">*</abbr></span><select name="area" required><option value="">Choose an area</option><option value="miramar-beach">Miramar Beach</option><option value="sandestin">Sandestin</option><option value="grand-boulevard">Grand Boulevard</option><option value="destin-commons">Destin Commons</option><option value="mid-destin">Mid-Destin</option><option value="destin-harbor">Destin Harbor</option><option value="crystal-beach">Crystal Beach</option></select></label>
+<label><span>Street address <abbr title="required">*</abbr></span><input name="address" type="text" required maxlength="200" autocomplete="street-address"></label>
+<label><span>Phone <abbr title="required">*</abbr></span><input name="phone" type="tel" required maxlength="40" autocomplete="tel"></label>
+<label><span>Website</span><input name="website" type="url" maxlength="500" placeholder="https://"></label>
+<fieldset><legend>Price range <abbr title="required">*</abbr></legend><label class="listing-choice"><input type="radio" name="price" value="$" required> <span>$</span></label><label class="listing-choice"><input type="radio" name="price" value="$$"> <span>$$</span></label><label class="listing-choice"><input type="radio" name="price" value="$$$"> <span>$$$</span></label><label class="listing-choice"><input type="radio" name="price" value="$$$$"> <span>$$$$</span></label></fieldset>
+<label><span>Short description / vibe <abbr title="required">*</abbr></span><textarea name="description" required maxlength="800" rows="4"></textarea></label>
+<h2>Hours</h2>
+<p class="listing-note">Give the hours for each day, or write Closed.</p>
+<div class="listing-hours"><label><span>Monday <abbr title="required">*</abbr></span><input name="mon" type="text" required maxlength="80" placeholder="11am to 10pm, or Closed"></label><label><span>Tuesday <abbr title="required">*</abbr></span><input name="tue" type="text" required maxlength="80" placeholder="11am to 10pm, or Closed"></label><label><span>Wednesday <abbr title="required">*</abbr></span><input name="wed" type="text" required maxlength="80" placeholder="11am to 10pm, or Closed"></label><label><span>Thursday <abbr title="required">*</abbr></span><input name="thu" type="text" required maxlength="80" placeholder="11am to 10pm, or Closed"></label><label><span>Friday <abbr title="required">*</abbr></span><input name="fri" type="text" required maxlength="80" placeholder="11am to 10pm, or Closed"></label><label><span>Saturday <abbr title="required">*</abbr></span><input name="sat" type="text" required maxlength="80" placeholder="11am to 10pm, or Closed"></label><label><span>Sunday <abbr title="required">*</abbr></span><input name="sun" type="text" required maxlength="80" placeholder="11am to 10pm, or Closed"></label></div>
+<label><span>Seasonal note</span><input name="seasonal" type="text" maxlength="300" placeholder="Optional"></label>
+<h2>What they serve</h2>
+<fieldset class="listing-checks"><legend>Cuisine types <abbr title="required">*</abbr></legend><label class="listing-choice"><input type="checkbox" name="cuisines" value="American"> <span>American</span></label><label class="listing-choice"><input type="checkbox" name="cuisines" value="Asian"> <span>Asian</span></label><label class="listing-choice"><input type="checkbox" name="cuisines" value="BBQ"> <span>BBQ</span></label><label class="listing-choice"><input type="checkbox" name="cuisines" value="Cafe"> <span>Cafe</span></label><label class="listing-choice"><input type="checkbox" name="cuisines" value="Chinese"> <span>Chinese</span></label><label class="listing-choice"><input type="checkbox" name="cuisines" value="Dessert"> <span>Dessert</span></label><label class="listing-choice"><input type="checkbox" name="cuisines" value="French"> <span>French</span></label><label class="listing-choice"><input type="checkbox" name="cuisines" value="Indian"> <span>Indian</span></label><label class="listing-choice"><input type="checkbox" name="cuisines" value="Irish"> <span>Irish</span></label><label class="listing-choice"><input type="checkbox" name="cuisines" value="Italian"> <span>Italian</span></label><label class="listing-choice"><input type="checkbox" name="cuisines" value="Japanese"> <span>Japanese</span></label><label class="listing-choice"><input type="checkbox" name="cuisines" value="Mediterranean"> <span>Mediterranean</span></label><label class="listing-choice"><input type="checkbox" name="cuisines" value="Mexican"> <span>Mexican</span></label><label class="listing-choice"><input type="checkbox" name="cuisines" value="Seafood"> <span>Seafood</span></label><label class="listing-choice"><input type="checkbox" name="cuisines" value="Southern"> <span>Southern</span></label><label class="listing-choice"><input type="checkbox" name="cuisines" value="Sushi"> <span>Sushi</span></label><label class="listing-choice"><input type="checkbox" name="cuisines" value="Thai"> <span>Thai</span></label><label class="listing-choice"><input type="checkbox" name="cuisines" value="Vietnamese"> <span>Vietnamese</span></label></fieldset>
+<fieldset class="listing-checks"><legend>Meals <abbr title="required">*</abbr></legend><label class="listing-choice"><input type="checkbox" name="meals" value="Breakfast"> <span>Breakfast</span></label><label class="listing-choice"><input type="checkbox" name="meals" value="Brunch"> <span>Brunch</span></label><label class="listing-choice"><input type="checkbox" name="meals" value="Lunch"> <span>Lunch</span></label><label class="listing-choice"><input type="checkbox" name="meals" value="Dinner"> <span>Dinner</span></label><label class="listing-choice"><input type="checkbox" name="meals" value="Late night"> <span>Late night</span></label></fieldset>
+<fieldset class="listing-checks"><legend>Food style</legend><label class="listing-choice"><input type="checkbox" name="foods" value="Bakery"> <span>Bakery</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Breakfast"> <span>Breakfast</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Breakfast Spot"> <span>Breakfast Spot</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Burgers"> <span>Burgers</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Cafe"> <span>Cafe</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Coffee"> <span>Coffee</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Cookies &amp; Sweets"> <span>Cookies &amp; Sweets</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Crepes"> <span>Crepes</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Dessert"> <span>Dessert</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Donuts"> <span>Donuts</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Grill"> <span>Grill</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Gyros"> <span>Gyros</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Ice Cream"> <span>Ice Cream</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Juice &amp; Bowls"> <span>Juice &amp; Bowls</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Market"> <span>Market</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Noodles"> <span>Noodles</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Oyster Bar"> <span>Oyster Bar</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Pasta"> <span>Pasta</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Pizza"> <span>Pizza</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Sandwiches"> <span>Sandwiches</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Seafood"> <span>Seafood</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Smoothies"> <span>Smoothies</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Snowcones"> <span>Snowcones</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Steak"> <span>Steak</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Sushi"> <span>Sushi</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Tacos"> <span>Tacos</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Tapas"> <span>Tapas</span></label><label class="listing-choice"><input type="checkbox" name="foods" value="Wine"> <span>Wine</span></label></fieldset>
+<p class="listing-note">Food style is optional.</p>
+<h2>Amenities</h2>
+<p class="listing-note">Choose yes or no for each. Only yes is shown on the listing.</p>
+<fieldset class="listing-yesno"><legend>Outdoor dining</legend><label class="listing-choice"><input type="radio" name="outdoor" value="yes" required> <span>Yes</span></label><label class="listing-choice"><input type="radio" name="outdoor" value="no"> <span>No</span></label></fieldset><fieldset class="listing-yesno"><legend>Happy hour (drinks)</legend><label class="listing-choice"><input type="radio" name="happyDrinks" value="yes" required> <span>Yes</span></label><label class="listing-choice"><input type="radio" name="happyDrinks" value="no"> <span>No</span></label></fieldset><fieldset class="listing-yesno"><legend>Happy hour (food)</legend><label class="listing-choice"><input type="radio" name="happyFood" value="yes" required> <span>Yes</span></label><label class="listing-choice"><input type="radio" name="happyFood" value="no"> <span>No</span></label></fieldset><fieldset class="listing-yesno"><legend>Reservations</legend><label class="listing-choice"><input type="radio" name="reservations" value="yes" required> <span>Yes</span></label><label class="listing-choice"><input type="radio" name="reservations" value="no"> <span>No</span></label></fieldset><fieldset class="listing-yesno"><legend>Kid friendly</legend><label class="listing-choice"><input type="radio" name="kids" value="yes" required> <span>Yes</span></label><label class="listing-choice"><input type="radio" name="kids" value="no"> <span>No</span></label></fieldset><fieldset class="listing-yesno"><legend>Groups of 12+</legend><label class="listing-choice"><input type="radio" name="groups" value="yes" required> <span>Yes</span></label><label class="listing-choice"><input type="radio" name="groups" value="no"> <span>No</span></label></fieldset><fieldset class="listing-yesno"><legend>Live music*</legend><label class="listing-choice"><input type="radio" name="music" value="yes" required> <span>Yes</span></label><label class="listing-choice"><input type="radio" name="music" value="no"> <span>No</span></label><p class="listing-note">Seasonal / subject to change.</p></fieldset>
+<h2>Social and media</h2>
+<p class="listing-note">Paste a link that is already online. To send a logo or photo as a file, use the contact form and name the restaurant.</p>
+<label><span>Facebook URL</span><input name="facebook" type="url" maxlength="500" placeholder="https://"></label>
+<label><span>Instagram</span><input name="instagram" type="url" maxlength="500" placeholder="https://"></label>
+<label><span>Logo URL</span><input name="logoUrl" type="url" maxlength="500" placeholder="https://"></label>
+<label><span>List photo URL</span><input name="listPhotoUrl" type="url" maxlength="500" placeholder="https://"></label>
+<label><span>Detail photo URL</span><input name="detailPhotoUrl" type="url" maxlength="500" placeholder="https://"></label>
+<label><span>Video URL</span><input name="videoUrl" type="url" maxlength="500" placeholder="https://"></label>
+<h2>Anything else</h2>
+<label><span>Notes</span><textarea name="notes" maxlength="2000" rows="5"></textarea></label>
+<label class="listing-choice listing-authorize"><input type="checkbox" name="authorized" value="yes" required> <span>I am authorized to submit this information for the restaurant. <abbr title="required">*</abbr></span></label>
+<button type="submit">Submit</button>
+<p class="listing-status" role="status" aria-live="polite"></p>
+</form></div>
+</main>
+<div id="site-footer"></div>
+<script src="/header.js"></script>
+<script src="/footer.js"></script>
+<script src="/list-restaurant.js"></script>
+
+</body>
+</html>

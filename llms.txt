@@ -15,6 +15,7 @@ Search by restaurant name, or look for restaurants and food in Destin, Miramar B
 - [Guides](https://www.eatingindestin.com/guides/): Seafood, breakfast, coffee, areas, and favorites in Destin and Miramar Beach.
 - [About](https://www.eatingindestin.com/about/): A restaurant guide for Destin and Miramar Beach.
 - [Contact](https://www.eatingindestin.com/contact/): Send a correction, edit, deletion, or new listing.
+- [List your restaurant](https://www.eatingindestin.com/list-your-restaurant/): Send a new listing or a full update.
 
 ## Areas
 

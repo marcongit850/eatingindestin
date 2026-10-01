@@ -141,12 +141,19 @@ for restaurant in restaurants:
     check("Other locations" not in page, f"listing should not add an other-locations block {restaurant['slug']}")
     check('class="profile"' in page and 'class="profile-hero"' in page, f"detail page left the shared profile template {restaurant['slug']}")
     check("maps.googleapis" not in page and "airtable" not in page.lower(), f"detail page calls a paid API {restaurant['slug']}")
-    claim = build.e(build.claim_href(restaurant["name"]))
+    update = build.e(build.list_update_href(restaurant["name"], restaurant["slug"]))
     check(
-        f'class="profile-claim"><a href="{claim}">Claim or correct this listing</a>' in page,
-        f"detail page missing claim link {restaurant['slug']}",
+        f'class="profile-claim"><a href="{update}">Update this listing</a>' in page,
+        f"detail page missing update link {restaurant['slug']}",
     )
-    check("Claim+or+correct%3A+" in claim, f"claim subject should name the restaurant with a colon {restaurant['slug']}")
+    check(
+        'href="/list-your-restaurant/">List your restaurant</a>' in page,
+        f"detail page missing list link {restaurant['slug']}",
+    )
+    check(
+        "intent=update" in update and f"%2Frestaurants%2F{restaurant['slug']}%2F" in update,
+        f"update link should name the listing {restaurant['slug']}",
+    )
     if restaurant.get("music"):
         check(
             ">Live music*</li>" in page and music_note in page,
@@ -268,6 +275,44 @@ check(
     "restaurant name should be optional",
 )
 check('src="/listing.js"' in contact, "contact page should load the listing form script")
+check(
+    'href="/list-your-restaurant/">restaurant listing form</a>' in contact
+    and "The form below is for a short note." in contact,
+    "contact page should point complete submissions to the full form",
+)
+check(
+    'href="/list-your-restaurant/">list your restaurant</a>' in about.split('class="window-decal"', 1)[-1],
+    "about decal should link the full restaurant form",
+)
+listing_page = (ROOT / "list-your-restaurant" / "index.html").read_text(encoding="utf-8")
+listing_main = listing_page.split("<main", 1)[-1].split("</main>", 1)[0]
+check("List your restaurant" in listing_page and 'rel="canonical" href="https://www.eatingindestin.com/list-your-restaurant/"' in listing_page, "listing form page should have a canonical URL")
+check('action="/api/list-restaurant"' in listing_page and "data-list-restaurant" in listing_page, "listing form should post to the restaurant endpoint")
+check('src="/list-restaurant.js"' in listing_page, "listing form page should load its script")
+check(
+    'class="hp"' in listing_page and 'name="company"' in listing_page and 'tabindex="-1"' in listing_page,
+    "listing form should include a hidden honeypot",
+)
+check("Seasonal / subject to change." in listing_main and ">Live music*</legend>" in listing_main, "live music should keep the seasonal note")
+check("\u2014" not in listing_main and "\u2013" not in listing_main, "listing form copy should not use dashes")
+check("Own or manage a restaurant in the Destin area?" in listing_main, "listing form should use Destin area wording")
+check('href="/contact/">contact form</a>' in listing_main, "listing form should keep a path back to the short note")
+options = json.loads((ROOT / "data" / "listing-options.json").read_text(encoding="utf-8"))
+for area in options["areas"]:
+    check(f'name="area"' in listing_page and f'value="{area["slug"]}"' in listing_page, f"listing form missing area {area['slug']}")
+for cuisine in options["cuisines"]:
+    check(f'name="cuisines" value="{build.e(cuisine)}"' in listing_page, f"listing form missing cuisine {cuisine}")
+for meal in ("Breakfast", "Brunch", "Lunch", "Dinner", "Late night"):
+    check(f'name="meals" value="{meal}"' in listing_page, f"listing form missing meal {meal}")
+for price in ("$", "$$", "$$$", "$$$$"):
+    check(f'name="price" value="{price}"' in listing_page, f"listing form missing price {price}")
+check(f"{build.ORIGIN}/list-your-restaurant/" in sitemap, "sitemap missing the restaurant form")
+list_js = (ROOT / "list-restaurant.js").read_text(encoding="utf-8")
+check(
+    "/api/list-restaurant" in list_js and 'querySelector(\'[name="company"]\')' in list_js,
+    "listing form script should post the honeypot with the full form",
+)
+check("Thanks. We have your listing." in list_js, "listing form script should thank the restaurant")
 listing_js = (ROOT / "listing.js").read_text(encoding="utf-8")
 check("/api/listing" in listing_js, "listing script should post to the worker")
 check("Enter the restaurant name." not in listing_js, "listing script should not require a restaurant name")
@@ -670,6 +715,7 @@ worker_js = (ROOT / "worker.js").read_text(encoding="utf-8")
 check("CONTACT_EMAIL" in worker_js and "RESEND_API_KEY" in worker_js and "SUBSCRIBE_FROM" in worker_js, "signup mail should name its env vars")
 check("GOOGLE_SHEETS_WEBHOOK_URL" in worker_js and "GOOGLE_SHEETS_WEBHOOK_TOKEN" in worker_js, "signup sheet should name its env vars")
 check('pathname === "/api/listing"' in worker_js and "reply_to" in worker_js, "listing mail should use the same Resend secrets and a reply address")
+check('pathname === "/api/list-restaurant"' in worker_js, "full restaurant form should post to its own endpoint")
 check("run_worker_first" in wrangler and '"main": "worker.js"' in wrangler, "api subscribe should be served by the worker")
 check("honeypot" in worker_js and "cf-connecting-ip" in worker_js and "MAX_BODY = 16000" in worker_js, "forms should cap body size, rate limit by IP, and trap a honeypot")
 headers = (ROOT / "_headers").read_text(encoding="utf-8")

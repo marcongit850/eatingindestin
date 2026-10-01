@@ -13,6 +13,7 @@ Each profile gives the street address and a map pin. A photograph appears when t
 - [Guides](https://www.eatingindestin.com/guides/)
 - [About](https://www.eatingindestin.com/about/)
 - [Contact](https://www.eatingindestin.com/contact/)
+- [List your restaurant](https://www.eatingindestin.com/list-your-restaurant/)
 - [Short index](https://www.eatingindestin.com/llms.txt)
 - [Sitemap](https://www.eatingindestin.com/sitemap.xml)
 
