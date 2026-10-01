@@ -435,6 +435,29 @@ body.home .nav a[aria-current="page"] { box-shadow: inset 0 -1px 0 rgba(247, 242
   background: var(--sand);
   border: 1px solid var(--line);
 }
+.about-intro {
+  display: grid;
+  gap: 2.4rem;
+  align-items: start;
+}
+.window-decal { margin: 0; max-width: 22rem; }
+.window-decal picture, .window-decal img { display: block; }
+.window-decal img {
+  width: min(16.5rem, 100%);
+  height: auto;
+  margin: 0 0 1.05rem;
+  filter: drop-shadow(0 10px 22px rgba(16, 40, 37, 0.12));
+}
+.window-decal h2 {
+  font-size: clamp(1.85rem, 3vw, 2.35rem);
+  max-width: 12ch;
+  margin-bottom: 0.55rem;
+}
+.window-decal p:last-child {
+  color: var(--muted);
+  font-weight: 300;
+  margin-bottom: 0;
+}
 #listing-title { max-width: 16ch; }
 
 input, select, textarea, button { font: inherit; color: var(--ink); }
@@ -876,6 +899,23 @@ html.js-filter #cards .card { display: none; }
   #map { height: min(68vh, 640px); }
   .map-layout { grid-template-columns: minmax(0, 1.65fr) minmax(240px, 0.75fr); align-items: start; }
   #map-list { max-height: min(68vh, 640px); overflow-y: auto; }
+}
+@media (min-width: 900px) {
+  .about-intro {
+    grid-template-columns: minmax(0, 40rem) minmax(13rem, 1fr);
+    column-gap: 2.75rem;
+    row-gap: 0;
+  }
+  .about-intro > .about-copy { grid-column: 1; grid-row: 1; }
+  .about-intro > .window-decal {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: start;
+    align-self: start;
+    padding-top: 4.75rem;
+  }
+  .about-intro > .prose:not(.about-copy) { grid-column: 1; grid-row: 2; }
+  .window-decal img { width: min(18rem, 100%); }
 }
 @media (min-width: 980px) {
   .meal-index { grid-template-columns: repeat(5, 1fr); }
