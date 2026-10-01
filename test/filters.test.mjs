@@ -69,7 +69,11 @@ test("amenity filters require a yes flag", () => {
   const music = restaurants.filter((item) => matches(item, { ...blank, music: "yes" }));
   assert.ok(happyFood.length > 0 && happyFood.every((item) => item.happyFood === true));
   assert.ok(happyDrinks.length > 0 && happyDrinks.every((item) => item.happyDrinks === true));
-  assert.ok(music.length > 0 && music.every((item) => item.music === true));
+  assert.equal(music.length, 20);
+  assert.ok(music.every((item) => item.music === true));
+  assert.ok(music.some((item) => item.slug === "harbor-tavern-destin-harbor"));
+  assert.ok(music.some((item) => item.slug === "boshamps-seafood-and-oyster-house-destin-harbor"));
+  assert.equal(describeFilters({ ...blank, music: "yes" }, {}), "Live music");
   assert.equal(describeFilters({ ...blank, groups: "yes", reservations: "yes" }, {}), "Takes reservations · Good for groups 12+");
 });
 
