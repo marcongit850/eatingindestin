@@ -80,7 +80,7 @@ The raw CSV is not uploaded with the site (see `.assetsignore`). It includes exp
 
 ## Deploy
 
-Cloudflare Worker `eatingindestin` serves the static site, `POST /api/subscribe`, and `POST /api/listing`. `wrangler.jsonc` sets `"name"` to `eatingindestin`, `"main"` to `worker.js`, and `"assets.directory"` to `.`. There is no custom domain route.
+Cloudflare Worker `eatingindestin` serves the static site, `POST /api/subscribe`, `POST /api/listing`, and `POST /api/list-restaurant`. `wrangler.jsonc` sets `"name"` to `eatingindestin`, `"main"` to `worker.js`, and `"assets.directory"` to `.`. There is no custom domain route.
 
 Signup notes and listing requests from `/contact/` go out through the Resend HTTP API (`https://api.resend.com/emails`) only when all three secrets are set on the Worker:
 
@@ -88,7 +88,7 @@ Signup notes and listing requests from `/contact/` go out through the Resend HTT
 - `SUBSCRIBE_FROM` — a verified Resend sender, also used as the From address for listing mail
 - `CONTACT_EMAIL` — inbox that receives the signup and listing requests
 
-If any of those three secrets is missing, the worker still accepts the signup or listing note and returns `delivered: false`. It does not call another newsletter product. A listing email sets `reply_to` to the address on the form so a reply goes back to that person.
+If any of those three secrets is missing, the worker still accepts the signup or listing note and returns `delivered: false`. It does not call another newsletter product. A listing email sets `reply_to` to the address on the form so a reply goes back to that person. The full form at `/list-your-restaurant/` posts to `/api/list-restaurant`, uses the same three secrets and reply address, and is not written to the sheet.
 
 Coupon signups are also posted to a Google Apps Script webhook, which appends a row, when both of these secrets are set:
 
@@ -114,4 +114,5 @@ Homepage meal and area links go to `/restaurants/?meal=Dinner` and `/restaurants
 - `/areas/` and `/areas/<slug>/` area notes
 - `/guides/` and `/guides/<slug>/` meal, area, and favorites guides built from the same listings
 - `/about/` and `/contact/`
+- `/list-your-restaurant/` full new listing or update form. `/contact/` stays the short note.
 - `sitemap.xml`, `robots.txt`, `llms.txt`
