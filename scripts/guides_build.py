@@ -178,6 +178,91 @@ def show_label(count: int) -> str:
     return f"Show {count} {build.restaurant_count_word(count, label=True)}"
 
 
+def has_meal(group: list[dict], meal: str) -> bool:
+    return any(meal in restaurant["meals"] for restaurant in group)
+
+
+def off_dinner(group: list[dict]) -> list[dict]:
+    return [restaurant for restaurant in group if "Dinner" not in restaurant["meals"]]
+
+
+def meal_sentence(group: list[dict]) -> str:
+    bits = []
+    for meal in ("Breakfast", "Lunch", "Dinner"):
+        if has_meal(group, meal):
+            bits.append(meal.lower())
+    if has_meal(group, "Desserts") or any("Dessert" in restaurant["cuisines"] for restaurant in group):
+        bits.append("a sweet stop")
+    if has_meal(group, "Drinks"):
+        bits.append("a drink stop")
+    if not bits:
+        return "Open a restaurant for the meal before you head over."
+    return f"You’ll find {human_list(bits)}."
+
+
+def dinner_mix_sentence(group: list[dict]) -> tuple[str, str]:
+    missing = off_dinner(group)
+    if not missing:
+        return (
+            "The restaurants on this page all serve dinner.",
+            "Yes. The restaurants on this page all serve dinner.",
+        )
+    bits = []
+    if any("Breakfast" in restaurant["meals"] or "Cafe" in restaurant["cuisines"] for restaurant in missing):
+        bits.append("breakfast")
+    if any("Desserts" in restaurant["meals"] or "Dessert" in restaurant["cuisines"] for restaurant in missing):
+        bits.append("sweets")
+    if any("Drinks" in restaurant["meals"] and "Lunch" not in restaurant["meals"] for restaurant in missing):
+        bits.append("a drink stop")
+    if any(
+        "Lunch" in restaurant["meals"]
+        and "Breakfast" not in restaurant["meals"]
+        and "Desserts" not in restaurant["meals"]
+        and "Dessert" not in restaurant["cuisines"]
+        for restaurant in missing
+    ):
+        bits.append("a lunch counter")
+    if not bits:
+        bits.append("daytime stops")
+    listed = human_list(bits)
+    return (
+        f"Not every stop serves dinner. You’ll also find {listed}.",
+        f"No. You’ll also find {listed}.",
+    )
+
+
+def service_paragraph(group: list[dict], setting: str) -> str:
+    found = meal_sentence(group)
+    if found.startswith("You’ll find "):
+        lead = f"At {setting}, you’ll find {found[len('You’ll find '):]}"
+    else:
+        lead = found
+    if not off_dinner(group):
+        return lead
+    if lead.endswith("."):
+        lead = lead[:-1]
+    return f"{lead}. Not every stop serves dinner, so open the restaurant if the evening is the plan."
+
+
+def kids_mix_sentence(group: list[dict]) -> tuple[str, str]:
+    yes = any(restaurant["kids"] for restaurant in group)
+    no = any(not restaurant["kids"] for restaurant in group)
+    if yes and no:
+        return (
+            "Some are listed as kid friendly and some aren’t. Open the restaurant before you bring children.",
+            "Some are and some aren’t. Open the restaurant before you bring children.",
+        )
+    if yes:
+        return (
+            "These restaurants are listed as kid friendly.",
+            "Yes. These restaurants are listed as kid friendly.",
+        )
+    return (
+        "These restaurants aren’t listed as kid friendly. Open the restaurant before you bring children.",
+        "No. These restaurants aren’t listed as kid friendly.",
+    )
+
+
 # One existing photo per guide, used as both the hub card and the page hero.
 # Restaurant covers are listings on that guide. Area covers are the area photos
 # already used on the area pages. None of these paths should be repeated.
@@ -187,7 +272,12 @@ GUIDE_COVERS = {
     "coffee-brunch-destin": ("restaurant", "camille-s-sidewalk-cafe-crystal-beach"),
     "kid-friendly-destin": ("restaurant", "moo-la-la-ice-cream-and-desserts-sandestin"),
     "dinner-sandestin": ("restaurant", "the-beach-house-sandestin"),
+    "sandestin-restaurants": ("area", "sandestin"),
+    "baytowne-wharf-restaurants": ("restaurant", "landshark-bar-and-grill-sandestin"),
+    "grand-boulevard-restaurants": ("area", "grand-boulevard"),
+    "destin-commons-restaurants": ("area", "destin-commons"),
     "destin-harbor-restaurants": ("restaurant", "dewey-destin-s-harborside-destin-harbor"),
+    "harborwalk-restaurants": ("restaurant", "harry-t-s-lighthouse-destin-harbor"),
     "miramar-beach-restaurants": ("area", "miramar-beach"),
     "waterfront-destin": ("area", "crystal-beach"),
     "laurens-favorites-destin": ("restaurant", "mcguire-s-irish-pub-destin-harbor"),
@@ -290,6 +380,15 @@ def guide_picks(restaurants: list[dict], areas: list[dict]) -> list[dict]:
     harbor = choose(lambda restaurant: restaurant["areaSlug"] == "destin-harbor")
     miramar = choose(lambda restaurant: restaurant["areaSlug"] == "miramar-beach")
     sandestin = choose(lambda restaurant: restaurant["areaSlug"] == "sandestin")
+    grand = choose(lambda restaurant: restaurant["areaSlug"] == "grand-boulevard")
+    # Commons Drive is already in the area. Parkway stops stay in only when a listing
+    # places them by Destin Commons, which is the nearby cluster the notes support.
+    commons = choose(
+        lambda restaurant: restaurant["areaSlug"] == "destin-commons"
+        or "destin commons" in f"{restaurant['notes']} {restaurant['label']}".casefold()
+    )
+    harborwalk = choose(lambda restaurant: restaurant["label"].casefold().startswith("harborwalk"))
+    baytowne = choose(lambda restaurant: "baytowne wharf" in restaurant["label"].casefold())
     water = choose(lambda restaurant: restaurant["outdoor"] and restaurant["areaSlug"] in WATER_AREAS)
     favorites = choose(lambda restaurant: restaurant["laurensFavorite"])
     cafes = choose(lambda restaurant: "Cafe" in restaurant["cuisines"])
@@ -303,7 +402,23 @@ def guide_picks(restaurants: list[dict], areas: list[dict]) -> list[dict]:
         "water": water,
         "favorites": favorites,
         "cafes": cafes,
+        "grand": grand,
+        "commons": commons,
+        "harborwalk": harborwalk,
+        "baytowne": baytowne,
     }
+    def search_slugs(query: str) -> set[str]:
+        needle = query.casefold()
+        return {restaurant["slug"] for restaurant in restaurants if needle in restaurant["search"]}
+
+    for query, group in (
+        ("Destin Commons", commons),
+        ("HarborWalk", harborwalk),
+        ("Baytowne Wharf", baytowne),
+    ):
+        wanted = {restaurant["slug"] for restaurant in group}
+        if search_slugs(query) != wanted:
+            raise SystemExit(f"{query} directory search does not match that guide")
     empty = [name for name, group in groups.items() if not group]
     if empty:
         raise SystemExit("guide is empty: " + ", ".join(empty))
@@ -399,10 +514,10 @@ def guide_picks(restaurants: list[dict], areas: list[dict]) -> list[dict]:
         breakfast_gap_faq = "Every area has at least one breakfast restaurant."
 
     if sandestin_other:
-        dinner_daytime = "Not every Sandestin restaurant serves dinner. Daytime stops stay on the Sandestin area page."
-        dinner_daytime_faq = "No. Coffee, breakfast, and other daytime stops stay on the Sandestin area page."
+        dinner_daytime = "Not every Sandestin restaurant serves dinner. Daytime stops are on the Sandestin restaurants guide."
+        dinner_daytime_faq = "No. Coffee, breakfast, and other daytime stops are on the Sandestin restaurants guide."
     else:
-        dinner_daytime = "The Sandestin restaurants here all serve dinner. The area page still has the full resort list."
+        dinner_daytime = "The Sandestin restaurants here all serve dinner. The Sandestin restaurants guide is the full resort list."
         dinner_daytime_faq = "Yes. The Sandestin restaurants on this page all serve dinner."
 
     if dinner_kids and dinner_not_kids:
@@ -445,6 +560,64 @@ def guide_picks(restaurants: list[dict], areas: list[dict]) -> list[dict]:
         "Breakfast includes kid-friendly restaurants." if breakfast_kids else "Seafood includes kid-friendly restaurants." if seafood_kids else "Open a restaurant before you count on a kids’ menu."
     )
     kids_everywhere = "You’ll still find them in every area." if len(kids_areas) == len(areas) else "The directory can show the kid-friendly list on its own."
+
+    grand_href = "/restaurants/?area=grand-boulevard"
+    grand_map = "/map/?area=grand-boulevard"
+    commons_href = filter_href("/restaurants/", [("q", "Destin Commons")])
+    commons_map = filter_href("/map/", [("q", "Destin Commons")])
+    harborwalk_href = filter_href("/restaurants/", [("q", "HarborWalk")])
+    harborwalk_map = filter_href("/map/", [("q", "HarborWalk")])
+    baytowne_href = filter_href("/restaurants/", [("q", "Baytowne Wharf")])
+    baytowne_map = filter_href("/map/", [("q", "Baytowne Wharf")])
+    sandestin_href = "/restaurants/?area=sandestin"
+    sandestin_map = "/map/?area=sandestin"
+    grand_service = service_paragraph(grand, "the square")
+    _grand_dinner, grand_dinner_faq = dinner_mix_sentence(grand)
+    grand_kids, grand_kids_faq = kids_mix_sentence(grand)
+    commons_service = service_paragraph(commons, "the shops")
+    _commons_dinner, commons_dinner_faq = dinner_mix_sentence(commons)
+    commons_kids, commons_kids_faq = kids_mix_sentence(commons)
+    commons_drive = [restaurant for restaurant in commons if "commons drive" in restaurant["label"].casefold()]
+    commons_parkway = [restaurant for restaurant in commons if restaurant["areaSlug"] != "destin-commons"]
+    commons_places = ["the shopping center"]
+    if commons_drive:
+        commons_places.append("Commons Drive beside it")
+    if commons_parkway:
+        commons_places.append("the parkway stops by the shops")
+    commons_where = (
+        "Destin Commons is the open-air shopping center in Destin. "
+        f"This list is {human_list(commons_places)}. "
+        "Open a restaurant for the address before you assume you’re in the parking lot."
+    )
+    if commons_parkway:
+        commons_where_faq = (
+            "The shopping center and Commons Drive are the core. "
+            "Parkway stops by the shops are included too. The address shows which is which."
+        )
+    else:
+        commons_where_faq = "They’re at the shopping center and on Commons Drive beside it. The address shows which street."
+    harborwalk_service = service_paragraph(harborwalk, "the boardwalk")
+    _harborwalk_dinner, harborwalk_dinner_faq = dinner_mix_sentence(harborwalk)
+    harborwalk_kids, harborwalk_kids_faq = kids_mix_sentence(harborwalk)
+    baytowne_service = service_paragraph(baytowne, "the wharf")
+    _baytowne_dinner, baytowne_dinner_faq = dinner_mix_sentence(baytowne)
+    baytowne_kids, baytowne_kids_faq = kids_mix_sentence(baytowne)
+    sandestin_found = meal_sentence(sandestin)
+    if sandestin_found.startswith("You’ll find "):
+        sandestin_found = "At the resort, you’ll find " + sandestin_found[len("You’ll find ") :]
+    if len({tuple(restaurant["meals"]) for restaurant in sandestin}) > 1:
+        sandestin_vary = "The wharf, the hotels, and the market shops don’t all serve the same meal."
+    else:
+        sandestin_vary = "Open a restaurant for the address and the hours."
+    sandestin_day = f"{sandestin_found} {sandestin_vary}"
+    sandestin_dinner, sandestin_dinner_faq = dinner_mix_sentence(sandestin)
+    sandestin_kids, sandestin_kids_faq = kids_mix_sentence(sandestin)
+    if sandestin_other:
+        sandestin_split = "The dinner guide is the evening only. Daytime stops stay on this page."
+        sandestin_split_faq = "No. Daytime stops stay on this page. The dinner guide is the evening list."
+    else:
+        sandestin_split = "Every restaurant here serves dinner. The dinner guide is that evening list."
+        sandestin_split_faq = "Yes. The Sandestin restaurants on this page all serve dinner."
 
     specs = [
         guide_spec(
@@ -643,8 +816,8 @@ def guide_picks(restaurants: list[dict], areas: list[dict]) -> list[dict]:
             ),
             "Sandestin",
             [
-                "Staying at Sandestin and don’t want to get back on 98? Dinner here is inside the resort: Baytowne Wharf, the marina, and the hotel restaurants.",
-                "Grand Boulevard, the town center north of the bay, is a short drive if you want the square instead of the wharf. Those restaurants are on the Grand Boulevard page, not this one.",
+                "Staying at Sandestin and don’t want to get back on 98? Dinner here is inside the resort: Baytowne Wharf, the marina, and the hotel restaurants. The wharf on its own is the Baytowne Wharf guide.",
+                "Grand Boulevard, the town center north of the bay, is a short drive if you want the square instead of the wharf. Those restaurants are on the Grand Boulevard guide, not this one.",
                 dinner_daytime,
                 dinner_kids_copy,
                 "Baytowne gets busy on summer evenings. If you’re walking the wharf, eat a little early. Hours change with the season, so open the restaurant before you head over.",
@@ -656,8 +829,8 @@ def guide_picks(restaurants: list[dict], areas: list[dict]) -> list[dict]:
                 faq_item(
                     "Does every Sandestin restaurant serve dinner?",
                     dinner_daytime_faq,
-                    "/areas/sandestin/",
-                    "Open the Sandestin area page",
+                    "/guides/sandestin-restaurants/",
+                    "Open the Sandestin restaurants guide",
                 ),
                 faq_item(
                     "Where in Sandestin is dinner?",
@@ -677,10 +850,214 @@ def guide_picks(restaurants: list[dict], areas: list[dict]) -> list[dict]:
             guide_cover("dinner-sandestin", restaurants, areas),
             "Dinner restaurants in Sandestin, near Destin.",
             extra=[
-                ("/areas/sandestin/", "Sandestin area page"),
-                ("/areas/grand-boulevard/", "Grand Boulevard restaurants"),
+                ("/guides/sandestin-restaurants/", "Sandestin restaurants"),
+                ("/guides/baytowne-wharf-restaurants/", "Baytowne Wharf restaurants"),
+                ("/guides/grand-boulevard-restaurants/", "Grand Boulevard restaurants"),
             ],
             list_name="Dinner near Sandestin",
+        ),
+        guide_spec(
+            "sandestin-restaurants",
+            "Sandestin restaurants",
+            "Sandestin restaurants | Eating in Destin",
+            (
+                "Sandestin restaurants in Destin, Florida, from Baytowne Wharf to the marina, "
+                "the hotels, and the market shops, not only dinner."
+            ),
+            "Sandestin",
+            [
+                "Staying at Sandestin and want the whole day, not just dinner? This is the resort: Baytowne Wharf, the marina, the hotel restaurants, and the Market Shops.",
+                sandestin_split,
+                sandestin_day,
+                "Grand Boulevard, the town center north of the bay, is a short drive if you want the square instead of the resort. Those restaurants are on the Grand Boulevard guide, not this one.",
+                "Open a restaurant for the address so you know whether you’re on the wharf, at a hotel, or at the market shops. Hours change with the season.",
+            ],
+            sandestin,
+            sandestin_href,
+            sandestin_map,
+            [
+                faq_item(
+                    "Is this the same as dinner near Sandestin?",
+                    sandestin_split_faq,
+                    "/guides/dinner-sandestin/",
+                    "Open dinner near Sandestin",
+                ),
+                faq_item(
+                    "Where in Sandestin are the restaurants?",
+                    "Inside the resort: Baytowne Wharf, the marina, the hotels, and the Market Shops. Grand Boulevard, north of the bay, is a separate area.",
+                    sandestin_href,
+                    "See Sandestin in the directory",
+                ),
+                faq_item(
+                    "Does every Sandestin restaurant serve dinner?",
+                    sandestin_dinner_faq,
+                    dinner_href,
+                    "See Sandestin dinner in the directory",
+                ),
+                faq_item(
+                    "Can we bring kids?",
+                    sandestin_kids_faq,
+                    filter_href("/restaurants/", [("area", "sandestin"), ("kids", "yes")]),
+                    "Show kid-friendly Sandestin",
+                ),
+            ],
+            "Sandestin",
+            "The resort list: wharf, marina, hotels, and market shops. Dinner has its own guide.",
+            guide_cover("sandestin-restaurants", restaurants, areas),
+            "Restaurants in Sandestin, near Destin, including meals beyond dinner.",
+            extra=[
+                ("/guides/dinner-sandestin/", "Dinner near Sandestin"),
+                ("/guides/baytowne-wharf-restaurants/", "Baytowne Wharf restaurants"),
+                ("/guides/grand-boulevard-restaurants/", "Grand Boulevard restaurants"),
+                ("/areas/sandestin/", "Sandestin area page"),
+            ],
+            list_name="Sandestin restaurants",
+        ),
+        guide_spec(
+            "baytowne-wharf-restaurants",
+            "Baytowne Wharf restaurants",
+            "Baytowne Wharf restaurants | Eating in Destin",
+            (
+                "Baytowne Wharf restaurants in Sandestin, near Destin, Florida, "
+                "at the Village of Baytowne Wharf, with the directory and a map."
+            ),
+            "Baytowne Wharf",
+            [
+                "Baytowne Wharf is the village inside Sandestin. If a search for Baytown brought you here, the name is Baytowne Wharf.",
+                baytowne_service,
+                "The marina, the resort hotels, and the Market Shops are Sandestin too, and they aren’t on this page. The Sandestin restaurants guide is that wider list. Dinner across the resort, including the hotels, is the dinner guide.",
+                "Grand Boulevard, north of the bay, is a different area if you want the square instead of the wharf. Baytowne gets busy on summer evenings, so eat a little early if you’re walking the village, and check the hours before you head over.",
+            ],
+            baytowne,
+            baytowne_href,
+            baytowne_map,
+            [
+                faq_item(
+                    "Is Baytowne the same as Sandestin?",
+                    "Baytowne Wharf is the village inside Sandestin. The marina, the hotels, and the Market Shops are on the Sandestin restaurants guide.",
+                    "/guides/sandestin-restaurants/",
+                    "Open Sandestin restaurants",
+                ),
+                faq_item(
+                    "Does every Baytowne Wharf stop serve dinner?",
+                    baytowne_dinner_faq,
+                    filter_href("/restaurants/", [("q", "Baytowne Wharf"), ("meal", "Dinner")]),
+                    "Show Baytowne Wharf dinner",
+                ),
+                faq_item(
+                    "Can we bring kids to Baytowne Wharf?",
+                    baytowne_kids_faq,
+                    filter_href("/restaurants/", [("q", "Baytowne Wharf"), ("kids", "yes")]),
+                    "Show kid-friendly Baytowne Wharf",
+                ),
+            ],
+            "Baytowne Wharf",
+            "The village inside Sandestin. The spelling is Baytowne Wharf.",
+            guide_cover("baytowne-wharf-restaurants", restaurants, areas),
+            "Restaurants at the Village of Baytowne Wharf in Sandestin, near Destin.",
+            extra=[
+                ("/guides/sandestin-restaurants/", "Sandestin restaurants"),
+                ("/guides/dinner-sandestin/", "Dinner near Sandestin"),
+                ("/guides/grand-boulevard-restaurants/", "Grand Boulevard restaurants"),
+            ],
+            list_name="Baytowne Wharf restaurants",
+        ),
+        guide_spec(
+            "grand-boulevard-restaurants",
+            "Grand Boulevard restaurants",
+            "Grand Boulevard restaurants | Eating in Destin",
+            (
+                "Grand Boulevard restaurants in Destin, Florida, at the town center north of the bay, "
+                "for a meal on the square instead of the wharf."
+            ),
+            "Grand Boulevard",
+            [
+                "Grand Boulevard is the town center north of the bay, on the Sandestin side of Destin. Come for the square when you want to sit down and don’t want to get back on 98.",
+                grand_service,
+                "This isn’t Baytowne Wharf, and it isn’t the hotels inside the resort. Those are on the Sandestin guides. If you’re staying at the resort and want the square, it’s a short drive north of the bay.",
+                f"{grand_kids} Weekend evenings in season fill the square. Go a little early if you want a table, and check the hours before you leave.",
+            ],
+            grand,
+            grand_href,
+            grand_map,
+            [
+                faq_item(
+                    "Is Grand Boulevard the same as Sandestin?",
+                    "No. Grand Boulevard is the town center north of the bay. Sandestin is the resort, including Baytowne Wharf.",
+                    "/guides/sandestin-restaurants/",
+                    "Open Sandestin restaurants",
+                ),
+                faq_item(
+                    "Does every Grand Boulevard restaurant serve dinner?",
+                    grand_dinner_faq,
+                    filter_href("/restaurants/", [("area", "grand-boulevard"), ("meal", "Dinner")]),
+                    "Show Grand Boulevard dinner",
+                ),
+                faq_item(
+                    "Can we bring kids to Grand Boulevard?",
+                    grand_kids_faq,
+                    filter_href("/restaurants/", [("area", "grand-boulevard"), ("kids", "yes")]),
+                    "Show kid-friendly Grand Boulevard",
+                ),
+            ],
+            "Grand Boulevard",
+            "The town center north of the bay, when you want the square.",
+            guide_cover("grand-boulevard-restaurants", restaurants, areas),
+            "Restaurants at Grand Boulevard, the town center north of the bay in Destin.",
+            extra=[
+                ("/areas/grand-boulevard/", "Grand Boulevard area page"),
+                ("/guides/sandestin-restaurants/", "Sandestin restaurants"),
+                ("/guides/baytowne-wharf-restaurants/", "Baytowne Wharf restaurants"),
+            ],
+            list_name="Grand Boulevard restaurants",
+        ),
+        guide_spec(
+            "destin-commons-restaurants",
+            "Destin Commons restaurants",
+            "Destin Commons restaurants | Eating in Destin",
+            (
+                "Destin Commons restaurants in Destin, Florida, at the open-air shopping center "
+                "and on Commons Drive beside it, with a map."
+            ),
+            "Destin Commons",
+            [
+                commons_where,
+                commons_service,
+                "It’s an easy lunch if you’re already at the shops, and a separate trip if you’re coming from the beach. Check the hours before you drive over.",
+                commons_kids,
+            ],
+            commons,
+            commons_href,
+            commons_map,
+            [
+                faq_item(
+                    "Are these restaurants inside Destin Commons?",
+                    commons_where_faq,
+                    commons_href,
+                    "See Destin Commons in the directory",
+                ),
+                faq_item(
+                    "Does every Destin Commons stop serve dinner?",
+                    commons_dinner_faq,
+                    filter_href("/restaurants/", [("q", "Destin Commons"), ("meal", "Dinner")]),
+                    "Show Destin Commons dinner",
+                ),
+                faq_item(
+                    "Can we bring kids to Destin Commons?",
+                    commons_kids_faq,
+                    filter_href("/restaurants/", [("q", "Destin Commons"), ("kids", "yes")]),
+                    "Show kid-friendly Destin Commons",
+                ),
+            ],
+            "Destin Commons",
+            "The open-air shops, Commons Drive beside them, and the parkway stops by the center.",
+            guide_cover("destin-commons-restaurants", restaurants, areas),
+            "Restaurants at Destin Commons and by the shops in Destin.",
+            extra=[
+                ("/areas/destin-commons/", "Destin Commons area page"),
+                ("/areas/mid-destin/", "Mid-Destin restaurants"),
+            ],
+            list_name="Destin Commons restaurants",
         ),
         guide_spec(
             "destin-harbor-restaurants",
@@ -694,7 +1071,7 @@ def guide_picks(restaurants: list[dict], areas: list[dict]) -> list[dict]:
             [
                 "Destin Harbor is the fishing harbor, and HarborWalk Village is the boardwalk beside the boats. Come hungry for seafood, and expect snacks, sweets, and a drink stop mixed in with the dining rooms.",
                 harbor_day,
-                "The area covers the boardwalk and the streets right around it. Open a restaurant for the address so you know whether you’re walking HarborWalk or driving to a spot nearby.",
+                "This page is the whole harbor, not only HarborWalk Village. The village has its own guide. Open a restaurant for the address so you know whether you’re on the boardwalk or at a spot nearby.",
                 "Summer afternoons and weekends fill the boardwalk. Parking tightens up then. Check the hours before you leave the condo, and go a little early if you want to sit down.",
             ],
             harbor,
@@ -719,16 +1096,70 @@ def guide_picks(restaurants: list[dict], areas: list[dict]) -> list[dict]:
                     harbor_map,
                     "Map Destin Harbor",
                 ),
+                faq_item(
+                    "Is HarborWalk the whole harbor?",
+                    "No. HarborWalk Village is the boardwalk. This page also includes the other restaurants in the harbor area. The HarborWalk guide is the village on its own.",
+                    "/guides/harborwalk-restaurants/",
+                    "Open HarborWalk restaurants",
+                ),
             ],
             "Destin Harbor",
             "HarborWalk Village and the docks, with seafood houses and snack stops.",
             guide_cover("destin-harbor-restaurants", restaurants, areas),
             "Restaurants in Destin Harbor.",
             extra=[
+                ("/guides/harborwalk-restaurants/", "HarborWalk restaurants"),
                 ("/areas/destin-harbor/", "Destin Harbor area page"),
                 (filter_href("/restaurants/", [("area", "destin-harbor"), ("cuisine", "Seafood")]), "Destin Harbor seafood"),
             ],
             list_name="Destin Harbor restaurants",
+        ),
+        guide_spec(
+            "harborwalk-restaurants",
+            "HarborWalk restaurants",
+            "HarborWalk restaurants | Eating in Destin",
+            (
+                "HarborWalk Village restaurants at Destin Harbor in Destin, Florida. "
+                "The boardwalk list, separate from the wider Destin Harbor guide."
+            ),
+            "HarborWalk",
+            [
+                "HarborWalk Village is the boardwalk at Destin Harbor. This page is that village. The Destin Harbor guide is wider: it keeps the village and the other restaurants in the harbor area.",
+                harborwalk_service,
+                "Open a restaurant for the address if you need to stay on the village. Summer afternoons and weekends fill the boardwalk, and parking tightens up then. Go a little early if you want to sit down.",
+            ],
+            harborwalk,
+            harborwalk_href,
+            harborwalk_map,
+            [
+                faq_item(
+                    "Is HarborWalk the same as Destin Harbor?",
+                    "No. HarborWalk Village is the boardwalk. The Destin Harbor guide also includes the other restaurants in the harbor area.",
+                    "/guides/destin-harbor-restaurants/",
+                    "Open Destin Harbor restaurants",
+                ),
+                faq_item(
+                    "Does every HarborWalk stop serve dinner?",
+                    harborwalk_dinner_faq,
+                    filter_href("/restaurants/", [("q", "HarborWalk"), ("meal", "Dinner")]),
+                    "Show HarborWalk dinner",
+                ),
+                faq_item(
+                    "Can we bring kids to HarborWalk?",
+                    harborwalk_kids_faq,
+                    filter_href("/restaurants/", [("q", "HarborWalk"), ("kids", "yes")]),
+                    "Show kid-friendly HarborWalk",
+                ),
+            ],
+            "HarborWalk",
+            "The boardwalk village at Destin Harbor, not the whole harbor.",
+            guide_cover("harborwalk-restaurants", restaurants, areas),
+            "HarborWalk Village restaurants at Destin Harbor. Not the wider harbor list.",
+            extra=[
+                ("/guides/destin-harbor-restaurants/", "Destin Harbor restaurants"),
+                ("/areas/destin-harbor/", "Destin Harbor area page"),
+            ],
+            list_name="HarborWalk restaurants",
         ),
         guide_spec(
             "miramar-beach-restaurants",

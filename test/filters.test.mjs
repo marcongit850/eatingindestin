@@ -5,7 +5,7 @@ import { FEATURED_ROTATE_MS, describeFilters, featuredIndex, featuredStatusForSt
 
 const restaurants = JSON.parse(readFileSync(new URL("../data/restaurants.json", import.meta.url), "utf8"));
 
-const blank = { meal: "", area: "", cuisine: "", q: "", outdoor: "", kids: "", music: "", laurens: "" };
+const blank = { meal: "", area: "", cuisine: "", q: "", outdoor: "", kids: "", music: "", laurens: "", reservations: "", groups: "", happyfood: "", happydrinks: "" };
 
 test("empty filters keep the full directory", () => {
   assert.equal(restaurants.filter((item) => matches(item, blank)).length, restaurants.length);
@@ -53,11 +53,28 @@ test("amenity filters require a yes flag", () => {
   assert.ok(outdoor.length > 0);
   assert.ok(outdoor.every((item) => item.outdoor));
   assert.ok(outdoor.length < restaurants.length);
+
+  const groups = restaurants.filter((item) => matches(item, { ...blank, groups: "yes" }));
+  assert.ok(groups.length > 0);
+  assert.ok(groups.every((item) => item.groups === true));
+  assert.ok(groups.some((item) => item.slug === "harbor-docks-destin-harbor"));
+
+  const reservations = restaurants.filter((item) => matches(item, { ...blank, reservations: "yes" }));
+  assert.ok(reservations.every((item) => item.reservations === true));
+  assert.ok(reservations.some((item) => item.slug === "mezcal-mexican-grill-miramar-beach"));
+  assert.ok(!reservations.some((item) => item.slug === "captain-dave-s-on-the-gulf-crystal-beach"));
+
+  const happyFood = restaurants.filter((item) => matches(item, { ...blank, happyfood: "yes" }));
+  const happyDrinks = restaurants.filter((item) => matches(item, { ...blank, happydrinks: "yes" }));
   const music = restaurants.filter((item) => matches(item, { ...blank, music: "yes" }));
-  assert.equal(music.length, 16);
+  assert.ok(happyFood.length > 0 && happyFood.every((item) => item.happyFood === true));
+  assert.ok(happyDrinks.length > 0 && happyDrinks.every((item) => item.happyDrinks === true));
+  assert.equal(music.length, 20);
   assert.ok(music.every((item) => item.music === true));
   assert.ok(music.some((item) => item.slug === "harbor-tavern-destin-harbor"));
+  assert.ok(music.some((item) => item.slug === "boshamps-seafood-and-oyster-house-destin-harbor"));
   assert.equal(describeFilters({ ...blank, music: "yes" }, {}), "Live music");
+  assert.equal(describeFilters({ ...blank, groups: "yes", reservations: "yes" }, {}), "Takes reservations · Good for groups 12+");
 });
 
 test("Lauren's Favorites shows only the tagged restaurants", () => {

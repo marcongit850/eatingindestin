@@ -505,6 +505,7 @@ def load_restaurants() -> list[dict]:
                 "happyDrinks": is_yes(row.get("Happy Hour (drinks)")),
                 "happyFood": is_yes(row.get("Happy Hour (food)")),
                 "reservations": is_yes(row.get("Reservations")),
+                "groups": is_yes(row.get("Groups of 12")),
                 "facebook": website_href(row.get("Facebook URL") or ""),
                 "instagram": website_href(row.get("Instagram") or ""),
                 "cardImage": card_image,
@@ -696,6 +697,10 @@ def card(restaurant: dict, heading: str = "h2") -> str:
             f'data-kids="{yes_no(restaurant["kids"])}"',
             f'data-music="{yes_no(restaurant["music"])}"',
             f'data-laurens="{yes_no(restaurant["laurensFavorite"])}"',
+            f'data-reservations="{yes_no(restaurant["reservations"])}"',
+            f'data-groups="{yes_no(restaurant["groups"])}"',
+            f'data-happyfood="{yes_no(restaurant["happyFood"])}"',
+            f'data-happydrinks="{yes_no(restaurant["happyDrinks"])}"',
             f'data-search="{e(restaurant["search"])}"',
         ]
     )
@@ -883,6 +888,8 @@ def detail_sentence(restaurant: dict) -> str:
         clauses.append("Live music is listed.")
     if restaurant["reservations"]:
         clauses.append("They take reservations.")
+    if restaurant["groups"]:
+        clauses.append("Groups of 12 or more are listed.")
     if restaurant["happyDrinks"] and restaurant["happyFood"]:
         clauses.append("A happy hour for drinks and food is listed.")
     elif restaurant["happyDrinks"]:
@@ -1392,6 +1399,10 @@ def filter_form(areas: list[dict], cuisines: list[str]) -> str:
         '<label class="check"><input type="checkbox" name="outdoor" value="yes"><span>Outdoor dining</span></label>'
         '<label class="check"><input type="checkbox" name="kids" value="yes"><span>Kid friendly</span></label>'
         '<label class="check"><input type="checkbox" name="music" value="yes"><span>Live music</span></label>'
+        '<label class="check"><input type="checkbox" name="reservations" value="yes"><span>Takes reservations</span></label>'
+        '<label class="check"><input type="checkbox" name="groups" value="yes"><span>Good for groups 12+</span></label>'
+        '<label class="check"><input type="checkbox" name="happyfood" value="yes"><span>Happy hour food</span></label>'
+        '<label class="check"><input type="checkbox" name="happydrinks" value="yes"><span>Happy hour drinks</span></label>'
         '<label class="check"><input type="checkbox" name="laurens" value="yes"><span>Lauren\'s Favorites</span></label>'
         "</div>"
         '<div class="filter-actions"><button type="submit">Apply</button><a class="clear" href="/restaurants/">Clear</a></div>'
@@ -1424,6 +1435,10 @@ def public_record(restaurant: dict) -> dict:
         "kids": restaurant["kids"],
         "music": restaurant["music"],
         "laurensFavorite": restaurant["laurensFavorite"],
+        "reservations": restaurant["reservations"],
+        "groups": restaurant["groups"],
+        "happyFood": restaurant["happyFood"],
+        "happyDrinks": restaurant["happyDrinks"],
         "image": restaurant["cardImage"],
     }
 
@@ -1638,7 +1653,7 @@ def build_home(restaurants: list[dict], areas: list[dict], hero: str | None) -> 
 def build_directory(restaurants: list[dict], areas: list[dict], cuisines: list[str]) -> None:
     pending = (
         "<script>!function(){var p=new URLSearchParams(location.search);"
-        "['meal','area','cuisine','q','outdoor','kids','music','laurens'].some(function(k){return p.get(k)})"
+        "['meal','area','cuisine','q','outdoor','kids','music','laurens','reservations','groups','happyfood','happydrinks'].some(function(k){return p.get(k)})"
         "&&document.documentElement.classList.add('js-filter')}();</script>\n"
     )
     cards = "".join(card(restaurant) for restaurant in restaurants)
@@ -1716,23 +1731,18 @@ def build_detail(restaurant: dict, restaurants: list[dict]) -> None:
         chips.append(f'<li><a href="/restaurants/?cuisine={e(cuisine)}">{e(cuisine)}</a></li>')
     if restaurant["price"]:
         chips.append(f'<li>{e(restaurant["price"])}</li>')
-    flags = []
-    if restaurant["outdoor"]:
-        flags.append("Outdoor dining")
-    if restaurant["kids"]:
-        flags.append("Kid friendly")
-    if restaurant["music"]:
-        flags.append("Live music*")
-    if restaurant["laurensFavorite"]:
-        flags.append("Lauren's Favorites")
-    if restaurant["happyDrinks"]:
-        flags.append("Happy hour drinks")
-    if restaurant["happyFood"]:
-        flags.append("Happy hour food")
-    if restaurant["reservations"]:
-        flags.append("Takes reservations")
-    for flag in flags:
-        chips.append(f"<li>{e(flag)}</li>")
+    for label, flag in (
+        ("Outdoor dining", restaurant["outdoor"]),
+        ("Kid friendly", restaurant["kids"]),
+        ("Live music*", restaurant["music"]),
+        ("Lauren's Favorites", restaurant["laurensFavorite"]),
+        ("Happy hour drinks", restaurant["happyDrinks"]),
+        ("Happy hour food", restaurant["happyFood"]),
+        ("Takes reservations", restaurant["reservations"]),
+        ("Good for groups 12+", restaurant["groups"]),
+    ):
+        if flag:
+            chips.append(f"<li>{e(label)}</li>")
     phone = f'<a href="{e(restaurant["tel"])}">{e(restaurant["phone"])}</a>' if restaurant["tel"] else ""
     website = restaurant_website_anchor(restaurant["website"]) if restaurant["website"] else ""
     directions = ""
