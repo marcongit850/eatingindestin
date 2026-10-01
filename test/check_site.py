@@ -526,8 +526,15 @@ cover_paths = [guide["teaser_image"] for guide in picks]
 check(len(cover_paths) == len(set(cover_paths)) == 9, "each guide needs a different cover image")
 check(".h1-place" not in styles, "listing H1 should not style a place subtitle")
 check(".profile-links" not in styles, "listing pages should not style a related-guides nav")
+website_links = 0
 for restaurant in source:
     page = (ROOT / "restaurants" / restaurant["slug"] / "index.html").read_text(encoding="utf-8")
+    if restaurant.get("website"):
+        website_links += 1
+        check(
+            f'<a href="{build.e(restaurant["website"])}" target="_blank" rel="noopener noreferrer">' in page,
+            f"restaurant website should open in a new tab {restaurant['slug']}",
+        )
     story = page.split('class="prose profile-story"', 1)[1].split("</div>", 1)[0]
     check(story.count("<p>") >= 2, f"listing intro should have the note and a practical paragraph {restaurant['slug']}")
     check("<nav" not in story, f"profile story should stay prose {restaurant['slug']}")
@@ -592,9 +599,40 @@ html_pages = [
     if ".wrangler" not in path.parts and "includes" not in path.parts
 ]
 check(html_pages, "no html pages to check for shared chrome")
+website_hrefs = {build.e(item["website"]) for item in source if item.get("website")}
+check(website_links > 0, "at least one listing should link the restaurant website")
+
+
+def anchor_hrefs(text: str):
+    for tag in re.findall(r"<a\b[^>]*>", text):
+        href_match = re.search(r'\bhref="([^"]*)"', tag)
+        href = href_match.group(1) if href_match else ""
+        yield tag, href
+
+
+def check_link_targets(text: str, label: str) -> None:
+    for tag, href in anchor_hrefs(text):
+        opens_new = 'target="_blank"' in tag
+        if href in website_hrefs:
+            check(
+                opens_new and 'rel="noopener noreferrer"' in tag,
+                f"{label} restaurant website should open in a new tab: {href}",
+            )
+            continue
+        internal = href.startswith(("/", "#")) or href.startswith(build.ORIGIN)
+        check(
+            not (opens_new and internal),
+            f"{label} internal link should stay in the same tab: {href}",
+        )
+
+
+check_link_targets(shared_header, "header")
+check_link_targets(shared_footer, "footer")
+check_link_targets(site_js, "site.js")
 for page in html_pages:
     text = page.read_text(encoding="utf-8")
     rel = page.relative_to(ROOT).as_posix()
+    check_link_targets(text, rel)
     check('id="site-header"' in text, f"{rel} does not mount the shared header")
     check('id="site-footer"' in text, f"{rel} does not mount the shared footer")
     check('src="/header.js"' in text and 'src="/footer.js"' in text, f"{rel} does not load the shared header and footer scripts")
