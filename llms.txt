@@ -12,6 +12,7 @@ Search by restaurant name, or look for restaurants and food in Destin, Miramar B
 - [Restaurants](https://www.eatingindestin.com/restaurants/)
 - [Map](https://www.eatingindestin.com/map/)
 - [Areas](https://www.eatingindestin.com/areas/)
+- [Guides](https://www.eatingindestin.com/guides/): Seafood, breakfast, coffee, areas, and favorites in Destin and Miramar Beach.
 - [About](https://www.eatingindestin.com/about/): A restaurant guide for Destin and Miramar Beach.
 - [Contact](https://www.eatingindestin.com/contact/): Send a correction, edit, deletion, or new listing.
 
@@ -24,6 +25,18 @@ Search by restaurant name, or look for restaurants and food in Destin, Miramar B
 - [Mid-Destin](https://www.eatingindestin.com/areas/mid-destin/): The US 98 stretch through Destin, with everyday restaurants between the harbor and Sandestin.
 - [Destin Harbor](https://www.eatingindestin.com/areas/destin-harbor/): HarborWalk Village and the Destin Harbor docks, with seafood houses on the water.
 - [Crystal Beach](https://www.eatingindestin.com/areas/crystal-beach/): Along Scenic 98, including Henderson Beach and the gulf-front inns.
+
+## Guides
+
+- [Best seafood in Destin](https://www.eatingindestin.com/guides/best-seafood-destin/): Seafood restaurants in Destin and Miramar Beach.
+- [Breakfast in Destin](https://www.eatingindestin.com/guides/breakfast-destin/): Breakfast restaurants in Destin and Miramar Beach.
+- [Coffee and brunch in Destin](https://www.eatingindestin.com/guides/coffee-brunch-destin/): Cafes and coffee in Destin and Miramar Beach. There isn’t a separate brunch meal.
+- [Kid-friendly in Destin and Miramar](https://www.eatingindestin.com/guides/kid-friendly-destin/): Kid-friendly restaurants in Destin and Miramar Beach.
+- [Dinner near Sandestin](https://www.eatingindestin.com/guides/dinner-sandestin/): Dinner restaurants in Sandestin, near Destin.
+- [Destin Harbor restaurants](https://www.eatingindestin.com/guides/destin-harbor-restaurants/): Restaurants in Destin Harbor.
+- [Miramar Beach restaurants](https://www.eatingindestin.com/guides/miramar-beach-restaurants/): Restaurants in Miramar Beach, near Destin.
+- [Waterfront dining in Destin](https://www.eatingindestin.com/guides/waterfront-destin/): Outdoor dining at Destin Harbor, Sandestin, and Crystal Beach. Not a waterfront rating.
+- [Lauren’s Favorites in Destin](https://www.eatingindestin.com/guides/laurens-favorites-destin/): Restaurants marked Lauren’s Favorites in Destin and Miramar Beach.
 
 ## Restaurants
 

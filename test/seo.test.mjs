@@ -187,7 +187,9 @@ assert.equal(locs.includes(`${ORIGIN}/`), true);
 assert.equal(locs.includes(`${ORIGIN}/restaurants/`), true);
 assert.equal(locs.includes(`${ORIGIN}/restaurants/harbor-docks-destin-harbor/`), true);
 assert.equal(locs.includes(`${ORIGIN}/404.html`), false);
-assert.equal(locs.length, 6 + 7 + 215);
+assert.equal(locs.includes(`${ORIGIN}/guides/`), true);
+assert.equal(locs.includes(`${ORIGIN}/guides/best-seafood-destin/`), true);
+assert.equal(locs.length, 7 + 9 + 7 + 215);
 
 const llms = read("llms.txt");
 const llmsFull = read("llms-full.txt");

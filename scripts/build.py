@@ -1347,12 +1347,17 @@ def build_home(restaurants: list[dict], areas: list[dict], hero: str | None) -> 
         "</div></section>"
         '<section class="section"><div class="wrap essay-grid">'
         '<div><p class="kicker">The coast</p><h2>A guide for Destin and Miramar Beach.</h2></div>'
-        f'<div class="prose"><p>{e(ABOUT)}</p>'
+        f'<div><div class="prose"><p>{e(ABOUT)}</p>'
         "<p>Search for a restaurant by name, or browse food in "
         '<a href="/areas/miramar-beach/">Miramar Beach</a>, '
         '<a href="/areas/sandestin/">Sandestin</a>, '
         '<a href="/areas/destin-harbor/">Destin Harbor</a>, and the rest of Destin.</p>'
         '<p><a class="button" href="/restaurants/">Browse the directory</a></p></div>'
+        '<p class="kicker">Guides</p>'
+        '<p class="lede">Popular guides for a trip to Destin and Miramar Beach. Seafood, breakfast, and the rest of the list are on the guides page.</p>'
+        '<p class="section-links"><a class="text-link" href="/guides/best-seafood-destin/">Best seafood in Destin</a>'
+        '<a class="text-link" href="/guides/breakfast-destin/">Breakfast in Destin</a>'
+        '<a class="text-link" href="/guides/">All guides</a></p></div>'
         "</div></section>"
     )
     description = (
@@ -1941,16 +1946,20 @@ def newest_date(dates: list[str]) -> str:
     return max(found) if found else ""
 
 
-def build_sitemap(restaurants: list[dict], areas: list[dict]) -> None:
+def build_sitemap(restaurants: list[dict], areas: list[dict], guides: list[dict]) -> None:
     site_date = newest_date([restaurant["updated"] for restaurant in restaurants])
     urls = [
         ("/", site_date),
         ("/restaurants/", site_date),
         ("/map/", site_date),
         ("/areas/", site_date),
+        ("/guides/", site_date),
         ("/about/", site_date),
         ("/contact/", site_date),
     ]
+    for guide in guides:
+        guide_date = newest_date(restaurant["updated"] for restaurant in guide["restaurants"])
+        urls.append((guide["path"], guide_date or site_date))
     for area in areas:
         area_date = newest_date(
             restaurant["updated"] for restaurant in restaurants if restaurant["areaSlug"] == area["slug"]
@@ -2001,7 +2010,7 @@ def build_robots() -> None:
     write(ROOT / "robots.txt", text)
 
 
-def build_llms(restaurants: list[dict], areas: list[dict]) -> None:
+def build_llms(restaurants: list[dict], areas: list[dict], guides: list[dict]) -> None:
     lines = [
         "# Eating in Destin",
         "",
@@ -2017,6 +2026,7 @@ def build_llms(restaurants: list[dict], areas: list[dict]) -> None:
         f"- [Restaurants]({ORIGIN}/restaurants/)",
         f"- [Map]({ORIGIN}/map/)",
         f"- [Areas]({ORIGIN}/areas/)",
+        f"- [Guides]({ORIGIN}/guides/): Seafood, breakfast, coffee, areas, and favorites in Destin and Miramar Beach.",
         f"- [About]({ORIGIN}/about/): A restaurant guide for Destin and Miramar Beach.",
         f"- [Contact]({ORIGIN}/contact/): Send a correction, edit, deletion, or new listing.",
         "",
@@ -2025,6 +2035,9 @@ def build_llms(restaurants: list[dict], areas: list[dict]) -> None:
     ]
     for area in areas:
         lines.append(f"- [{area['fullName']}]({ORIGIN}/areas/{area['slug']}/): {area['description']}")
+    lines.extend(["", "## Guides", ""])
+    for guide in guides:
+        lines.append(f"- [{guide['h1']}]({ORIGIN}{guide['path']}): {guide['llms']}")
     lines.extend(
         [
             "",
@@ -2065,6 +2078,7 @@ def build_llms(restaurants: list[dict], areas: list[dict]) -> None:
         f"- [Restaurants]({ORIGIN}/restaurants/)",
         f"- [Map]({ORIGIN}/map/)",
         f"- [Areas]({ORIGIN}/areas/)",
+        f"- [Guides]({ORIGIN}/guides/)",
         f"- [About]({ORIGIN}/about/)",
         f"- [Contact]({ORIGIN}/contact/)",
         f"- [Short index]({ORIGIN}/llms.txt)",
@@ -2083,7 +2097,22 @@ def build_llms(restaurants: list[dict], areas: list[dict]) -> None:
     full.extend(["", "## Areas", ""])
     for area in areas:
         full.append(f"- [{area['fullName']}]({ORIGIN}/areas/{area['slug']}/): {area['description']}")
+    full.extend(["", "## Guides", ""])
+    for guide in guides:
+        full.append(f"- [{guide['h1']}]({ORIGIN}{guide['path']}): {guide['llms']}")
     write(ROOT / "llms-full.txt", "\n".join(full) + "\n")
+
+
+def guide_picks(restaurants: list[dict], areas: list[dict]) -> list[dict]:
+    import guides_build
+
+    return guides_build.guide_picks(restaurants, areas)
+
+
+def build_guides(restaurants: list[dict], areas: list[dict]) -> list[dict]:
+    import guides_build
+
+    return guides_build.build_guides(restaurants, areas)
 
 
 def main() -> None:
@@ -2118,12 +2147,13 @@ def main() -> None:
         build_detail(restaurant, restaurants)
     build_map(areas, cuisines)
     build_areas(areas, restaurants)
+    guides = build_guides(restaurants, areas)
     build_about()
     build_contact()
     build_404()
-    build_sitemap(restaurants, areas)
+    build_sitemap(restaurants, areas, guides)
     build_robots()
-    build_llms(restaurants, areas)
+    build_llms(restaurants, areas, guides)
     photos = sum(1 for restaurant in restaurants if restaurant["cardImage"])
     print(f"Built {len(restaurants)} restaurants, {len(areas)} areas, {photos} photos")
 

@@ -112,5 +112,6 @@ Homepage meal and area links go to `/restaurants/?meal=Dinner` and `/restaurants
 - `/restaurants/<slug>/` one restaurant
 - `/map/` Leaflet on OpenStreetMap. Pins outside the Destin–Miramar corridor stay on the map, and they do not set the opening frame.
 - `/areas/` and `/areas/<slug>/` area notes
+- `/guides/` and `/guides/<slug>/` meal, area, and favorites guides built from the same listings
 - `/about/` and `/contact/`
 - `sitemap.xml`, `robots.txt`, `llms.txt`
