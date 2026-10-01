@@ -2377,7 +2377,6 @@ def build_list_restaurant(areas: list[dict], cuisines: list[str], foods: list[st
         + "".join(amenities)
         + "\n"
         "<h2>Social and media</h2>\n"
-        '<p class="listing-note">Paste a link that is already online. To send a logo or photo as a file, use the contact form and name the restaurant.</p>\n'
         + listing_text("facebook", "Facebook URL", input_type="url", maxlength=500, placeholder="https://")
         + "\n"
         + listing_text("instagram", "Instagram", input_type="url", maxlength=500, placeholder="https://")
