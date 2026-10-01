@@ -316,6 +316,7 @@ copy_files = [
     ROOT / "llms-full.txt",
     ROOT / "data" / "locations.json",
     * (ROOT / "areas").glob("**/index.html"),
+    * (ROOT / "guides").glob("**/index.html"),
 ]
 for copy_path in copy_files:
     copy_text = copy_path.read_text(encoding="utf-8")
@@ -444,6 +445,56 @@ shared_header = (ROOT / "includes" / "header.html").read_text(encoding="utf-8")
 shared_footer = (ROOT / "includes" / "footer.html").read_text(encoding="utf-8")
 check('href="/restaurants/"' in shared_header and 'href="/map/"' in shared_header, "shared header is missing nav links")
 check('href="/areas/"' in shared_header and 'href="/about/"' in shared_header, "shared header is missing town or about links")
+check('href="/guides/"' in shared_header, "shared header is missing the guides link")
+check('href="/guides/"' in shared_footer, "shared footer is missing the guides link")
+check('href="/guides/best-seafood-destin/"' in home and 'href="/guides/"' in home, "homepage should mention the guides")
+check("Popular guides for a trip to Destin and Miramar Beach." in home, "homepage guides mention should stay modest")
+guide_index = (ROOT / "guides" / "index.html").read_text(encoding="utf-8")
+seafood_page = (ROOT / "guides" / "best-seafood-destin" / "index.html").read_text(encoding="utf-8")
+check("<h1>Guides for Destin</h1>" in guide_index, "guides index heading")
+check('<h1 class="guide-title">Best seafood in Destin</h1>' in seafood_page, "seafood guide heading")
+check('href="/restaurants/?cuisine=Seafood"' in seafood_page, "seafood guide should link the directory filter")
+check('href="/map/?cuisine=Seafood"' in seafood_page, "seafood guide should link the map filter")
+check('href="/restaurants/?cuisine=Seafood&amp;kids=yes"' in seafood_page, "seafood guide should link kid-friendly seafood")
+check("FAQPage" in seafood_page, "seafood guide should include FAQ schema")
+check("oysters, shrimp" in seafood_page, "seafood guide should stay specific about the catch")
+check("this page gathers" not in seafood_page.lower(), "seafood guide should not explain itself as a tag dump")
+check(f"{build.ORIGIN}/guides/" in sitemap and f"{build.ORIGIN}/guides/best-seafood-destin/" in sitemap, "sitemap missing guides")
+areas_for_guides = build.load_areas(source)
+picks = build.guide_picks(source, areas_for_guides)
+check(len(picks) == 9, f"expected 9 guides, got {len(picks)}")
+check([item["slug"] for item in picks][0] == "best-seafood-destin", "seafood guide should stay first")
+check([item["slug"] for item in picks][-1] == "laurens-favorites-destin", "favorites guide should stay last")
+for guide in picks:
+    page = (ROOT / "guides" / guide["slug"] / "index.html").read_text(encoding="utf-8")
+    check(f'<h1 class="guide-title">{build.e(guide["h1"])}</h1>' in page or f"<h1>{build.e(guide['h1'])}</h1>" in page, f"guide heading {guide['slug']}")
+    if guide["slug"] != "index":
+        check(f'<h1 class="guide-title">{build.e(guide["h1"])}</h1>' in page, f"guide title class {guide['slug']}")
+    check("FAQPage" in page, f"guide FAQ schema {guide['slug']}")
+    check(2 <= page.count("<h3>") <= 4, f"guide FAQ count {guide['slug']}")
+    check(build.e(guide["directory_href"]) in page, f"directory filter missing {guide['slug']}")
+    check(build.e(guide["map_href"]) in page, f"map filter missing {guide['slug']}")
+    check(guide["path"] in guide_index, f"guides index missing {guide['slug']}")
+    prose = "\n".join(guide["paragraphs"] + [item["answer"] for item in guide["faqs"]])
+    for restaurant in source:
+        check(restaurant["name"] not in prose, f"{guide['slug']} names {restaurant['name']}")
+        present = f"/restaurants/{restaurant['slug']}/" in page
+        if restaurant["slug"] in {item["slug"] for item in guide["restaurants"]}:
+            check(present, f"{guide['slug']} missing {restaurant['slug']}")
+        else:
+            check(not present, f"{guide['slug']} should not list {restaurant['slug']}")
+    check(f"{build.ORIGIN}{guide['path']}" in sitemap, f"sitemap missing {guide['slug']}")
+    check(re.search(r"\b\d+\s+restaurants\b", prose, re.I) is None, f"{guide['slug']} hard-codes a restaurant count")
+coffee_page = (ROOT / "guides" / "coffee-brunch-destin" / "index.html").read_text(encoding="utf-8")
+check("doesn’t list brunch as its own meal" in coffee_page, "coffee guide should say brunch is not its own meal")
+check("/restaurants/capriccio-cafe-mid-destin/" not in coffee_page, "coffee guide should follow the Cafe cuisine, not every coffee mention")
+water_page = (ROOT / "guides" / "waterfront-destin" / "index.html").read_text(encoding="utf-8")
+check("don’t score a table as on the water" in water_page, "waterfront guide should say outdoor seating is not a view rating")
+check("/restaurants/whataburger-destin-harbor-destin-harbor/" not in water_page, "a harbor listing without outdoor seating is not on the waterfront guide")
+check("/restaurants/chipotle-mexican-grill-destin-commons-destin-commons/" not in water_page, "a shopping-center patio is not on the waterfront guide")
+check("/restaurants/whataburger-destin-harbor-destin-harbor/" in (ROOT / "guides" / "destin-harbor-restaurants" / "index.html").read_text(encoding="utf-8"), "harbor guide should keep the full area list")
+llms = (ROOT / "llms.txt").read_text(encoding="utf-8")
+check(f"{build.ORIGIN}/guides/" in llms, "llms.txt should link the guides")
 check('href="/contact/"' in shared_footer and "site-footer" in shared_footer, "shared footer is missing links")
 check(
     'src="/images/eating-in-destin-logo.png"' in shared_header and 'alt="Eating in Destin"' in shared_header,
