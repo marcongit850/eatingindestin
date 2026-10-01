@@ -122,9 +122,11 @@ assert.match(restaurant.description, /Harbor Docks/);
 assert.match(restaurant.description, /\bDestin\b/);
 
 const harborHtml = read("restaurants/harbor-docks-destin-harbor/index.html");
-assert.match(harborHtml, /<h1>Harbor Docks<span class="h1-place">in Destin Harbor<\/span><\/h1>/);
-assert.match(harborHtml, /href="\/guides\/destin-harbor-restaurants\/"/);
-assert.match(harborHtml, /href="\/guides\/best-seafood-destin\/"/);
+assert.match(harborHtml, /<h1>Harbor Docks<\/h1>/);
+assert.equal(/h1-place|Related guides|Other locations/.test(harborHtml), false);
+assert.match(harborHtml, /Harbor Docks is a casual bar and restaurant in Destin Harbor/);
+assert.match(harborHtml, /The address is 538 Harbor Blvd/);
+assert.match(harborHtml, /Also in Destin Harbor/);
 assert.match(harborHtml, /href="\/areas\/destin-harbor\/"/);
 assert.match(attr(harborHtml, /<title>([^<]+)<\/title>/), /Harbor Docks/);
 assert.match(attr(harborHtml, /<title>([^<]+)<\/title>/), /Destin Harbor/);
@@ -136,7 +138,9 @@ assert.equal(seaLevelRestaurant.openingHours, undefined);
 assert.equal(seaLevelRestaurant.aggregateRating, undefined);
 assert.ok(seaLevelRestaurant.telephone);
 assert.ok(seaLevelRestaurant.address.streetAddress);
-assert.match(read("restaurants/sea-level-crystal-beach/index.html"), /<h1>Sea Level<span class="h1-place">in Crystal Beach, Destin<\/span><\/h1>/);
+const seaLevelHtml = read("restaurants/sea-level-crystal-beach/index.html");
+assert.match(seaLevelHtml, /<h1>Sea Level<\/h1>/);
+assert.equal(/h1-place|Related guides|Other locations/.test(seaLevelHtml), false);
 
 const profilePages = walk(join(root, "restaurants")).filter(
   (path) => path.endsWith(`${join("index.html")}`) && !path.endsWith(`${join("restaurants", "index.html")}`),

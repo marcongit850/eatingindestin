@@ -723,7 +723,6 @@ def within_meta(text: str) -> str | None:
     return None
 
 
-WATER_AREA_SLUGS = {"destin-harbor", "sandestin", "crystal-beach"}
 BROAD_PLACES = {
     "destin",
     "miramar beach",
@@ -901,60 +900,6 @@ def practical_paragraph(restaurant: dict) -> str:
     return " ".join(part for part in parts if part)
 
 
-def related_guides(restaurant: dict) -> list[tuple[str, str]]:
-    """Guides this restaurant is actually on. Three is enough; the area page is linked separately."""
-    meals = set(restaurant["meals"])
-    cuisines = set(restaurant["cuisines"])
-    area = restaurant["areaSlug"]
-    links: list[tuple[str, str]] = []
-    seen: set[str] = set()
-
-    def add(href: str, label: str) -> None:
-        if href in seen or len(links) >= 3:
-            return
-        seen.add(href)
-        links.append((href, label))
-
-    if area == "destin-harbor":
-        add("/guides/destin-harbor-restaurants/", "Destin Harbor restaurants")
-    elif area == "miramar-beach":
-        add("/guides/miramar-beach-restaurants/", "Miramar Beach restaurants")
-    elif area == "sandestin" and "Dinner" in meals:
-        add("/guides/dinner-sandestin/", "Dinner near Sandestin")
-
-    if "Seafood" in cuisines:
-        add("/guides/best-seafood-destin/", "Best seafood in Destin")
-    elif "Cafe" in cuisines:
-        add("/guides/coffee-brunch-destin/", "Coffee and brunch in Destin")
-    elif "Breakfast" in meals:
-        add("/guides/breakfast-destin/", "Breakfast in Destin")
-
-    if restaurant["laurensFavorite"]:
-        add("/guides/laurens-favorites-destin/", "Lauren’s Favorites")
-    elif restaurant["outdoor"] and area in WATER_AREA_SLUGS:
-        add("/guides/waterfront-destin/", "Waterfront dining in Destin")
-    elif restaurant["kids"]:
-        add("/guides/kid-friendly-destin/", "Kid-friendly restaurants")
-
-    if restaurant["outdoor"] and area in WATER_AREA_SLUGS:
-        add("/guides/waterfront-destin/", "Waterfront dining in Destin")
-    if restaurant["kids"]:
-        add("/guides/kid-friendly-destin/", "Kid-friendly restaurants")
-    if "Breakfast" in meals:
-        add("/guides/breakfast-destin/", "Breakfast in Destin")
-    if "Cafe" in cuisines:
-        add("/guides/coffee-brunch-destin/", "Coffee and brunch in Destin")
-    return links
-
-
-def guide_nav(restaurant: dict) -> str:
-    links = related_guides(restaurant)
-    if not links:
-        return ""
-    items = "".join(f'<a class="text-link" href="{e(href)}">{e(label)}</a>' for href, label in links)
-    return f'<nav class="section-links profile-links" aria-label="Related guides">{items}</nav>'
-
-
 def listing_story(restaurant: dict) -> str:
     """Note from the listing, then a practical paragraph built only from its fields."""
     note = readable_note(restaurant)
@@ -966,24 +911,7 @@ def listing_story(restaurant: dict) -> str:
         parts.append(f"<p>{e(practical)}</p>")
     if not parts:
         parts.append(f"<p>{e(practical_paragraph(restaurant))}</p>")
-    return "".join(parts) + guide_nav(restaurant)
-
-
-def heading_html(restaurant: dict) -> str:
-    cue = heading_cue(restaurant)
-    lead = cue_lead(cue)
-    return f'<h1>{e(restaurant["name"])}<span class="h1-place">{e(lead)} {e(cue)}</span></h1>'
-
-
-def nearby_listings(restaurant: dict, restaurants: list[dict], limit: int = 4) -> list[dict]:
-    cuisines = set(restaurant["cuisines"])
-    others = [
-        other
-        for other in restaurants
-        if other["areaSlug"] == restaurant["areaSlug"] and other["slug"] != restaurant["slug"]
-    ]
-    others.sort(key=lambda other: (-len(cuisines & set(other["cuisines"])), other["name"].lower()))
-    return others[:limit]
+    return "".join(parts)
 
 
 def meta_tails(restaurant: dict) -> list[str]:
@@ -1820,7 +1748,11 @@ def build_detail(restaurant: dict, restaurants: list[dict]) -> None:
         ]
     )
     logo = f'<img class="logo" src="{e(restaurant["logo"])}" alt="{e(restaurant["name"])} logo">' if restaurant["logo"] else ""
-    nearby = nearby_listings(restaurant, restaurants)
+    nearby = [
+        other
+        for other in restaurants
+        if other["areaSlug"] == restaurant["areaSlug"] and other["slug"] != restaurant["slug"]
+    ][:4]
     nearby_html = "".join(
         f'<a class="map-hit" href="/restaurants/{e(other["slug"])}/"><strong>{e(other["name"])}</strong><span>{e(other["price"])}</span></a>'
         for other in nearby
@@ -1870,7 +1802,7 @@ def build_detail(restaurant: dict, restaurants: list[dict]) -> None:
         '<div class="wrap profile-head">'
         f"{crumb_nav(profile_crumbs)}"
         f'<p class="eyebrow"><a href="{e(area_href)}">{e(area_line)}</a>{price_bit}{category_bit}</p>'
-        f"{heading_html(restaurant)}"
+        f"<h1>{e(restaurant['name'])}</h1>"
         f'<ul class="chips">{"".join(chips)}</ul>'
         "</div>"
         '<div class="wrap profile-grid">'
