@@ -494,7 +494,7 @@ check("this page gathers" not in seafood_page.lower(), "seafood guide should not
 check(f"{build.ORIGIN}/guides/" in sitemap and f"{build.ORIGIN}/guides/best-seafood-destin/" in sitemap, "sitemap missing guides")
 areas_for_guides = build.load_areas(source)
 picks = build.guide_picks(source, areas_for_guides)
-check(len(picks) == 9, f"expected 9 guides, got {len(picks)}")
+check(len(picks) == 14, f"expected 14 guides, got {len(picks)}")
 check([item["slug"] for item in picks][0] == "best-seafood-destin", "seafood guide should stay first")
 check([item["slug"] for item in picks][-1] == "laurens-favorites-destin", "favorites guide should stay last")
 for guide in picks:
@@ -526,7 +526,7 @@ for guide in picks:
         f"{guide['slug']} social image should use its cover",
     )
 cover_paths = [guide["teaser_image"] for guide in picks]
-check(len(cover_paths) == len(set(cover_paths)) == 9, "each guide needs a different cover image")
+check(len(cover_paths) == len(set(cover_paths)) == 14, "each guide needs a different cover image")
 check(".h1-place" not in styles, "listing H1 should not style a place subtitle")
 check(".profile-links" not in styles, "listing pages should not style a related-guides nav")
 website_links = 0
@@ -553,6 +553,46 @@ check("don’t score a table as on the water" in water_page, "waterfront guide s
 check("/restaurants/whataburger-destin-harbor-destin-harbor/" not in water_page, "a harbor listing without outdoor seating is not on the waterfront guide")
 check("/restaurants/chipotle-mexican-grill-destin-commons-destin-commons/" not in water_page, "a shopping-center patio is not on the waterfront guide")
 check("/restaurants/whataburger-destin-harbor-destin-harbor/" in (ROOT / "guides" / "destin-harbor-restaurants" / "index.html").read_text(encoding="utf-8"), "harbor guide should keep the full area list")
+harbor_guide = (ROOT / "guides" / "destin-harbor-restaurants" / "index.html").read_text(encoding="utf-8")
+harborwalk_page = (ROOT / "guides" / "harborwalk-restaurants" / "index.html").read_text(encoding="utf-8")
+check("/guides/harborwalk-restaurants/" in harbor_guide, "harbor guide should point to HarborWalk")
+check("not only HarborWalk Village" in harbor_guide, "harbor guide should say it is wider than HarborWalk")
+check("/restaurants/whataburger-destin-harbor-destin-harbor/" not in harborwalk_page, "HarborWalk guide should not include a harbor restaurant off the village")
+check("/restaurants/harry-t-s-lighthouse-destin-harbor/" in harborwalk_page, "HarborWalk guide should include a village listing")
+check("/guides/destin-harbor-restaurants/" in harborwalk_page, "HarborWalk guide should point back to the harbor guide")
+check('href="/restaurants/?q=HarborWalk"' in harborwalk_page, "HarborWalk guide should filter the directory by the village")
+baytowne_page = (ROOT / "guides" / "baytowne-wharf-restaurants" / "index.html").read_text(encoding="utf-8")
+check("/restaurants/the-beach-house-sandestin/" not in baytowne_page, "Baytowne guide should not include a gulf-front hotel")
+check("/restaurants/marina-bar-and-grill-sandestin/" not in baytowne_page, "Baytowne guide should not include the marina")
+check("/restaurants/landshark-bar-and-grill-sandestin/" in baytowne_page, "Baytowne guide should include a wharf listing")
+check("Baytowne Wharf" in baytowne_page and "Baytown" in baytowne_page, "Baytowne guide should use the Wharf spelling and catch Baytown")
+sandestin_guide = (ROOT / "guides" / "sandestin-restaurants" / "index.html").read_text(encoding="utf-8")
+dinner_guide = (ROOT / "guides" / "dinner-sandestin" / "index.html").read_text(encoding="utf-8")
+check("/restaurants/ruby-slipper-cafe-sandestin/" in sandestin_guide, "Sandestin guide should keep daytime restaurants")
+check("/restaurants/ruby-slipper-cafe-sandestin/" not in dinner_guide, "dinner guide should stay evening-only")
+check("/restaurants/the-beach-house-sandestin/" in sandestin_guide, "Sandestin guide should include resort dinner")
+check("/guides/sandestin-restaurants/" in dinner_guide, "dinner guide should point to the wider Sandestin guide")
+check("/guides/dinner-sandestin/" in sandestin_guide, "Sandestin guide should point to the dinner guide")
+check("/guides/baytowne-wharf-restaurants/" in sandestin_guide, "Sandestin guide should point to Baytowne Wharf")
+grand_page = (ROOT / "guides" / "grand-boulevard-restaurants" / "index.html").read_text(encoding="utf-8")
+check('href="/restaurants/?area=grand-boulevard"' in grand_page, "Grand Boulevard guide should filter that area")
+check("/images/areas/grand-boulevard.jpg" in grand_page, "Grand Boulevard guide should use its area photo")
+check("/restaurants/another-broken-egg-cafe-grand-boulevard-grand-boulevard/" in grand_page, "Grand Boulevard guide should list its restaurants")
+commons_page = (ROOT / "guides" / "destin-commons-restaurants" / "index.html").read_text(encoding="utf-8")
+check("/restaurants/jet-s-pizza-destin-mid-destin/" in commons_page, "Destin Commons guide should include Commons Drive")
+check("/restaurants/starbucks-emerald-coast-mid-destin/" in commons_page, "Destin Commons guide should include the parkway cafe by the shops")
+check("/restaurants/subway-destin-mid-destin/" in commons_page, "Destin Commons guide should include the parkway shop by the commons")
+check('href="/restaurants/?q=Destin+Commons"' in commons_page, "Destin Commons guide should use the directory search that matches the cluster")
+check("/images/areas/destin-commons.jpg" in commons_page, "Destin Commons guide should use its area photo")
+check("/images/areas/sandestin.jpg" in sandestin_guide, "Sandestin guide should use its area photo")
+for slug in (
+    "grand-boulevard-restaurants",
+    "destin-commons-restaurants",
+    "harborwalk-restaurants",
+    "baytowne-wharf-restaurants",
+    "sandestin-restaurants",
+):
+    check(f"/guides/{slug}/" in guide_index, f"guides hub missing {slug}")
 llms = (ROOT / "llms.txt").read_text(encoding="utf-8")
 check(f"{build.ORIGIN}/guides/" in llms, "llms.txt should link the guides")
 check('href="/contact/"' in shared_footer and "site-footer" in shared_footer, "shared footer is missing links")
