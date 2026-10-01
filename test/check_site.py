@@ -262,6 +262,24 @@ check(
 about_main = about.split("<main", 1)[-1].split("</main>", 1)[0]
 check("\u2014" not in about_main, "about body should not use an em dash")
 check('class="print-covers"' in about, "print covers should share one layout")
+check("about-intro" in about and 'class="window-decal"' in about, "about page should set the decal beside the intro")
+check(build.DECAL_IMAGE in about and build.DECAL_WEBP in about, "about page should use the window decal image")
+check(build.e(build.DECAL_ALT) in about, "about page should describe the window decal")
+check("A free window decal" in about, "about page should offer the free window decal")
+check(
+    "Restaurants in the guide can have a free window decal." in about
+    and "with the restaurant name and a mailing address, and we’ll send one." in about,
+    "decal note should invite restaurants to ask for one",
+)
+check(
+    f'href="{build.e(build.decal_contact_href())}"' in about,
+    "decal note should link to the contact form with the decal subject",
+)
+for decal_name in (build.DECAL_IMAGE, build.DECAL_WEBP):
+    decal_path = ROOT / decal_name.lstrip("/")
+    check(decal_path.is_file(), f"missing window decal {decal_name}")
+    check(decal_path.stat().st_size < 400_000, f"window decal too large for the web: {decal_name}")
+check(".about-intro" in styles and ".window-decal" in styles, "about layout should style the window decal")
 for cover in build.PRINT_COVERS:
     check(cover["jpg"] in about and cover["webp"] in about, f"about page should include {cover['jpg']}")
     check(build.e(cover["alt"]) in about, f"about page should describe {cover['jpg']}")

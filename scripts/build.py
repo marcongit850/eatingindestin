@@ -102,6 +102,10 @@ PRINT_GUIDES = (
     "Looking ahead, we\u2019ll also be launching a printed version of the \"Eating In\" guides in 2027, "
     "bringing the same curated experience into a high-quality physical format you can bring along."
 )
+DECAL_IMAGE = "/images/about-decal-destin.png"
+DECAL_WEBP = "/images/about-decal-destin.webp"
+DECAL_ALT = "Circular Eating in Destin window decal that reads Proudly listed on Eating in Destin."
+DECAL_SUBJECT = "Free window decal"
 PRINT_COVERS = (
     {
         "jpg": "/images/guides/eating-in-destin-spring-summer-2027.jpg",
@@ -143,6 +147,11 @@ def claim_href(name: str) -> str:
         }
     )
     return f"/contact/?{query}"
+
+
+def decal_contact_href() -> str:
+    """Contact URL for a restaurant asking for the free window decal."""
+    return "/contact/?" + urlencode({"subject": DECAL_SUBJECT})
 
 
 def slugify(value: str) -> str:
@@ -2083,16 +2092,36 @@ def print_cover(cover: dict) -> str:
     )
 
 
+def window_decal_aside() -> str:
+    return (
+        '<aside class="window-decal" aria-labelledby="window-decal-heading">'
+        "<picture>"
+        f'<source srcset="{e(DECAL_WEBP)}" type="image/webp">'
+        f'<img src="{e(DECAL_IMAGE)}" width="720" height="720" alt="{e(DECAL_ALT)}" decoding="async">'
+        "</picture>"
+        '<p class="kicker">For restaurants</p>'
+        '<h2 id="window-decal-heading">A free window decal</h2>'
+        "<p>Restaurants in the guide can have a free window decal. "
+        f'<a class="text-link" href="{e(decal_contact_href())}">Contact us</a> '
+        "with the restaurant name and a mailing address, and we\u2019ll send one.</p>"
+        "</aside>"
+    )
+
+
 def build_about() -> None:
     covers = "".join(print_cover(cover) for cover in PRINT_COVERS)
     body = (
-        '<div class="wrap page-intro"><div class="prose">'
+        '<div class="wrap page-intro about-intro">'
+        '<div class="prose about-copy">'
         f'{crumb_nav([("Home", "/"), ("About", "/about/")])}'
         '<p class="kicker">About</p>'
         "<h1>The Destin restaurant guide</h1>"
         f"<p>{e(ABOUT_LEAD)}</p>"
         f"<p>{e(ABOUT_TOWNS)}</p>"
         '<p><a class="button" href="/restaurants/">See the restaurants</a></p>'
+        "</div>"
+        f"{window_decal_aside()}"
+        '<div class="prose">'
         '<section class="print-guides" aria-labelledby="print-guides-heading">'
         '<h2 id="print-guides-heading">Coming in 2027</h2>'
         f"<p>{e(PRINT_GUIDES)}</p>"
