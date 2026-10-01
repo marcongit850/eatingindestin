@@ -11,6 +11,11 @@
  * The sheet is recorded only when the webhook returns JSON with `ok: true`.
  * An HTTP 200 HTML error, other non-JSON body, or `{ok:false}` is not a
  * recording. A sheet miss leaves a Resend success as a success.
+ *
+ * Spam: a filled honeypot (`company`, `hp_field`, or `website`) is answered
+ * with the normal success response and is not emailed or recorded. Bodies
+ * over 16 KB are rejected. Each Cloudflare IP may POST five times a minute
+ * across the two forms.
  */
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -22,6 +27,10 @@ const LISTING_TYPES = {
   other: "Other",
 };
 const LISTING_TYPE_ERROR = "Choose update, edit, deletion, new listing, or other.";
+const MAX_BODY = 16000;
+const WINDOW_MS = 60 * 1000;
+const MAX_PER_WINDOW = 5;
+const recentHits = new Map();
 
 export function parseSubscribe(body) {
   if (!body || typeof body !== "object") return { error: "Send the signup as JSON." };
@@ -191,29 +200,114 @@ function thanksPage(message, status) {
   });
 }
 
-async function readBody(request) {
-  const type = request.headers.get("content-type") || "";
-  if (type.includes("application/json")) {
-    try {
-      return { html: false, parsed: parseSubscribe(await request.json()) };
-    } catch {
-      return { html: false, parsed: { error: "Send the signup as JSON." } };
+function clientIp(request) {
+  return String(request.headers.get("cf-connecting-ip") || "").trim();
+}
+
+function rateLimited(ip) {
+  // Workers set cf-connecting-ip. Requests without it are not counted so
+  // local tests stay independent of each other.
+  if (!ip) return false;
+  const now = Date.now();
+  const stamps = (recentHits.get(ip) || []).filter((time) => now - time < WINDOW_MS);
+  if (stamps.length >= MAX_PER_WINDOW) {
+    recentHits.set(ip, stamps);
+    return true;
+  }
+  stamps.push(now);
+  recentHits.set(ip, stamps);
+  if (recentHits.size > 1000) {
+    for (const [key, times] of recentHits) {
+      const fresh = times.filter((time) => now - time < WINDOW_MS);
+      if (fresh.length) recentHits.set(key, fresh);
+      else recentHits.delete(key);
     }
   }
-  const form = await request.formData();
-  return {
-    html: true,
-    parsed: parseSubscribe({
-      email: form.get("email"),
-      audience: form.get("audience"),
-      coupons: form.get("coupons") === "yes",
-    }),
-  };
+  return false;
+}
+
+function honeypotFilled(data) {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return false;
+  const raw = data.company ?? data.hp_field ?? data.website;
+  if (raw == null) return false;
+  return String(raw).trim().length > 0;
+}
+
+function wantsHtml(request) {
+  const type = request.headers.get("content-type") || "";
+  return !type.includes("application/json");
+}
+
+function rejectPost(request, error, status) {
+  return wantsHtml(request) ? thanksPage(error, status) : json({ ok: false, error }, status);
+}
+
+function fakeSuccess(request, kind) {
+  if (wantsHtml(request)) {
+    const message = kind === "listing" ? "Thanks. We have your note." : "Thanks. We have your signup.";
+    return thanksPage(message, 200);
+  }
+  if (kind === "listing") return json({ ok: true, delivered: false }, 200);
+  return json({ ok: true, delivered: false, recorded: false }, 200);
+}
+
+function tooLongMessage(kind) {
+  return kind === "listing" ? "That request is too long." : "That signup is too long.";
+}
+
+function unreadableMessage(kind) {
+  return kind === "listing" ? "Send the request as JSON." : "Send the signup as JSON.";
+}
+
+async function readFields(request, kind) {
+  const lengthHeader = Number(request.headers.get("content-length") || 0);
+  if (Number.isFinite(lengthHeader) && lengthHeader > MAX_BODY) {
+    return { response: rejectPost(request, tooLongMessage(kind), 413) };
+  }
+  if (rateLimited(clientIp(request))) {
+    return { response: rejectPost(request, "Please wait a minute and try again.", 429) };
+  }
+  let raw = "";
+  try {
+    raw = await request.text();
+  } catch {
+    return { response: rejectPost(request, unreadableMessage(kind), 400) };
+  }
+  if (raw.length > MAX_BODY) {
+    return { response: rejectPost(request, tooLongMessage(kind), 413) };
+  }
+
+  const html = wantsHtml(request);
+  let data;
+  if (!html) {
+    try {
+      data = raw.trim() ? JSON.parse(raw) : null;
+    } catch {
+      return { response: rejectPost(request, unreadableMessage(kind), 400) };
+    }
+  } else {
+    const params = new URLSearchParams(raw);
+    data = {};
+    for (const key of params.keys()) data[key] = params.get(key);
+  }
+  if (honeypotFilled(data)) return { response: fakeSuccess(request, kind) };
+
+  if (kind === "listing") return { html, parsed: parseListing(data) };
+  const body = data && typeof data === "object" && !Array.isArray(data)
+    ? {
+        email: data.email,
+        audience: data.audience,
+        coupons: html ? data.coupons === "yes" : Boolean(data.coupons),
+      }
+    : data;
+  return { html, parsed: parseSubscribe(body) };
 }
 
 export async function handleSubscribe(request, env, fetchImpl = fetch) {
   if (request.method !== "POST") return json({ ok: false, error: "Use POST." }, 405);
-  const { html, parsed } = await readBody(request);
+  const read = await readFields(request, "subscribe");
+  if (read.response) return read.response;
+  const { html, parsed } = read;
   if (parsed.error) {
     return html ? thanksPage(parsed.error, 400) : json({ ok: false, error: parsed.error }, 400);
   }
@@ -224,32 +318,11 @@ export async function handleSubscribe(request, env, fetchImpl = fetch) {
   return html ? thanksPage("Thanks. We have your signup.", 200) : json(result, 200);
 }
 
-async function readListingBody(request) {
-  const type = request.headers.get("content-type") || "";
-  if (type.includes("application/json")) {
-    try {
-      return { html: false, parsed: parseListing(await request.json()) };
-    } catch {
-      return { html: false, parsed: { error: "Send the request as JSON." } };
-    }
-  }
-  const form = await request.formData();
-  return {
-    html: true,
-    parsed: parseListing({
-      restaurant: form.get("restaurant"),
-      town: form.get("town"),
-      type: form.get("type"),
-      details: form.get("details"),
-      name: form.get("name"),
-      email: form.get("email"),
-    }),
-  };
-}
-
 export async function handleListing(request, env, fetchImpl = fetch) {
   if (request.method !== "POST") return json({ ok: false, error: "Use POST." }, 405);
-  const { html, parsed } = await readListingBody(request);
+  const read = await readFields(request, "listing");
+  if (read.response) return read.response;
+  const { html, parsed } = read;
   if (parsed.error) {
     return html ? thanksPage(parsed.error, 400) : json({ ok: false, error: parsed.error }, 400);
   }
