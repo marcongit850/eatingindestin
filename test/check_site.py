@@ -114,6 +114,20 @@ for area in areas:
     check(f'href="/areas/{area["slug"]}/"' in home, f"homepage missing area page {area['slug']}")
     check((ROOT / "areas" / area["slug"] / "index.html").exists(), f"missing town page {area['slug']}")
 
+music_note = "Live music is seasonal and subject to change — confirm with the restaurant."
+music_count = sum(1 for item in restaurants if item.get("music") is True)
+check(music_count == 16, f"live music should stay a verified yes on 16 listings, got {music_count}")
+check(directory.count('data-music="yes"') == music_count, "directory should keep every live music listing filterable")
+check(
+    'name="music" value="yes"' in directory and ">Live music</span>" in directory and "Live music*" not in directory,
+    "directory filter should keep Live music as a verified yes without the seasonal asterisk",
+)
+check(music_note not in directory, "the seasonal note belongs on listing pages, not the directory filter")
+check(
+    'name="music" value="yes"' in map_page and ">Live music</span>" in map_page and "Live music*" not in map_page,
+    "map filter should keep Live music as a verified yes without the seasonal asterisk",
+)
+
 for restaurant in restaurants:
     path = ROOT / "restaurants" / restaurant["slug"] / "index.html"
     check(path.exists(), f"missing detail page {restaurant['slug']}")
@@ -133,6 +147,16 @@ for restaurant in restaurants:
         f"detail page missing claim link {restaurant['slug']}",
     )
     check("Claim+or+correct%3A+" in claim, f"claim subject should name the restaurant with a colon {restaurant['slug']}")
+    if restaurant.get("music"):
+        check(
+            ">Live music*</li>" in page and music_note in page,
+            f"{restaurant['slug']} should mark the live music chip as seasonal",
+        )
+    else:
+        check(
+            "Live music*" not in page and music_note not in page,
+            f"{restaurant['slug']} should not show a live music chip or seasonal note",
+        )
 
 check(f"Sitemap: {build.ORIGIN}/sitemap.xml" in robots, "robots missing sitemap")
 check("User-agent: *" in robots and "Allow: /" in robots, "robots should allow crawlers")

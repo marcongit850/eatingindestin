@@ -53,6 +53,11 @@ test("amenity filters require a yes flag", () => {
   assert.ok(outdoor.length > 0);
   assert.ok(outdoor.every((item) => item.outdoor));
   assert.ok(outdoor.length < restaurants.length);
+  const music = restaurants.filter((item) => matches(item, { ...blank, music: "yes" }));
+  assert.equal(music.length, 16);
+  assert.ok(music.every((item) => item.music === true));
+  assert.ok(music.some((item) => item.slug === "harbor-tavern-destin-harbor"));
+  assert.equal(describeFilters({ ...blank, music: "yes" }, {}), "Live music");
 });
 
 test("Lauren's Favorites shows only the tagged restaurants", () => {
