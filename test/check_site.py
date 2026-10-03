@@ -42,6 +42,14 @@ check("not on the site yet" not in home and "Design preview" not in home, "homep
 check("full restaurant CSV" not in home.lower(), "homepage should not say the CSV is withheld")
 check("<h1>Where to eat<br> in Destin.</h1>" in home, "homepage headline should say where to eat in Destin")
 check('<h1 id="listing-title">Restaurants in Destin</h1>' in directory, "directory heading should target restaurants in Destin")
+check('class="video-tour" aria-label="Video tour"' in directory, "directory intro should include the video tour")
+check(
+    'poster="/images/eating-in-destin-tour-poster.jpg"' in directory
+    and 'src="/videos/eating-in-destin-tour.mp4"' in directory,
+    "directory video tour should use the Destin poster and clip",
+)
+check("autoplay" not in directory and "loop" not in directory, "directory video tour should not autoplay or loop")
+check('class="video-tour"' not in home, "video tour stays off the home page")
 check("Filter by area, meal, or a few words." in directory, "directory intro should name the filters")
 check("Food in Destin and Miramar Beach, Florida." in directory, "directory intro should name Destin and Miramar Beach")
 check('id="browse-areas-heading">Browse by area</h2>' in directory, "directory should offer browse by area below the listings")
@@ -74,6 +82,7 @@ check(
     "directory filter should include Lauren's Favorites",
 )
 map_page = (ROOT / "map" / "index.html").read_text(encoding="utf-8")
+check('class="video-tour"' not in map_page, "video tour stays off the map")
 check(">Lauren's Favorites</span>" in map_page, "map filter should include Lauren's Favorites")
 check('name="area"' in map_page and ">All areas</option>" in map_page, "map keeps the area dropdown")
 check(
@@ -140,6 +149,7 @@ for restaurant in restaurants:
     check('aria-label="Related guides"' not in page, f"listing should not add a related-guides nav {restaurant['slug']}")
     check("Other locations" not in page, f"listing should not add an other-locations block {restaurant['slug']}")
     check('class="profile"' in page and 'class="profile-hero"' in page, f"detail page left the shared profile template {restaurant['slug']}")
+    check('class="video-tour"' not in page, f"video tour should stay off the listing page {restaurant['slug']}")
     check("maps.googleapis" not in page and "airtable" not in page.lower(), f"detail page calls a paid API {restaurant['slug']}")
     update = build.e(build.list_update_href(restaurant["name"], restaurant["slug"]))
     check(
