@@ -642,13 +642,45 @@ for restaurant in source:
             f'<a href="{build.e(restaurant["website"])}" target="_blank" rel="noopener noreferrer">' in page,
             f"restaurant website should open in a new tab {restaurant['slug']}",
         )
-    story = page.split('class="prose profile-story"', 1)[1].split("</div>", 1)[0]
-    check(story.count("<p>") >= 2, f"listing intro should have the note and a practical paragraph {restaurant['slug']}")
+    story = page.split('class="prose profile-story">', 1)[1].split("</div>", 1)[0]
+    check(story == build.listing_story(restaurant), f"listing intro should be the useful note only {restaurant['slug']}")
+    check(story.count("<p>") <= 1, f"listing intro should not restate chips in a second paragraph {restaurant['slug']}")
+    for phrase in (
+        "The address is",
+        "It’s listed for",
+        "on the listing",
+        "It’s marked kid friendly",
+        "Hours are on this page",
+        "Hours aren’t listed on this page",
+    ):
+        check(phrase not in story, f"listing intro restates {phrase!r} {restaurant['slug']}")
     check("<nav" not in story, f"profile story should stay prose {restaurant['slug']}")
     check("aggregateRating" not in page and '"review"' not in page, f"listing schema should not invent reviews {restaurant['slug']}")
     check('aria-label="Related guides"' not in page, f"related guides nav should stay off the listing {restaurant['slug']}")
     check(f'href="/areas/{restaurant["areaSlug"]}/"' in page, f"area page link missing {restaurant['slug']}")
     check(f"Also in {build.e(restaurant['area'])}" in page or f"Restaurants in {build.e(restaurant['area'])}" in page, f"nearby or area link missing {restaurant['slug']}")
+osaka = next(item for item in shown if item["slug"] == "osaka-japanese-hibachi-steakhouse-sushi-bar-mid-destin")
+osaka_page = (ROOT / "restaurants" / osaka["slug"] / "index.html").read_text(encoding="utf-8")
+osaka_story = osaka_page.split('class="prose profile-story">', 1)[1].split("</div>", 1)[0]
+check(
+    "in front of the Fresh Market and near Destin Commons" in osaka_story
+    and "Call the Destin line to reserve a table" in osaka_story,
+    "Osaka should keep the place note that the chips do not say",
+)
+check("34745 Emerald Coast Pkwy" in osaka_page and "34745 Emerald Coast Pkwy" not in osaka_story, "Osaka address stays in the sidebar")
+for slug in (
+    "cafe-destin-mid-destin",
+    "gulf-coast-burger-co-destin-commons",
+    "holi-indian-kitchen-miramar-beach",
+    "joe-s-crab-shack-mid-destin",
+    "new-dragon-chinese-buffet-and-mongolian-grill-mid-destin",
+    "talay-thai-cuisine-miramar-beach",
+    "thai-9-cuisine-miramar-beach",
+):
+    page = (ROOT / "restaurants" / slug / "index.html").read_text(encoding="utf-8")
+    story = page.split('class="prose profile-story">', 1)[1].split("</div>", 1)[0]
+    check(story == "", f"a note that only repeats chips and the sidebar should not render {slug}")
+    check("<dt>Address</dt>" in page, f"address sidebar should stay {slug}")
 coffee_page = (ROOT / "guides" / "coffee-brunch-destin" / "index.html").read_text(encoding="utf-8")
 check("doesn’t list brunch as its own meal" in coffee_page, "coffee guide should say brunch is not its own meal")
 check("/restaurants/capriccio-cafe-mid-destin/" not in coffee_page, "coffee guide should follow the Cafe cuisine, not every coffee mention")
