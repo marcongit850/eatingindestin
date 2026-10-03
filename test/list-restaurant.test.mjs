@@ -294,7 +294,7 @@ test("an HTML form post keeps repeated cuisine and meal values", async () => {
   );
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type"), /text\/html/);
-  assert.match(await response.text(), /Thanks\. We have your listing\./);
+  assert.match(await response.text(), /Thanks!  We will review and get back to you shortly\./);
   const mailed = JSON.parse(init.body);
   assert.match(mailed.text, /Cuisine types: Seafood, American/);
   assert.match(mailed.text, /Meals: Lunch, Dinner, Late night/);
@@ -454,7 +454,7 @@ test("a browser form post without JavaScript still attaches the images", async (
   );
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type"), /text\/html/);
-  assert.match(await response.text(), /Thanks\. We have your listing\./);
+  assert.match(await response.text(), /Thanks!  We will review and get back to you shortly\./);
   const body = JSON.parse(init.body);
   assert.match(body.text, /Images: logo\.jpg/);
   assert.equal(body.attachments[0].content_type, "image/jpeg");

@@ -357,7 +357,7 @@
             }
             form.reset();
             uploads.clear();
-            status(form, "Thanks. We have your listing.", false);
+            status(form, "Thanks!  We will review and get back to you shortly.", false);
           })
           .catch(function () {
             status(form, "The listing could not be sent. Try again in a moment.", true);

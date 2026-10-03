@@ -609,7 +609,7 @@ function rejectPost(request, error, status) {
 function fakeSuccess(request, kind) {
   if (wantsHtml(request)) {
     const message = kind === "restaurant"
-      ? "Thanks. We have your listing."
+      ? "Thanks!  We will review and get back to you shortly."
       : kind === "listing"
         ? "Thanks. We have your note."
         : "Thanks. We have your signup.";
@@ -747,7 +747,7 @@ export async function handleListRestaurant(request, env, fetchImpl = fetch) {
   if (!result.ok) {
     return html ? thanksPage(result.error, 502) : json(result, 502);
   }
-  return html ? thanksPage("Thanks. We have your listing.", 200) : json(result, 200);
+  return html ? thanksPage("Thanks!  We will review and get back to you shortly.", 200) : json(result, 200);
 }
 
 export default {
