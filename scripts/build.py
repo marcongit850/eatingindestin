@@ -149,7 +149,7 @@ LISTING_AMENITIES = (
 LISTING_TITLE = "List your restaurant | Eating in Destin"
 LISTING_DESCRIPTION = (
     "Add or update a restaurant listing in the Destin area. "
-    "Hours, cuisine, amenities, and photo links for Destin and Miramar Beach."
+    "Hours, cuisine, amenities, and photos for Destin and Miramar Beach."
 )
 PRINT_COVERS = (
     {
@@ -2362,7 +2362,7 @@ def build_list_restaurant(areas: list[dict], cuisines: list[str], foods: list[st
     for area in areas:
         area_options.append(f'<option value="{e(area["slug"])}">{e(area["fullName"])}</option>')
     hours = "".join(
-        listing_text(name, label, required=True, maxlength=80, placeholder="11am to 10pm, or Closed")
+        listing_text(name, label, maxlength=80, placeholder="11am to 10pm, or Closed")
         for name, label in LISTING_DAYS
     )
     amenities = []
@@ -2372,7 +2372,7 @@ def build_list_restaurant(areas: list[dict], cuisines: list[str], foods: list[st
         amenities.append(
             '<fieldset class="listing-yesno">'
             f"<legend>{legend}</legend>"
-            f'<label class="listing-choice"><input type="radio" name="{e(name)}" value="yes" required> <span>Yes</span></label>'
+            f'<label class="listing-choice"><input type="radio" name="{e(name)}" value="yes"> <span>Yes</span></label>'
             f'<label class="listing-choice"><input type="radio" name="{e(name)}" value="no"> <span>No</span></label>'
             f"{note_html}</fieldset>"
         )
@@ -2387,12 +2387,12 @@ def build_list_restaurant(areas: list[dict], cuisines: list[str], foods: list[st
         "<p>We review every submission before it goes on the guide. For a short note, the "
         '<a class="text-link" href="/contact/">contact form</a> is enough.</p>\n'
         "</div>\n"
-        f'<form class="listing-form listing-form-full" action="/api/list-restaurant" method="post" data-list-restaurant>\n'
+        f'<form class="listing-form listing-form-full" action="/api/list-restaurant" method="post" enctype="multipart/form-data" data-list-restaurant>\n'
         '<div class="hp" aria-hidden="true"><label>Company <input name="company" type="text" tabindex="-1" autocomplete="off"></label></div>\n'
         "<h2>About you</h2>\n"
         + listing_text("name", "Your name", required=True, maxlength=120, autocomplete="name")
         + "\n"
-        + listing_radios("role", "Role", list(LISTING_ROLES), required=True)
+        + listing_radios("role", "Role", list(LISTING_ROLES))
         + "\n"
         + listing_text("email", "Email", required=True, input_type="email", maxlength=200, autocomplete="email", extra=' inputmode="email"')
         + "\n"
@@ -2405,41 +2405,35 @@ def build_list_restaurant(areas: list[dict], cuisines: list[str], foods: list[st
             "intent",
             "Request",
             [("new", "New listing"), ("update", "Update an existing listing")],
-            required=True,
         )
         + "\n"
         '<div class="listing-existing" data-existing>\n'
         + listing_text("existing", "Current listing URL or restaurant name", maxlength=300, placeholder="Listing URL or exact restaurant name")
-        + '\n<p class="listing-note">Required when you are updating a listing already on the site.</p>\n'
-        "</div>\n"
+        + "\n</div>\n"
         "<h2>Basics</h2>\n"
-        + listing_text("restaurant", "Restaurant name", required=True, maxlength=160, autocomplete="organization")
+        + listing_text("restaurant", "Restaurant name", maxlength=160, autocomplete="organization")
         + "\n"
-        + "<label><span>Area / town"
-        + listing_star()
-        + "</span>"
-        + f'<select name="area" required>{"".join(area_options)}</select></label>\n'
-        + listing_text("address", "Street address", required=True, maxlength=200, autocomplete="street-address")
+        + '<label><span>Area / town</span>'
+        + f'<select name="area">{"".join(area_options)}</select></label>\n'
+        + listing_text("address", "Street address", maxlength=200, autocomplete="street-address")
         + "\n"
-        + listing_text("phone", "Phone", required=True, input_type="tel", maxlength=40, autocomplete="tel")
+        + listing_text("phone", "Phone", input_type="tel", maxlength=40, autocomplete="tel")
         + "\n"
         + listing_text("website", "Website", input_type="url", maxlength=500, placeholder="https://")
         + "\n"
-        + listing_radios("price", "Price range", [(price, price) for price in LISTING_PRICES], required=True)
+        + listing_radios("price", "Price range", [(price, price) for price in LISTING_PRICES])
         + "\n"
-        + "<label><span>Short description / vibe"
-        + listing_star()
-        + "</span>"
-        + '<textarea name="description" required maxlength="800" rows="4"></textarea></label>\n'
+        + '<label><span>Short description / vibe</span>'
+        + '<textarea name="description" maxlength="800" rows="4"></textarea></label>\n'
         "<h2>Hours</h2>\n"
         '<p class="listing-note">Give the hours for each day, or write Closed.</p>\n'
         f'<div class="listing-hours">{hours}</div>\n'
         + listing_text("seasonal", "Seasonal note", maxlength=300, placeholder="Optional")
         + "\n"
         "<h2>What they serve</h2>\n"
-        + listing_checks("cuisines", "Cuisine types", cuisines, required=True)
+        + listing_checks("cuisines", "Cuisine types", cuisines)
         + "\n"
-        + listing_checks("meals", "Meals", list(LISTING_MEALS), required=True)
+        + listing_checks("meals", "Meals", list(LISTING_MEALS))
         + "\n"
         + listing_checks("foods", "Food style", foods, required=False)
         + '\n<p class="listing-note">Food style is optional.</p>\n'
@@ -2448,23 +2442,25 @@ def build_list_restaurant(areas: list[dict], cuisines: list[str], foods: list[st
         + "".join(amenities)
         + "\n"
         "<h2>Social and media</h2>\n"
+        '<div class="listing-social">\n'
         + listing_text("facebook", "Facebook URL", input_type="url", maxlength=500, placeholder="https://")
         + "\n"
         + listing_text("instagram", "Instagram", input_type="url", maxlength=500, placeholder="https://")
         + "\n"
-        + listing_text("logoUrl", "Logo URL", input_type="url", maxlength=500, placeholder="https://")
-        + "\n"
-        + listing_text("listPhotoUrl", "List photo URL", input_type="url", maxlength=500, placeholder="https://")
-        + "\n"
-        + listing_text("detailPhotoUrl", "Detail photo URL", input_type="url", maxlength=500, placeholder="https://")
-        + "\n"
         + listing_text("videoUrl", "Video URL", input_type="url", maxlength=500, placeholder="https://")
-        + "\n"
+        + "\n</div>\n"
+        '<div class="listing-uploads" data-uploads>\n'
+        '<label class="listing-drop">'
+        '<input name="photos" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" multiple>'
+        "<span>Drop logos or pictures here</span>"
+        "</label>\n"
+        '<ul class="listing-file-names" data-file-names></ul>\n'
+        "</div>\n"
         "<h2>Anything else</h2>\n"
         '<label><span>Notes</span><textarea name="notes" maxlength="2000" rows="5"></textarea></label>\n'
         '<label class="listing-choice listing-authorize">'
-        '<input type="checkbox" name="authorized" value="yes" required> '
-        f"<span>I am authorized to submit this information for the restaurant.{listing_star()}</span></label>\n"
+        '<input type="checkbox" name="authorized" value="yes"> '
+        "<span>I am authorized to submit this information for the restaurant.</span></label>\n"
         '<button type="submit">Submit</button>\n'
         '<p class="listing-status" role="status" aria-live="polite"></p>\n'
         "</form></div>\n"

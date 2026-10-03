@@ -1322,6 +1322,68 @@ html.js-filter #cards .card { display: none; }
 }
 .listing-form fieldset.listing-yesno .listing-note { flex: 1 0 100%; }
 .listing-authorize { align-items: flex-start; }
+.listing-social,
+.listing-uploads { display: grid; gap: 1.05rem; }
+.listing-drop {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 6.75rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  cursor: pointer;
+  text-align: center;
+}
+.listing-drop:focus-within,
+.listing-drop.is-over { border-color: var(--gulf); }
+.listing-drop input[type="file"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.listing-form .listing-drop > span {
+  display: block;
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--muted);
+}
+.listing-file-names {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.15rem;
+}
+.listing-file-names:empty { display: none; }
+.listing-file-names li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 44px;
+}
+.listing-file-names span { overflow-wrap: anywhere; }
+.listing-file-names button {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0.2rem 0;
+  border: 0;
+  background: transparent;
+  color: var(--gulf);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.listing-file-names button:hover { background: transparent; color: var(--coral-deep); }
 @media (min-width: 720px) {
   .listing-hours { grid-template-columns: 1fr 1fr; }
 }

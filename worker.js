@@ -21,8 +21,10 @@ import listingOptions from "./data/listing-options.json" with { type: "json" };
  * `company`, `hp_field`, and `website` as the honeypot. The full restaurant
  * form treats `company` and `hp_field` only, because `website` is the
  * restaurant site. Bodies over 16 KB are rejected, except the full restaurant
- * form, which allows 32 KB. Each Cloudflare IP may POST five times a minute
- * across the forms.
+ * form, which allows 32 KB of JSON. That form may also post multipart JPEG,
+ * PNG, and WebP images, up to 2 MB each and 6 MB together. Those files are
+ * attached to the listing email and are not saved on the site. Each
+ * Cloudflare IP may POST five times a minute across the forms.
  */
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -36,6 +38,14 @@ const LISTING_TYPES = {
 const LISTING_TYPE_ERROR = "Choose update, edit, deletion, new listing, or other.";
 const MAX_BODY = 16000;
 const MAX_RESTAURANT_BODY = 32000;
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+const MAX_IMAGE_TOTAL = 6 * 1024 * 1024;
+const MAX_IMAGES = 6;
+const MAX_RESTAURANT_MULTIPART = 7 * 1024 * 1024;
+const IMAGE_TYPE_ERROR = "Use a JPEG, PNG, or WebP image.";
+const IMAGE_SIZE_ERROR = "Each image must be 2 MB or smaller.";
+const IMAGE_COUNT_ERROR = "Attach up to 6 images.";
+const IMAGE_TOTAL_ERROR = "Keep the images to 6 MB or less together.";
 const WINDOW_MS = 60 * 1000;
 const MAX_PER_WINDOW = 5;
 const recentHits = new Map();
@@ -214,14 +224,106 @@ function choiceList(value, allowed, min, missing, invalid) {
   return { value: picked };
 }
 
-function yesNo(value, label) {
-  const text = String(value || "").trim().toLowerCase();
-  if (text !== "yes" && text !== "no") return { error: `Choose yes or no for ${label}.` };
-  return { value: text };
-}
-
 function authorizedYes(value) {
   return value === true || String(value || "").trim().toLowerCase() === "yes";
+}
+
+function sniffImage(bytes) {
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "image/jpeg";
+  if (
+    bytes.length >= 8
+    && bytes[0] === 0x89
+    && bytes[1] === 0x50
+    && bytes[2] === 0x4e
+    && bytes[3] === 0x47
+    && bytes[4] === 0x0d
+    && bytes[5] === 0x0a
+    && bytes[6] === 0x1a
+    && bytes[7] === 0x0a
+  ) return "image/png";
+  if (
+    bytes.length >= 12
+    && bytes[0] === 0x52
+    && bytes[1] === 0x49
+    && bytes[2] === 0x46
+    && bytes[3] === 0x46
+    && bytes[8] === 0x57
+    && bytes[9] === 0x45
+    && bytes[10] === 0x42
+    && bytes[11] === 0x50
+  ) return "image/webp";
+  return "";
+}
+
+function bytesToBase64(bytes) {
+  const chunk = 0x8000;
+  let binary = "";
+  for (let index = 0; index < bytes.length; index += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + chunk));
+  }
+  return btoa(binary);
+}
+
+function safeImageName(name, type, used) {
+  const ext = type === "image/png" ? "png" : type === "image/webp" ? "webp" : "jpg";
+  const base = String(name || "").replace(/\\/g, "/").split("/").pop().replace(/[\u0000-\u001F\u007F]/g, "");
+  const stem = base.replace(/\.[^.]+$/, "").replace(/[^A-Za-z0-9._-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "image";
+  let filename = `${stem}.${ext}`;
+  let count = 2;
+  while (used.has(filename)) {
+    filename = `${stem.slice(0, 54)}-${count}.${ext}`;
+    count += 1;
+  }
+  used.add(filename);
+  return filename;
+}
+
+async function collectImages(files) {
+  const present = files.filter((file) => file && Number(file.size) > 0);
+  if (!present.length) return { value: [] };
+  if (present.length > MAX_IMAGES) return { error: IMAGE_COUNT_ERROR };
+  let total = 0;
+  for (const file of present) {
+    const size = Number(file.size) || 0;
+    if (size > MAX_IMAGE_BYTES) return { error: IMAGE_SIZE_ERROR };
+    total += size;
+    if (total > MAX_IMAGE_TOTAL) return { error: IMAGE_TOTAL_ERROR };
+  }
+  const images = [];
+  const used = new Set();
+  for (const file of present) {
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    if (bytes.byteLength > MAX_IMAGE_BYTES) return { error: IMAGE_SIZE_ERROR };
+    const kind = sniffImage(bytes);
+    if (!kind) return { error: IMAGE_TYPE_ERROR };
+    images.push({
+      filename: safeImageName(file.name, kind, used),
+      type: kind,
+      content: bytesToBase64(bytes),
+    });
+  }
+  return { value: images };
+}
+
+function assignField(data, key, value) {
+  if (!Object.prototype.hasOwnProperty.call(data, key)) {
+    data[key] = value;
+    return;
+  }
+  data[key] = Array.isArray(data[key]) ? data[key].concat(value) : [data[key], value];
+}
+
+function fieldsFromForm(formData) {
+  const data = {};
+  const files = [];
+  for (const [key, value] of formData.entries()) {
+    if (typeof value === "string") {
+      assignField(data, key, value);
+      continue;
+    }
+    if (key === "photos" && value && Number(value.size) > 0) files.push(value);
+  }
+  return { data, files };
 }
 
 function showValue(value) {
@@ -231,7 +333,16 @@ function showValue(value) {
 }
 
 function yesNoLabel(value) {
-  return value === "yes" ? "Yes" : "No";
+  if (value === "yes") return "Yes";
+  if (value === "no") return "No";
+  return "Not provided";
+}
+
+function optionalYesNo(value, label) {
+  const text = String(value || "").trim().toLowerCase();
+  if (!text) return { value: "" };
+  if (text !== "yes" && text !== "no") return { error: `Choose yes or no for ${label}.` };
+  return { value: text };
 }
 
 export function parseListRestaurant(body) {
@@ -241,8 +352,8 @@ export function parseListRestaurant(body) {
   if (!nameRaw) return { error: "Enter your name." };
   if (!name) return { error: "Keep your name under 120 characters." };
   const role = String(body.role || "").trim().toLowerCase();
-  const roleOption = listingOptions.roles.find((item) => item.value === role);
-  if (!roleOption) return { error: "Choose owner, manager, marketing, or other." };
+  const roleOption = role ? listingOptions.roles.find((item) => item.value === role) : null;
+  if (role && !roleOption) return { error: "Choose owner, manager, marketing, or other." };
   const email = String(body.email || "").trim();
   if (!EMAIL.test(email) || email.length > 200) return { error: "Enter a valid email." };
   const yourPhone = phoneField(body.yourPhone, {
@@ -256,29 +367,23 @@ export function parseListRestaurant(body) {
   const bestTime = oneLine(body.bestTime, 120);
   if (bestRaw && !bestTime) return { error: "Keep the best time under 120 characters." };
   const intent = String(body.intent || "").trim().toLowerCase();
-  if (intent !== "new" && intent !== "update") return { error: "Choose new listing or update an existing listing." };
+  if (intent && intent !== "new" && intent !== "update") return { error: "Choose new listing or update an existing listing." };
   const existingRaw = String(body.existing || "").trim();
   const existing = oneLine(body.existing, 300);
-  if (intent === "update") {
-    if (!existingRaw) return { error: "Enter the current listing URL or restaurant name." };
-    if (!existing) return { error: "Keep the current listing under 300 characters." };
-  } else if (existingRaw && !existing) {
-    return { error: "Keep the current listing under 300 characters." };
-  }
+  if (existingRaw && !existing) return { error: "Keep the current listing under 300 characters." };
   const restaurantRaw = String(body.restaurant || "").trim();
   const restaurant = oneLine(body.restaurant, 160);
-  if (!restaurantRaw) return { error: "Enter the restaurant name." };
-  if (!restaurant) return { error: "Keep the restaurant name under 160 characters." };
+  if (restaurantRaw && !restaurant) return { error: "Keep the restaurant name under 160 characters." };
+  const areaRaw = String(body.area || "").trim();
   const areaSlug = oneLine(body.area, 80);
-  const area = listingOptions.areas.find((item) => item.slug === areaSlug);
-  if (!area) return { error: "Choose an area." };
+  const area = areaRaw ? listingOptions.areas.find((item) => item.slug === areaSlug) : null;
+  if (areaRaw && !area) return { error: "Choose an area." };
   const addressRaw = String(body.address || "").trim();
   const address = oneLine(body.address, 200);
-  if (!addressRaw) return { error: "Enter the street address." };
-  if (!address) return { error: "Keep the street address under 200 characters." };
+  if (addressRaw && !address) return { error: "Keep the street address under 200 characters." };
   const phone = phoneField(body.phone, {
-    required: true,
-    missing: "Enter the restaurant phone.",
+    required: false,
+    missing: "",
     invalid: "Enter a valid restaurant phone.",
     label: "restaurant phone",
   });
@@ -286,35 +391,27 @@ export function parseListRestaurant(body) {
   const website = optionalUrl(body.website, "website");
   if (website.error) return website;
   const price = String(body.price || "").trim();
-  if (!listingOptions.prices.includes(price)) return { error: "Choose a price range." };
+  if (price && !listingOptions.prices.includes(price)) return { error: "Choose a price range." };
   const description = plain(body.description, 800);
-  if (!description.text) return { error: "Enter a short description." };
   if (description.tooLong) return { error: "Keep the description under 800 characters." };
   const hours = {};
   for (const day of listingOptions.days) {
     const raw = String(body[day.name] || "").trim();
     const text = oneLine(body[day.name], 80);
-    if (!raw) return { error: `Enter hours for ${day.label}.` };
-    if (!text) return { error: `Keep ${day.label} hours under 80 characters.` };
+    if (raw && !text) return { error: `Keep ${day.label} hours under 80 characters.` };
     hours[day.name] = text;
   }
   const seasonal = plain(body.seasonal, 300);
   if (seasonal.tooLong) return { error: "Keep the seasonal note under 300 characters." };
-  const cuisines = choiceList(
-    body.cuisines,
-    listingOptions.cuisines,
-    1,
-    "Choose at least one cuisine type.",
-    "Choose cuisine types from the list.",
-  );
+  const cuisines = choiceList(body.cuisines, listingOptions.cuisines, 0, "", "Choose cuisine types from the list.");
   if (cuisines.error) return cuisines;
-  const meals = choiceList(body.meals, listingOptions.meals, 1, "Choose at least one meal.", "Choose meals from the list.");
+  const meals = choiceList(body.meals, listingOptions.meals, 0, "", "Choose meals from the list.");
   if (meals.error) return meals;
   const foods = choiceList(body.foods, listingOptions.foods, 0, "", "Choose food styles from the list.");
   if (foods.error) return foods;
   const amenities = {};
   for (const item of listingOptions.amenities) {
-    const answer = yesNo(body[item.name], item.label.toLowerCase());
+    const answer = optionalYesNo(body[item.name], item.label.toLowerCase());
     if (answer.error) return answer;
     amenities[item.name] = answer.value;
   }
@@ -322,9 +419,6 @@ export function parseListRestaurant(body) {
   for (const [key, label] of [
     ["facebook", "Facebook URL"],
     ["instagram", "Instagram URL"],
-    ["logoUrl", "logo URL"],
-    ["listPhotoUrl", "list photo URL"],
-    ["detailPhotoUrl", "detail photo URL"],
     ["videoUrl", "video URL"],
   ]) {
     const url = optionalUrl(body[key], label);
@@ -333,20 +427,19 @@ export function parseListRestaurant(body) {
   }
   const notes = plain(body.notes, 2000);
   if (notes.tooLong) return { error: "Keep the notes under 2,000 characters." };
-  if (!authorizedYes(body.authorized)) return { error: "Confirm you are authorized to submit this listing." };
   return {
     value: {
       name,
       role,
-      roleLabel: roleOption.label,
+      roleLabel: roleOption ? roleOption.label : "",
       email,
       yourPhone: yourPhone.value,
       bestTime: bestTime || "",
       intent,
       existing: existing || "",
       restaurant,
-      area: area.slug,
-      areaName: area.name,
+      area: area ? area.slug : "",
+      areaName: area ? area.name : "",
       address,
       phone: phone.value,
       website: website.value,
@@ -360,20 +453,21 @@ export function parseListRestaurant(body) {
       amenities,
       ...urls,
       notes: notes.text,
-      authorized: true,
+      authorized: authorizedYes(body.authorized),
     },
   };
 }
 
 export async function deliverListRestaurant(payload, env, fetchImpl = fetch) {
-  const intentLabel = payload.intent === "new" ? "New listing" : "Update an existing listing";
-  const hourLines = listingOptions.days.map((day) => `${day.label}: ${payload.hours[day.name]}`);
+  const intentLabel = payload.intent === "new" ? "New listing" : payload.intent === "update" ? "Update an existing listing" : "Not provided";
+  const hourLines = listingOptions.days.map((day) => `${day.label}: ${showValue(payload.hours[day.name])}`);
   const amenityLines = listingOptions.amenities.map((item) => `${item.label}: ${yesNoLabel(payload.amenities[item.name])}`);
   const musicNote = listingOptions.amenities.find((item) => item.name === "music");
+  const imageNames = Array.isArray(payload.images) ? payload.images.map((image) => image.filename).filter(Boolean) : [];
   const text = [
     "About you",
     `Your name: ${payload.name}`,
-    `Role: ${payload.roleLabel}`,
+    `Role: ${showValue(payload.roleLabel)}`,
     `Email: ${payload.email}`,
     `Phone: ${showValue(payload.yourPhone)}`,
     `Best time to reach you: ${showValue(payload.bestTime)}`,
@@ -383,22 +477,22 @@ export async function deliverListRestaurant(payload, env, fetchImpl = fetch) {
     `Current listing: ${showValue(payload.existing)}`,
     "",
     "Basics",
-    `Restaurant name: ${payload.restaurant}`,
-    `Area: ${payload.areaName}`,
-    `Street address: ${payload.address}`,
-    `Phone: ${payload.phone}`,
+    `Restaurant name: ${showValue(payload.restaurant)}`,
+    `Area: ${showValue(payload.areaName)}`,
+    `Street address: ${showValue(payload.address)}`,
+    `Phone: ${showValue(payload.phone)}`,
     `Website: ${showValue(payload.website)}`,
-    `Price range: ${payload.price}`,
+    `Price range: ${showValue(payload.price)}`,
     "Short description / vibe:",
-    payload.description,
+    showValue(payload.description),
     "",
     "Hours",
     ...hourLines,
     `Seasonal note: ${showValue(payload.seasonal)}`,
     "",
     "What they serve",
-    `Cuisine types: ${payload.cuisines.join(", ")}`,
-    `Meals: ${payload.meals.join(", ")}`,
+    `Cuisine types: ${showValue(payload.cuisines)}`,
+    `Meals: ${showValue(payload.meals)}`,
     `Food style: ${showValue(payload.foods)}`,
     "",
     "Amenities",
@@ -408,26 +502,27 @@ export async function deliverListRestaurant(payload, env, fetchImpl = fetch) {
     "Social and media",
     `Facebook URL: ${showValue(payload.facebook)}`,
     `Instagram: ${showValue(payload.instagram)}`,
-    `Logo URL: ${showValue(payload.logoUrl)}`,
-    `List photo URL: ${showValue(payload.listPhotoUrl)}`,
-    `Detail photo URL: ${showValue(payload.detailPhotoUrl)}`,
     `Video URL: ${showValue(payload.videoUrl)}`,
+    `Images: ${showValue(imageNames.join(", "))}`,
     "",
     "Anything else",
     "Notes:",
     showValue(payload.notes),
-    "Authorized to submit: Yes",
+    `Authorized to submit: ${payload.authorized ? "Yes" : "Not provided"}`,
   ].join("\n");
-  return postResend(
-    env,
-    {
-      reply_to: payload.email,
-      subject: `Eating in Destin restaurant listing: ${intentLabel}: ${payload.restaurant}`,
-      text,
-    },
-    fetchImpl,
-    "The listing could not be sent.",
-  );
+  const message = {
+    reply_to: payload.email,
+    subject: `Eating in Destin restaurant listing: ${intentLabel}: ${payload.restaurant || "Not provided"}`,
+    text,
+  };
+  if (payload.images && payload.images.length) {
+    message.attachments = payload.images.map((image) => ({
+      filename: image.filename,
+      content: image.content,
+      content_type: image.type,
+    }));
+  }
+  return postResend(env, message, fetchImpl, "The listing could not be sent.");
 }
 
 export const CANONICAL_HOST = "www.eatingindestin.com";
@@ -501,6 +596,8 @@ function honeypotFilled(data, keys) {
 }
 
 function wantsHtml(request) {
+  const accept = request.headers.get("accept") || "";
+  if (accept.includes("application/json")) return false;
   const type = request.headers.get("content-type") || "";
   return !type.includes("application/json");
 }
@@ -535,13 +632,35 @@ function unreadableMessage(kind) {
 }
 
 async function readFields(request, kind, options = {}) {
-  const maxBody = options.maxBody || MAX_BODY;
+  const typeHeader = request.headers.get("content-type") || "";
+  const multipart = typeHeader.toLowerCase().includes("multipart/form-data");
+  const maxBody = multipart && kind === "restaurant" ? MAX_RESTAURANT_MULTIPART : (options.maxBody || MAX_BODY);
   const lengthHeader = Number(request.headers.get("content-length") || 0);
   if (Number.isFinite(lengthHeader) && lengthHeader > maxBody) {
     return { response: rejectPost(request, tooLongMessage(kind), 413) };
   }
   if (rateLimited(clientIp(request))) {
     return { response: rejectPost(request, "Please wait a minute and try again.", 429) };
+  }
+  if (multipart && kind !== "restaurant") {
+    return { response: rejectPost(request, unreadableMessage(kind), 400) };
+  }
+  if (multipart) {
+    let formData;
+    try {
+      formData = await request.formData();
+    } catch {
+      return { response: rejectPost(request, "The listing could not be read.", 400) };
+    }
+    const { data, files } = fieldsFromForm(formData);
+    if (honeypotFilled(data, options.honeypotKeys)) return { response: fakeSuccess(request, kind) };
+    const parsed = parseListRestaurant(data);
+    if (!parsed.error) {
+      const images = await collectImages(files);
+      if (images.error) return { html: wantsHtml(request), parsed: images };
+      parsed.value.images = images.value;
+    }
+    return { html: wantsHtml(request), parsed };
   }
   let raw = "";
   try {
