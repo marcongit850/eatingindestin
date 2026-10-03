@@ -9,7 +9,7 @@ const blank = { meal: "", area: "", cuisine: "", q: "", outdoor: "", kids: "", m
 
 test("empty filters keep the full directory", () => {
   assert.equal(restaurants.filter((item) => matches(item, blank)).length, restaurants.length);
-  assert.equal(restaurants.length, 215);
+  assert.equal(restaurants.length, 236);
 });
 
 test("list and map links keep the active filters", () => {
@@ -69,7 +69,7 @@ test("amenity filters require a yes flag", () => {
   const music = restaurants.filter((item) => matches(item, { ...blank, music: "yes" }));
   assert.ok(happyFood.length > 0 && happyFood.every((item) => item.happyFood === true));
   assert.ok(happyDrinks.length > 0 && happyDrinks.every((item) => item.happyDrinks === true));
-  assert.equal(music.length, 20);
+  assert.equal(music.length, 22);
   assert.ok(music.every((item) => item.music === true));
   assert.ok(music.some((item) => item.slug === "harbor-tavern-destin-harbor"));
   assert.ok(music.some((item) => item.slug === "boshamps-seafood-and-oyster-house-destin-harbor"));
