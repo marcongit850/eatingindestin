@@ -29,9 +29,6 @@ function sample(overrides = {}) {
     foods: ["Seafood", "Oyster Bar"],
     facebook: "https://www.facebook.com/harbordocks",
     instagram: "https://www.instagram.com/harbordocks/",
-    logoUrl: "https://example.com/logo.png",
-    listPhotoUrl: "https://example.com/list.jpg",
-    detailPhotoUrl: "https://example.com/detail.jpg",
     videoUrl: "",
     notes: "Use the dock photo.",
     authorized: true,
@@ -80,29 +77,41 @@ test("listing options stay aligned with the published restaurants and areas", ()
   assert.equal(listingOptions.amenities.find((item) => item.name === "music").note, "Seasonal / subject to change.");
 });
 
-test("parseListRestaurant requires the fields a listing stores", () => {
+test("parseListRestaurant requires a name and email and lets every other field stay blank", () => {
   assert.equal(parseListRestaurant(null).error, "Send the listing as JSON.");
   assert.equal(parseListRestaurant({}).error, "Enter your name.");
+  assert.equal(parseListRestaurant({ name: "Jamie Cook" }).error, "Enter a valid email.");
   assert.equal(parseListRestaurant(sample({ role: "chef" })).error, "Choose owner, manager, marketing, or other.");
   assert.equal(parseListRestaurant(sample({ email: "nope" })).error, "Enter a valid email.");
   assert.equal(parseListRestaurant(sample({ intent: "edit" })).error, "Choose new listing or update an existing listing.");
-  assert.equal(parseListRestaurant(sample({ existing: "" })).error, "Enter the current listing URL or restaurant name.");
+  assert.equal(parseListRestaurant(sample({ existing: "" })).value.existing, "");
   assert.equal(parseListRestaurant(sample({ intent: "new", existing: "" })).value.intent, "new");
   assert.equal(parseListRestaurant(sample({ area: "seaside" })).error, "Choose an area.");
+  assert.equal(parseListRestaurant(sample({ area: "" })).value.area, "");
   assert.equal(parseListRestaurant(sample({ price: "free" })).error, "Choose a price range.");
+  assert.equal(parseListRestaurant(sample({ price: "" })).value.price, "");
   assert.equal(parseListRestaurant(sample({ phone: "call us" })).error, "Enter a valid restaurant phone.");
+  assert.equal(parseListRestaurant(sample({ phone: "" })).value.phone, "");
   assert.equal(parseListRestaurant(sample({ website: "harbordocks.com" })).error, "Enter a full website starting with https://.");
   assert.equal(parseListRestaurant(sample({ cuisines: ["Not a cuisine"] })).error, "Choose cuisine types from the list.");
-  assert.equal(parseListRestaurant(sample({ meals: [] })).error, "Choose at least one meal.");
+  assert.deepEqual(parseListRestaurant(sample({ meals: [] })).value.meals, []);
   assert.equal(parseListRestaurant(sample({ meals: ["Desserts"] })).error, "Choose meals from the list.");
-  assert.equal(parseListRestaurant(sample({ mon: "" })).error, "Enter hours for Monday.");
-  assert.equal(parseListRestaurant(sample({ music: "" })).error, "Choose yes or no for live music.");
-  assert.equal(parseListRestaurant(sample({ authorized: false })).error, "Confirm you are authorized to submit this listing.");
+  assert.equal(parseListRestaurant(sample({ mon: "" })).value.hours.mon, "");
+  assert.equal(parseListRestaurant(sample({ music: "" })).value.amenities.music, "");
+  assert.equal(parseListRestaurant(sample({ music: "maybe" })).error, "Choose yes or no for live music.");
+  assert.equal(parseListRestaurant(sample({ authorized: false })).value.authorized, false);
   const parsed = parseListRestaurant(sample({ foods: [] }));
   assert.deepEqual(parsed.value.foods, []);
   assert.equal(parsed.value.areaName, "Destin Harbor");
   assert.equal(parsed.value.roleLabel, "Manager");
   assert.deepEqual(parsed.value.meals, ["Lunch", "Dinner", "Late night"]);
+  const bare = parseListRestaurant({ name: "Jamie Cook", email: "jamie@example.com" });
+  assert.equal(bare.value.restaurant, "");
+  assert.equal(bare.value.intent, "");
+  assert.equal(bare.value.role, "");
+  assert.equal(bare.value.description, "");
+  assert.deepEqual(bare.value.cuisines, []);
+  assert.equal(bare.value.authorized, false);
 });
 
 test("all three secrets email every labeled field", async () => {
@@ -150,10 +159,8 @@ test("all three secrets email every labeled field", async () => {
     "Live music note: Seasonal / subject to change.",
     "Facebook URL: https://www.facebook.com/harbordocks",
     "Instagram: https://www.instagram.com/harbordocks/",
-    "Logo URL: https://example.com/logo.png",
-    "List photo URL: https://example.com/list.jpg",
-    "Detail photo URL: https://example.com/detail.jpg",
     "Video URL: Not provided",
+    "Images: Not provided",
     "Use the dock photo.",
     "Authorized to submit: Yes",
   ]) {
@@ -177,6 +184,45 @@ test("a new listing can leave the current listing blank", async () => {
   assert.match(body.text, /Current listing: Not provided/);
   assert.match(body.text, /Best time to reach you: Not provided/);
   assert.match(body.text, /Notes:\nNot provided/);
+});
+
+test("a name and email are enough to send the listing email", async () => {
+  let init = null;
+  const response = await handleListRestaurant(
+    postJson({ name: "Jamie Cook", email: "jamie@example.com" }, "203.0.113.27"),
+    mailEnv,
+    (_url, nextInit) => {
+      init = nextInit;
+      return Promise.resolve(new Response("{}", { status: 200 }));
+    },
+  );
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { ok: true, delivered: true });
+  const body = JSON.parse(init.body);
+  assert.equal(body.reply_to, "jamie@example.com");
+  assert.equal(body.subject, "Eating in Destin restaurant listing: Not provided: Not provided");
+  for (const line of [
+    "Your name: Jamie Cook",
+    "Role: Not provided",
+    "Email: jamie@example.com",
+    "Request: Not provided",
+    "Restaurant name: Not provided",
+    "Area: Not provided",
+    "Street address: Not provided",
+    "Phone: Not provided",
+    "Price range: Not provided",
+    "Short description / vibe:\nNot provided",
+    "Monday: Not provided",
+    "Cuisine types: Not provided",
+    "Meals: Not provided",
+    "Outdoor dining: Not provided",
+    "Live music: Not provided",
+    "Images: Not provided",
+    "Authorized to submit: Not provided",
+  ]) {
+    assert.ok(body.text.includes(line), line);
+  }
+  assert.equal(body.attachments, undefined);
 });
 
 test("missing secrets accept the restaurant form and do not call Resend", async () => {
@@ -332,4 +378,176 @@ test("the worker routes /api/list-restaurant without touching static assets", as
 test("a non-POST restaurant request is rejected", async () => {
   const response = await handleListRestaurant(new Request("https://www.eatingindestin.com/api/list-restaurant"), {});
   assert.equal(response.status, 405);
+});
+
+const PNG_1X1 = Uint8Array.from(Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==",
+  "base64",
+));
+
+function imageFile(name, type, bytes) {
+  return new File([bytes], name, { type });
+}
+
+function jpegBytes(size) {
+  const bytes = new Uint8Array(size);
+  bytes[0] = 0xff;
+  bytes[1] = 0xd8;
+  bytes[2] = 0xff;
+  return bytes;
+}
+
+function postMultipart(files, ip, overrides = {}, accept = "application/json") {
+  const fields = sample({ company: "", authorized: "yes", ...overrides });
+  const form = new FormData();
+  for (const [key, value] of Object.entries(fields)) {
+    if (Array.isArray(value)) value.forEach((item) => form.append(key, String(item)));
+    else form.append(key, value == null ? "" : String(value));
+  }
+  for (const file of files) form.append("photos", file, file.name);
+  const headers = { "cf-connecting-ip": ip };
+  if (accept) headers.accept = accept;
+  return new Request("https://www.eatingindestin.com/api/list-restaurant", {
+    method: "POST",
+    headers,
+    body: form,
+  });
+}
+
+test("listing images are attached to the same email and are not stored", async () => {
+  let init = null;
+  const png = imageFile("Harbor Logo.PNG", "image/png", PNG_1X1);
+  const webp = imageFile("patio.webp", "image/webp", Uint8Array.from([
+    0x52, 0x49, 0x46, 0x46, 0x1a, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50,
+    0x56, 0x50, 0x38, 0x20, 0x0a, 0x00, 0x00, 0x00,
+  ]));
+  const response = await handleListRestaurant(
+    postMultipart([png, webp], "203.0.113.40"),
+    mailEnv,
+    (_url, nextInit) => {
+      init = nextInit;
+      return Promise.resolve(new Response("{}", { status: 200 }));
+    },
+  );
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { ok: true, delivered: true });
+  const body = JSON.parse(init.body);
+  assert.match(body.text, /Images: Harbor-Logo\.png, patio\.webp/);
+  assert.doesNotMatch(body.text, /Logo URL|List photo URL|Detail photo URL/);
+  assert.equal(body.attachments.length, 2);
+  assert.equal(body.attachments[0].filename, "Harbor-Logo.png");
+  assert.equal(body.attachments[0].content_type, "image/png");
+  assert.deepEqual(Buffer.from(body.attachments[0].content, "base64"), Buffer.from(PNG_1X1));
+  assert.equal(body.attachments[1].filename, "patio.webp");
+  assert.equal(body.attachments[1].content_type, "image/webp");
+});
+
+test("a browser form post without JavaScript still attaches the images", async () => {
+  let init = null;
+  const response = await handleListRestaurant(
+    postMultipart([imageFile("logo.jpg", "image/jpeg", jpegBytes(40000))], "203.0.113.41", {}, ""),
+    mailEnv,
+    (_url, nextInit) => {
+      init = nextInit;
+      return Promise.resolve(new Response("{}", { status: 200 }));
+    },
+  );
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type"), /text\/html/);
+  assert.match(await response.text(), /Thanks\. We have your listing\./);
+  const body = JSON.parse(init.body);
+  assert.match(body.text, /Images: logo\.jpg/);
+  assert.equal(body.attachments[0].content_type, "image/jpeg");
+});
+
+test("the wrong image type is rejected and not emailed", async () => {
+  let called = false;
+  const gif = imageFile("menu.gif", "image/gif", Uint8Array.from([0x47, 0x49, 0x46, 0x38, 0x39, 0x61]));
+  const spoofed = imageFile("logo.png", "image/png", Uint8Array.from([0x3c, 0x68, 0x74, 0x6d, 0x6c, 0x3e]));
+  for (const [file, ip] of [[gif, "203.0.113.42"], [spoofed, "203.0.113.43"]]) {
+    const response = await handleListRestaurant(postMultipart([file], ip), mailEnv, () => {
+      called = true;
+      return Promise.resolve(new Response("{}", { status: 200 }));
+    });
+    assert.equal(response.status, 400);
+    assert.equal((await response.json()).error, "Use a JPEG, PNG, or WebP image.");
+  }
+  assert.equal(called, false);
+});
+
+test("an image over 2 MB is rejected before mail is sent", async () => {
+  let called = false;
+  const response = await handleListRestaurant(
+    postMultipart([imageFile("cover.jpg", "image/jpeg", jpegBytes(2 * 1024 * 1024 + 1))], "203.0.113.44"),
+    mailEnv,
+    () => {
+      called = true;
+      return Promise.resolve(new Response("{}", { status: 200 }));
+    },
+  );
+  assert.equal(called, false);
+  assert.equal(response.status, 400);
+  assert.equal((await response.json()).error, "Each image must be 2 MB or smaller.");
+});
+
+test("too many images are rejected", async () => {
+  const files = Array.from({ length: 7 }, (_, index) => imageFile(`photo-${index}.jpg`, "image/jpeg", jpegBytes(32)));
+  const response = await handleListRestaurant(postMultipart(files, "203.0.113.45"), mailEnv, () => {
+    throw new Error("mail should not be sent");
+  });
+  assert.equal(response.status, 400);
+  assert.equal((await response.json()).error, "Attach up to 6 images.");
+});
+
+test("images over 6 MB together are rejected", async () => {
+  const files = [
+    imageFile("one.jpg", "image/jpeg", jpegBytes(2 * 1024 * 1024)),
+    imageFile("two.jpg", "image/jpeg", jpegBytes(2 * 1024 * 1024)),
+    imageFile("three.jpg", "image/jpeg", jpegBytes(2 * 1024 * 1024)),
+    imageFile("four.jpg", "image/jpeg", jpegBytes(32)),
+  ];
+  const response = await handleListRestaurant(postMultipart(files, "203.0.113.46"), mailEnv, () => {
+    throw new Error("mail should not be sent");
+  });
+  assert.equal(response.status, 400);
+  assert.equal((await response.json()).error, "Keep the images to 6 MB or less together.");
+});
+
+test("a filled honeypot with images looks successful and is not emailed", async () => {
+  let called = false;
+  const response = await handleListRestaurant(
+    postMultipart([imageFile("logo.png", "image/png", PNG_1X1)], "203.0.113.47", { company: "Acme Bots" }),
+    mailEnv,
+    () => {
+      called = true;
+      return Promise.resolve(new Response("{}", { status: 200 }));
+    },
+  );
+  assert.equal(called, false);
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { ok: true, delivered: false });
+});
+
+test("a multipart restaurant body over 7 MB is rejected before mail is sent", async () => {
+  let called = false;
+  const response = await handleListRestaurant(
+    new Request("https://www.eatingindestin.com/api/list-restaurant", {
+      method: "POST",
+      headers: {
+        "content-type": "multipart/form-data; boundary=----listing",
+        "content-length": String(7 * 1024 * 1024 + 1),
+        accept: "application/json",
+        "cf-connecting-ip": "203.0.113.48",
+      },
+      body: "----listing--",
+    }),
+    mailEnv,
+    () => {
+      called = true;
+      return Promise.resolve(new Response("{}", { status: 200 }));
+    },
+  );
+  assert.equal(called, false);
+  assert.equal(response.status, 413);
+  assert.match((await response.json()).error, /too long/i);
 });

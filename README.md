@@ -88,7 +88,7 @@ Signup notes and listing requests from `/contact/` go out through the Resend HTT
 - `SUBSCRIBE_FROM` — a verified Resend sender, also used as the From address for listing mail
 - `CONTACT_EMAIL` — inbox that receives the signup and listing requests
 
-If any of those three secrets is missing, the worker still accepts the signup or listing note and returns `delivered: false`. It does not call another newsletter product. A listing email sets `reply_to` to the address on the form so a reply goes back to that person. The full form at `/list-your-restaurant/` posts to `/api/list-restaurant`, uses the same three secrets and reply address, and is not written to the sheet.
+If any of those three secrets is missing, the worker still accepts the signup or listing note and returns `delivered: false`. It does not call another newsletter product. A listing email sets `reply_to` to the address on the form so a reply goes back to that person. The full form at `/list-your-restaurant/` posts to `/api/list-restaurant`, uses the same three secrets and reply address, and is not written to the sheet. Optional JPEG, PNG, and WebP images from that form are attached to the same email and are not published on the site.
 
 Coupon signups are also posted to a Google Apps Script webhook, which appends a row, when both of these secrets are set:
 

@@ -305,6 +305,8 @@ check(
 )
 check("Seasonal / subject to change." in listing_main and ">Live music*</legend>" in listing_main, "live music should keep the seasonal note")
 check("\u2014" not in listing_main and "\u2013" not in listing_main, "listing form copy should not use dashes")
+check(listing_main.count(" required") == 2 and listing_main.count(' title="required"') == 2, "only name and email should be required")
+check("Required when you are updating" not in listing_main, "an update should not demand the current listing")
 check("Own or manage a restaurant in the Destin area?" in listing_main, "listing form should use Destin area wording")
 check('href="/contact/">contact form</a>' in listing_main, "listing form should keep a path back to the short note")
 options = json.loads((ROOT / "data" / "listing-options.json").read_text(encoding="utf-8"))
@@ -323,6 +325,18 @@ check(
     "listing form script should post the honeypot with the full form",
 )
 check("Thanks. We have your listing." in list_js, "listing form script should thank the restaurant")
+social = listing_main.split("<h2>Social and media</h2>", 1)[-1].split("<h2>Anything else</h2>", 1)[0]
+check(
+    social.find('name="facebook"') < social.find('name="instagram"') < social.find('name="videoUrl"') < social.find('name="photos"'),
+    "facebook, instagram, and video should stay above the image box",
+)
+check('name="videoUrl" type="url"' in social and 'type="file"' not in social.split('name="videoUrl"', 1)[0], "video should stay a url field")
+check('name="photos" type="file"' in social and "multiple" in social and "Drop logos or pictures here" in social, "logos and pictures should share one image box")
+check("image/jpeg,image/png,image/webp" in social, "the image box should accept jpeg, png, and webp")
+check('name="logoUrl"' not in listing_page and 'name="listPhotoUrl"' not in listing_page and 'name="detailPhotoUrl"' not in listing_page, "photo url fields should be gone")
+check('enctype="multipart/form-data"' in listing_page, "the listing form should post multipart images")
+check("Use a JPEG, PNG, or WebP image." in list_js and "Each image must be 2 MB or smaller." in list_js, "the form should explain a rejected image")
+check('headers: { accept: "application/json" }' in list_js and "new FormData(form)" in list_js, "the form script should post the image files")
 listing_js = (ROOT / "listing.js").read_text(encoding="utf-8")
 check("/api/listing" in listing_js, "listing script should post to the worker")
 check("Enter the restaurant name." not in listing_js, "listing script should not require a restaurant name")
