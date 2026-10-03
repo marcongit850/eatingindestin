@@ -901,90 +901,83 @@ def readable_note(restaurant: dict) -> str:
     return sentence(note)
 
 
-def address_sentence(restaurant: dict) -> str:
-    address = restaurant["address"]
-    area = restaurant["area"]
-    city = restaurant["city"] or "Destin"
-    if not address:
-        if area.lower() == city.lower():
-            return f"It’s in {area}."
-        return f"It’s in {area}, {city}."
-    if area.lower() == city.lower() or area.lower() in address.lower():
-        return f"The address is {address}."
-    return f"The address is {address}, in {area}."
+# Grammar and labels that do not add a fact beyond the chips and the facts sidebar.
+_STORY_FILLER = {
+    "a", "an", "the", "is", "are", "was", "were", "be", "been", "being",
+    "of", "and", "or", "to", "for", "in", "on", "at", "by", "with", "from", "as",
+    "its", "it", "this", "that", "these", "those", "their", "they", "you", "your",
+    "serves", "serve", "serving", "served", "has", "have", "offers", "offering", "offer",
+    "food", "foods", "cuisine", "cuisines", "restaurant", "restaurants", "cafe",
+    "dining", "room", "shop", "shops", "menu", "daily", "open", "opened", "hours",
+    "hour", "closed", "phone", "address", "listed", "listing", "marked",
+}
+_STORY_DAYS = {
+    "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+}
 
 
-def service_sentence(restaurant: dict) -> str:
-    meals = oxford([meal.lower() for meal in restaurant["meals"]])
-    cuisines = oxford(restaurant["cuisines"][:3])
-    if meals and cuisines:
-        noun = "cuisine" if len(restaurant["cuisines"][:3]) == 1 else "cuisines"
-        verb = "is" if noun == "cuisine" else "are"
-        return f"It’s listed for {meals}. {cuisines} {verb} the {noun} on the listing."
-    if meals:
-        return f"It’s listed for {meals}."
-    if cuisines:
-        return f"{cuisines} is on the listing."
-    return ""
+def _story_tokens(*blobs: str) -> set[str]:
+    tokens: set[str] = set()
+    for blob in blobs:
+        tokens.update(re.findall(r"[a-z0-9]+", (blob or "").lower()))
+    return tokens
 
 
-def detail_sentence(restaurant: dict) -> str:
-    """Only flags the listing itself marks yes. In Review and No stay unsaid."""
-    clauses = []
+def story_paragraph(restaurant: dict) -> str:
+    """The listing note, unless every word only repeats chips or the facts sidebar.
+
+    A place name that is not the address, the area, or a chip stays. The restaurant
+    name does not count: it is already the page heading.
+    """
+    note = readable_note(restaurant)
+    if not note:
+        return ""
+    known = set(_STORY_FILLER) | set(_STORY_DAYS)
+    known |= _story_tokens(
+        restaurant["name"],
+        restaurant["address"],
+        restaurant["street"],
+        restaurant["city"],
+        restaurant["area"],
+        restaurant["phone"],
+        restaurant["hours"],
+        restaurant["category"],
+        restaurant["price"],
+    )
+    for key in ("cuisines", "meals", "foods", "vibes"):
+        known |= _story_tokens(*restaurant[key])
     if restaurant["outdoor"]:
-        clauses.append("Outdoor dining is listed.")
+        known.update(("outdoor", "patio"))
     if restaurant["kids"]:
-        clauses.append("It’s marked kid friendly.")
+        known.update(("kid", "kids", "friendly"))
     if restaurant["music"]:
-        clauses.append("Live music is listed.")
+        known.update(("live", "music"))
     if restaurant["reservations"]:
-        clauses.append("They take reservations.")
+        known.update(("reservation", "reservations", "reserve"))
     if restaurant["groups"]:
-        clauses.append("Groups of 12 or more are listed.")
-    if restaurant["happyDrinks"] and restaurant["happyFood"]:
-        clauses.append("A happy hour for drinks and food is listed.")
-    elif restaurant["happyDrinks"]:
-        clauses.append("A happy hour for drinks is listed.")
-    elif restaurant["happyFood"]:
-        clauses.append("A happy hour for food is listed.")
-    return " ".join(clauses)
-
-
-def hours_sentence(restaurant: dict) -> str:
-    if restaurant["hours"]:
-        return "Hours are on this page."
-    return "Hours aren’t listed on this page."
-
-
-def favorite_sentence(restaurant: dict) -> str:
+        known.update(("group", "groups"))
+    if restaurant["happyDrinks"] or restaurant["happyFood"]:
+        known.update(("happy",))
+    if restaurant["happyDrinks"]:
+        known.add("drinks")
     if restaurant["laurensFavorite"]:
-        return "It’s on Lauren’s Favorites."
+        known.update(("lauren", "laurens", "favorite", "favorites"))
+    for word in re.findall(r"[A-Za-z0-9']+", note):
+        token = word.lower().replace("'", "")
+        if token.isdigit() or token in known:
+            continue
+        if len(token) > 3 and token.endswith("s") and token[:-1] in known:
+            continue
+        return note
     return ""
-
-
-def practical_paragraph(restaurant: dict) -> str:
-    parts = [
-        address_sentence(restaurant),
-        service_sentence(restaurant),
-        detail_sentence(restaurant),
-        favorite_sentence(restaurant),
-        hours_sentence(restaurant),
-    ]
-    return " ".join(part for part in parts if part)
 
 
 def listing_story(restaurant: dict) -> str:
-    """Note from the listing, then a practical paragraph built only from its fields."""
-    note = readable_note(restaurant)
-    practical = practical_paragraph(restaurant)
-    parts = []
-    if note:
-        parts.append(f"<p>{e(note)}</p>")
-    if practical and practical != note:
-        parts.append(f"<p>{e(practical)}</p>")
-    if not parts:
-        parts.append(f"<p>{e(practical_paragraph(restaurant))}</p>")
-    return "".join(parts)
+    """One description paragraph. Facts already shown as chips or sidebar stay off the page."""
+    note = story_paragraph(restaurant)
+    if not note:
+        return ""
+    return f"<p>{e(note)}</p>"
 
 
 def meta_tails(restaurant: dict) -> list[str]:
