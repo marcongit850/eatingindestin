@@ -31,11 +31,11 @@ def check(condition: bool, message: str) -> None:
 
 
 shown = build.published_restaurants()
-check(len(source) == 215, f"named published rows should stay at 215, got {len(source)}")
-check(len(restaurants) == len(shown) == 215, "public json should include every named published restaurant")
+check(len(source) == 236, f"named published rows should stay at 236, got {len(source)}")
+check(len(restaurants) == len(shown) == 236, "public json should include every named published restaurant")
 csv_rows = build.load_rows(ROOT / "data" / "restaurants.csv")
 blank_names = [row for row in csv_rows if build.clean_text(row.get("Status")) == "PUBLISHED" and not build.clean_text(row.get("Restaurant Name"))]
-check(len(csv_rows) == 351 and len(blank_names) == 114, "the CSV keeps 351 rows, including 114 blank stubs that stay off the site")
+check(len(csv_rows) == 372 and len(blank_names) == 114, "the CSV keeps 372 rows, including 114 blank stubs that stay off the site")
 detail_pages = list((ROOT / "restaurants").glob("*/index.html"))
 check(len(detail_pages) == len(restaurants), f"generated {len(detail_pages)} detail pages for {len(restaurants)} rows")
 check("not on the site yet" not in home and "Design preview" not in home, "homepage should not say the catalog is still a sample")
@@ -125,7 +125,7 @@ for area in areas:
 
 music_note = "Live music is seasonal and subject to change — confirm with the restaurant."
 music_count = sum(1 for item in restaurants if item.get("music") is True)
-check(music_count == 20, f"live music should stay a verified yes on 20 listings, got {music_count}")
+check(music_count == 22, f"live music should stay a verified yes on 22 listings, got {music_count}")
 check(directory.count('data-music="yes"') == music_count, "directory should keep every live music listing filterable")
 check(
     'name="music" value="yes"' in directory and ">Live music</span>" in directory and "Live music*" not in directory,
@@ -185,15 +185,21 @@ check(
     missing_photos
     == [
         "crafty-siren-destin-harbor",
+        "drizzle-destin-harbor",
+        "empanola-destin-mid-destin",
+        "everbowl-miramar-beach",
         "harbor-tavern-destin-harbor",
         "lone-wolf-pizza-co-mid-destin",
         "o-quigley-s-seafood-steamer-mid-destin",
         "parlor-doughnuts-destin-mid-destin",
+        "pizza-by-the-sea-miramar-beach",
+        "que-pasa-mexican-kitchen-tequila-mid-destin",
+        "shrimp-basket-mid-destin",
         "sundries-general-market-sandestin",
     ],
     f"unexpected monogram listings: {missing_photos}",
 )
-check(len(photos) == 209, f"expected 209 restaurant photos, got {len(photos)}")
+check(len(photos) == 224, f"expected 224 restaurant photos, got {len(photos)}")
 check(build.local_listing_photo("not-a-restaurant") is None, "a slug without a dropped file should stay a monogram")
 check(build.listing_photos("sundries-general-market-sandestin") == [], "Sundries General Market has no photo folder")
 check(build.listing_photos("crafty-siren-destin-harbor") == [], "Crafty Siren has no photo folder")
@@ -461,7 +467,7 @@ check(
     "town restaurant counts should stay on one line",
 )
 check("11 Restaurants" in areas_index and "11 places" not in areas_index, "area cards should count Restaurants")
-check("50 Restaurants" in home and re.search(r"\bplaces\b", home) is None, "homepage area counts should say Restaurants")
+check("56 Restaurants" in home and re.search(r"\bplaces\b", home) is None, "homepage area counts should say Restaurants")
 check(build.restaurant_count_word(1, label=True) == "Restaurant", "a single listing is a Restaurant label")
 check(build.restaurant_count_word(7) == "restaurants", "sentence counts stay lowercase")
 check("1 restaurant on the map" in site_js and "restaurants on the map" in site_js, "map count should say restaurants")

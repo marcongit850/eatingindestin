@@ -64,7 +64,8 @@ MEAL_ORDER = ["Breakfast", "Lunch", "Dinner", "Desserts", "Drinks"]
 # so the published row is tagged without adding a column to the CSV export.
 LAURENS_FAVORITES = (
     ("The Melting Pot", ("melting pot",)),
-    ("McGuire's", ("mcguire", "mcguires")),
+    # The pub only. McGuire's Sushi is a separate room and is not a favorite.
+    ("McGuire's", ("mcguires irish",)),
     ("Seagar's", ("seagar", "seagars")),
     ("Ruth's Chris", ("ruths chris", "ruth chris", "ruth kris")),
     ("Crab Trap", ("crab trap",)),
@@ -371,6 +372,10 @@ def area_photo(slug: str, raw: str) -> str | None:
 def wix_to_url(raw: str, width: int, height: int) -> str | None:
     raw = (raw or "").strip()
     if not raw:
+        return None
+    if raw.startswith("/images/"):
+        if (ROOT / raw.lstrip("/")).is_file():
+            return raw
         return None
     if raw.startswith(("http://", "https://")):
         return raw
@@ -1122,20 +1127,23 @@ def opening_hours(raw: str) -> list[str]:
         match = re.fullmatch(r"(Mon|Tue|Wed|Thu|Fri|Sat|Sun):\s*(.+)", part)
         if not match:
             return []
-        if match.group(2).strip().lower() == "closed":
+        body = match.group(2).strip()
+        if body.lower() == "closed":
             continue
-        times = re.fullmatch(
-            r"(\d{1,2}:\d{2}\s*[AP]M)\s*-\s*(\d{1,2}:\d{2}\s*[AP]M)",
-            match.group(2).strip(),
-            re.I,
-        )
-        if not times:
-            return []
-        start = clock_24(times.group(1))
-        end = clock_24(times.group(2))
-        if not start or not end:
-            return []
-        slots.append(f"{DAY_CODES[match.group(1).lower()]} {start}-{end}")
+        day = DAY_CODES[match.group(1).lower()]
+        for piece in body.split(","):
+            times = re.fullmatch(
+                r"(\d{1,2}:\d{2}\s*[AP]M)\s*-\s*(\d{1,2}:\d{2}\s*[AP]M)",
+                piece.strip(),
+                re.I,
+            )
+            if not times:
+                return []
+            start = clock_24(times.group(1))
+            end = clock_24(times.group(2))
+            if not start or not end:
+                return []
+            slots.append(f"{day} {start}-{end}")
     return slots
 
 

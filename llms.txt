@@ -64,11 +64,13 @@ Search by restaurant name, or look for restaurants and food in Destin, Miramar B
 - [Beach Walk Cafe](https://www.eatingindestin.com/restaurants/beach-walk-cafe-crystal-beach/): American, Seafood in Crystal Beach, Destin, Florida.
 - [Big Bad Breakfast Miramar Beach](https://www.eatingindestin.com/restaurants/big-bad-breakfast-miramar-beach-miramar-beach/): American, Southern in Miramar Beach, near Destin, Florida.
 - [Bijoux](https://www.eatingindestin.com/restaurants/bijoux-sandestin/): American, Seafood in Sandestin, Miramar Beach, near Destin, Florida.
+- [Bistrology](https://www.eatingindestin.com/restaurants/bistrology-miramar-beach/): Cafe, American in Miramar Beach, near Destin, Florida.
 - [Bitterroot](https://www.eatingindestin.com/restaurants/bitterroot-destin-commons/): American, Southern in Destin Commons, Destin, Florida.
 - [Boardwalk Fry Co.](https://www.eatingindestin.com/restaurants/boardwalk-fry-co-destin-harbor/): American in Destin Harbor, Destin, Florida.
 - [Boathouse Oyster Bar](https://www.eatingindestin.com/restaurants/boathouse-oyster-bar-destin-harbor/): Seafood, American in Destin Harbor, Destin, Florida.
 - [Bonefish Grill Destin](https://www.eatingindestin.com/restaurants/bonefish-grill-destin-mid-destin/): Seafood, American in Destin Commons, Destin, Florida.
 - [Boshamps Seafood & Oyster House](https://www.eatingindestin.com/restaurants/boshamps-seafood-and-oyster-house-destin-harbor/): Seafood, American in Destin Harbor, Destin, Florida.
+- [Bowled Co.](https://www.eatingindestin.com/restaurants/bowled-co-destin-commons/): American in Destin Commons, Destin, Florida.
 - [Bric à Brac](https://www.eatingindestin.com/restaurants/bric-a-brac-mid-destin/): American in Mid-Destin, Destin, Florida.
 - [BrickTop's](https://www.eatingindestin.com/restaurants/bricktop-s-grand-boulevard/): American in Grand Boulevard, Miramar Beach, near Destin, Florida.
 - [Brotula's Seafood House & Steamer](https://www.eatingindestin.com/restaurants/brotula-s-seafood-house-and-steamer-destin-harbor/): Seafood, American in Destin Harbor, Destin, Florida.
@@ -94,17 +96,23 @@ Search by restaurant name, or look for restaurants and food in Destin, Miramar B
 - [Ciao Italian Bistro & Pizza](https://www.eatingindestin.com/restaurants/ciao-italian-bistro-and-pizza-mid-destin/): Italian in Mid-Destin, Destin, Florida.
 - [Cissy's Scenic 98 Cafe](https://www.eatingindestin.com/restaurants/cissy-s-scenic-98-cafe-crystal-beach/): Cafe, American in Crystal Beach, Destin, Florida.
 - [Clean Juice](https://www.eatingindestin.com/restaurants/clean-juice-sandestin/): American in Sandestin, Miramar Beach, near Destin, Florida.
+- [Commelfo Restaurant](https://www.eatingindestin.com/restaurants/commelfo-restaurant-miramar-beach/): American in Miramar Beach, near Destin, Florida.
 - [Coyote Ugly Saloon](https://www.eatingindestin.com/restaurants/coyote-ugly-saloon-destin-harbor/): American in Destin Harbor, Destin, Florida.
 - [Cracker Barrel Destin](https://www.eatingindestin.com/restaurants/cracker-barrel-destin-mid-destin/): American, Southern in Mid-Destin, Destin, Florida.
 - [Crackings](https://www.eatingindestin.com/restaurants/crackings-mid-destin/): American, Southern in Mid-Destin, Destin, Florida.
 - [Crafty Siren](https://www.eatingindestin.com/restaurants/crafty-siren-destin-harbor/): American in Destin Harbor, Destin, Florida.
 - [Culver's Miramar Beach](https://www.eatingindestin.com/restaurants/culver-s-miramar-beach-miramar-beach/): American in Miramar Beach, Destin, Florida.
+- [Dat Burrito Place](https://www.eatingindestin.com/restaurants/dat-burrito-place-destin-commons/): Mexican in Destin Commons, Destin, Florida.
 - [Dewey Destin's Harborside](https://www.eatingindestin.com/restaurants/dewey-destin-s-harborside-destin-harbor/): Seafood, American in Destin Harbor, Destin, Florida.
 - [Dewey Destin's Seafood Restaurant](https://www.eatingindestin.com/restaurants/dewey-destin-s-seafood-restaurant-destin-harbor/): Seafood, American in Destin Harbor, Destin, Florida.
 - [Domo Izakaya](https://www.eatingindestin.com/restaurants/domo-izakaya-mid-destin/): Japanese, Sushi in Mid-Destin, Destin, Florida.
+- [Drizzle](https://www.eatingindestin.com/restaurants/drizzle-destin-harbor/): Dessert in Destin Harbor, Destin, Florida.
 - [Dude & Meatball's](https://www.eatingindestin.com/restaurants/dude-and-meatball-s-sandestin/): Italian in Sandestin, Miramar Beach, near Destin, Florida.
 - [El Jalisco Destin Commons](https://www.eatingindestin.com/restaurants/el-jalisco-destin-commons-destin-commons/): Mexican in Destin Commons, Destin, Florida.
+- [Empanola Destin](https://www.eatingindestin.com/restaurants/empanola-destin-mid-destin/): American in Mid-Destin, Destin, Florida.
+- [everbowl](https://www.eatingindestin.com/restaurants/everbowl-miramar-beach/): Cafe in Miramar Beach, near Destin, Florida.
 - [Everkrisp](https://www.eatingindestin.com/restaurants/everkrisp-grand-boulevard/): American in Grand Boulevard, Miramar Beach, near Destin, Florida.
+- [Evie Mae's Pit Barbecue](https://www.eatingindestin.com/restaurants/evie-mae-s-pit-barbecue-miramar-beach/): BBQ in Miramar Beach, near Destin, Florida.
 - [Fat Clemenza's](https://www.eatingindestin.com/restaurants/fat-clemenza-s-miramar-beach/): Italian in Miramar Beach, near Destin, Florida.
 - [Fat Tuesday Daiquiri Bar](https://www.eatingindestin.com/restaurants/fat-tuesday-daiquiri-bar-sandestin/): American in Sandestin, Miramar Beach, near Destin, Florida.
 - [Fatboys Destin](https://www.eatingindestin.com/restaurants/fatboys-destin-mid-destin/): American in Destin Harbor, Destin, Florida.
@@ -141,6 +149,7 @@ Search by restaurant name, or look for restaurants and food in Destin, Miramar B
 - [Jester Mardi Gras Daiquiris](https://www.eatingindestin.com/restaurants/jester-mardi-gras-daiquiris-destin-harbor/): American in Destin Harbor, Destin, Florida.
 - [Jet's Pizza Destin](https://www.eatingindestin.com/restaurants/jet-s-pizza-destin-mid-destin/): Italian, American in Destin Commons, Destin, Florida.
 - [Jimmy John's Grand Boulevard](https://www.eatingindestin.com/restaurants/jimmy-john-s-grand-boulevard-grand-boulevard/): American in Grand Boulevard, Miramar Beach, near Destin, Florida.
+- [Joe's Crab Shack](https://www.eatingindestin.com/restaurants/joe-s-crab-shack-mid-destin/): Seafood, American in Mid-Destin, Destin, Florida.
 - [John Wehner's Village Door Restaurant](https://www.eatingindestin.com/restaurants/john-wehner-s-village-door-restaurant-sandestin/): American, BBQ in Sandestin, Destin, Florida.
 - [Jon Smith Subs](https://www.eatingindestin.com/restaurants/jon-smith-subs-sandestin/): American in Sandestin, Miramar Beach, near Destin, Florida.
 - [Kenny D's Beach Bar & Grill](https://www.eatingindestin.com/restaurants/kenny-d-s-beach-bar-and-grill-crystal-beach/): Southern, Seafood in Miramar Beach, near Destin, Florida.
@@ -150,6 +159,7 @@ Search by restaurant name, or look for restaurants and food in Destin, Miramar B
 - [La Cremeria](https://www.eatingindestin.com/restaurants/la-cremeria-sandestin/): Dessert, Italian in Sandestin, Destin, Florida.
 - [La Paz Restaurante & Cantina](https://www.eatingindestin.com/restaurants/la-paz-restaurante-and-cantina-destin-harbor/): Mexican, Seafood in Destin Harbor, Destin, Florida.
 - [LandShark Bar & Grill](https://www.eatingindestin.com/restaurants/landshark-bar-and-grill-sandestin/): American, Seafood in Sandestin, Miramar Beach, near Destin, Florida.
+- [Lillie's Q](https://www.eatingindestin.com/restaurants/lillie-s-q-miramar-beach/): BBQ, American in Miramar Beach, near Destin, Florida.
 - [LocOhana Tropical Grill](https://www.eatingindestin.com/restaurants/locohana-tropical-grill-destin-harbor/): American in Destin Harbor, Destin, Florida.
 - [Lone Wolf Pizza Co.](https://www.eatingindestin.com/restaurants/lone-wolf-pizza-co-mid-destin/): Italian, American in Mid-Destin, Destin, Florida.
 - [LongHorn Steakhouse Destin](https://www.eatingindestin.com/restaurants/longhorn-steakhouse-destin-mid-destin/): American in Mid-Destin, Destin, Florida.
@@ -162,17 +172,20 @@ Search by restaurant name, or look for restaurants and food in Destin, Miramar B
 - [Marina Bar & Grill](https://www.eatingindestin.com/restaurants/marina-bar-and-grill-sandestin/): American, Seafood in Sandestin, Miramar Beach, near Destin, Florida.
 - [Marina Cafe](https://www.eatingindestin.com/restaurants/marina-cafe-destin-harbor/): Seafood, American in Destin Harbor, Destin, Florida.
 - [McGuire's Irish Pub](https://www.eatingindestin.com/restaurants/mcguire-s-irish-pub-destin-harbor/): Irish, American in Destin Harbor, Destin, Florida.
+- [McGuire's Sushi](https://www.eatingindestin.com/restaurants/mcguire-s-sushi-destin-harbor/): Japanese, Sushi in Destin Harbor, Destin, Florida.
 - [Merlin's Pizza](https://www.eatingindestin.com/restaurants/merlin-s-pizza-mid-destin/): Italian in Mid-Destin, Destin, Florida.
 - [Mezcal Mexican Grill](https://www.eatingindestin.com/restaurants/mezcal-mexican-grill-miramar-beach/): Mexican in Miramar Beach, near Destin, Florida.
 - [Mi Gente Mexican Restaurant & Cantina](https://www.eatingindestin.com/restaurants/mi-gente-mexican-restaurant-and-cantina-mid-destin/): Mexican in Mid-Destin, Destin, Florida.
 - [Miller's Ale House Destin](https://www.eatingindestin.com/restaurants/miller-s-ale-house-destin-mid-destin/): American in Mid-Destin, Destin, Florida.
 - [Mimmo's Ristorante Italiano](https://www.eatingindestin.com/restaurants/mimmo-s-ristorante-italiano-mid-destin/): Italian in Mid-Destin, Destin, Florida.
+- [Moe's Original BBQ](https://www.eatingindestin.com/restaurants/moe-s-original-bbq-destin-harbor/): BBQ, American in Destin Harbor, Destin, Florida.
 - [Moo La-La Ice Cream & Desserts](https://www.eatingindestin.com/restaurants/moo-la-la-ice-cream-and-desserts-sandestin/): Dessert, American in Sandestin, Miramar Beach, near Destin, Florida.
 - [New Dragon Chinese Buffet & Mongolian Grill](https://www.eatingindestin.com/restaurants/new-dragon-chinese-buffet-and-mongolian-grill-mid-destin/): Chinese, Asian in Mid-Destin, Destin, Florida.
 - [Nonna's Ristorante](https://www.eatingindestin.com/restaurants/nonna-s-ristorante-destin-harbor/): Italian in Destin Harbor, Destin, Florida.
 - [O'Quigley's Seafood Steamer](https://www.eatingindestin.com/restaurants/o-quigley-s-seafood-steamer-mid-destin/): Seafood, American in Mid-Destin, Destin, Florida.
 - [Olive Garden Destin](https://www.eatingindestin.com/restaurants/olive-garden-destin-mid-destin/): Italian in Mid-Destin, Destin, Florida.
 - [On the Rocks](https://www.eatingindestin.com/restaurants/on-the-rocks-destin-harbor/): American in Destin Harbor, Destin, Florida.
+- [Osaka Japanese Hibachi Steakhouse & Sushi Bar](https://www.eatingindestin.com/restaurants/osaka-japanese-hibachi-steakhouse-sushi-bar-mid-destin/): Japanese, Sushi in Mid-Destin, Destin, Florida.
 - [Outback Steakhouse Destin](https://www.eatingindestin.com/restaurants/outback-steakhouse-destin-mid-destin/): American in Mid-Destin, Destin, Florida.
 - [Outcast Seafood](https://www.eatingindestin.com/restaurants/outcast-seafood-miramar-beach/): Seafood, American in Miramar Beach, near Destin, Florida.
 - [Ovide](https://www.eatingindestin.com/restaurants/ovide-sandestin/): American, Southern in Sandestin, Miramar Beach, near Destin, Florida.
@@ -186,10 +199,12 @@ Search by restaurant name, or look for restaurants and food in Destin, Miramar B
 - [Pazzo Italiano](https://www.eatingindestin.com/restaurants/pazzo-italiano-mid-destin/): Italian in Mid-Destin, Destin, Florida.
 - [Pepito's Mexican Restaurant](https://www.eatingindestin.com/restaurants/pepito-s-mexican-restaurant-mid-destin/): Mexican in Mid-Destin, Destin, Florida.
 - [Perla Baking Co.](https://www.eatingindestin.com/restaurants/perla-baking-co-grand-boulevard/): Cafe, American in Grand Boulevard, Destin, Florida.
+- [Pizza by the Sea](https://www.eatingindestin.com/restaurants/pizza-by-the-sea-miramar-beach/): Italian in Miramar Beach, near Destin, Florida.
 - [Pizza Hut Miramar Beach](https://www.eatingindestin.com/restaurants/pizza-hut-miramar-beach-miramar-beach/): Italian in Miramar Beach, near Destin, Florida.
 - [Pompano Joe's](https://www.eatingindestin.com/restaurants/pompano-joe-s-miramar-beach/): Seafood, American in Miramar Beach, Destin, Florida.
 - [Poppy's Crazy Lobster](https://www.eatingindestin.com/restaurants/poppy-s-crazy-lobster-sandestin/): Southern, Seafood in Sandestin, Miramar Beach, near Destin, Florida.
 - [Primrose Coastal Italian](https://www.eatingindestin.com/restaurants/primrose-crystal-beach/): Italian, Seafood in Crystal Beach, Destin, Florida.
+- [Que Pasa Mexican Kitchen & Tequila](https://www.eatingindestin.com/restaurants/que-pasa-mexican-kitchen-tequila-mid-destin/): Mexican in Mid-Destin, Destin, Florida.
 - [Real Thai Fusion](https://www.eatingindestin.com/restaurants/real-thai-fusion-miramar-beach/): Thai, Asian in Miramar Beach, near Destin, Florida.
 - [Red Brick Pizza](https://www.eatingindestin.com/restaurants/red-brick-pizza-destin-commons/): Italian in Destin Commons, Destin, Florida.
 - [Red Door Saloon](https://www.eatingindestin.com/restaurants/red-door-saloon-destin-harbor/): American in Destin Harbor, Destin, Florida.
@@ -205,6 +220,8 @@ Search by restaurant name, or look for restaurants and food in Destin, Miramar B
 - [Sea Level](https://www.eatingindestin.com/restaurants/sea-level-crystal-beach/): American in Crystal Beach, Destin, Florida.
 - [Seagar's Prime Steaks & Seafood](https://www.eatingindestin.com/restaurants/seagar-s-prime-steaks-and-seafood-sandestin/): American, Seafood in Sandestin, Miramar Beach, near Destin, Florida.
 - [Shake's Frozen Custard](https://www.eatingindestin.com/restaurants/shake-s-frozen-custard-mid-destin/): Dessert, American in Mid-Destin, Destin, Florida.
+- [Shan Kishi](https://www.eatingindestin.com/restaurants/shan-kishi-miramar-beach/): Japanese, Sushi in Miramar Beach, near Destin, Florida.
+- [Shrimp Basket](https://www.eatingindestin.com/restaurants/shrimp-basket-mid-destin/): Seafood, American in Mid-Destin, Destin, Florida.
 - [Slick Lips Seafood & Oyster House](https://www.eatingindestin.com/restaurants/slick-lips-seafood-and-oyster-house-sandestin/): Seafood, American in Sandestin, Miramar Beach, near Destin, Florida.
 - [Smashburger Destin Commons](https://www.eatingindestin.com/restaurants/smashburger-destin-commons-destin-commons/): American in Destin Commons, Destin, Florida.
 - [Smoothie King Destin](https://www.eatingindestin.com/restaurants/smoothie-king-destin-mid-destin/): American in Mid-Destin, Destin, Florida.
@@ -218,6 +235,7 @@ Search by restaurant name, or look for restaurants and food in Destin, Miramar B
 - [Starbucks Miramar Beach](https://www.eatingindestin.com/restaurants/starbucks-miramar-beach-miramar-beach/): Cafe, American in Miramar Beach, near Destin, Florida.
 - [Subway Destin](https://www.eatingindestin.com/restaurants/subway-destin-mid-destin/): American in Mid-Destin, Destin, Florida.
 - [Sundries General Market](https://www.eatingindestin.com/restaurants/sundries-general-market-sandestin/): American in Sandestin, Miramar Beach, near Destin, Florida.
+- [Sushimoto of South Walton](https://www.eatingindestin.com/restaurants/sushimoto-of-south-walton-miramar-beach/): Japanese, Sushi in Miramar Beach, near Destin, Florida.
 - [Sweetbay Coffee](https://www.eatingindestin.com/restaurants/sweetbay-coffee-sandestin/): Cafe, American in Sandestin, Miramar Beach, near Destin, Florida.
 - [Taco Bell Destin](https://www.eatingindestin.com/restaurants/taco-bell-destin-destin-harbor/): Mexican in Destin Harbor, Destin, Florida.
 - [Tailfins Waterfront Grill](https://www.eatingindestin.com/restaurants/tailfins-waterfront-grill-destin-harbor/): Seafood, American in Destin Harbor, Destin, Florida.
@@ -237,9 +255,11 @@ Search by restaurant name, or look for restaurants and food in Destin, Miramar B
 - [The Edge Seafood Restaurant & SkyBar](https://www.eatingindestin.com/restaurants/the-edge-seafood-restaurant-and-skybar-destin-harbor/): Seafood, American in Destin Harbor, Destin, Florida.
 - [The Fudgery](https://www.eatingindestin.com/restaurants/the-fudgery-destin-harbor/): Dessert, American in Destin Harbor, Destin, Florida.
 - [The Green Panini](https://www.eatingindestin.com/restaurants/the-green-panini-sandestin/): Cafe, American in Sandestin, Miramar Beach, near Destin, Florida.
+- [The Gulf Club Restaurant](https://www.eatingindestin.com/restaurants/the-gulf-club-restaurant-mid-destin/): American in Mid-Destin, Destin, Florida.
 - [The Lobby Bar](https://www.eatingindestin.com/restaurants/the-lobby-bar-sandestin/): American in Sandestin, Miramar Beach, near Destin, Florida.
 - [The Local Market](https://www.eatingindestin.com/restaurants/the-local-market-mid-destin/): American in Mid-Destin, Destin, Florida.
 - [The Melting Pot](https://www.eatingindestin.com/restaurants/the-melting-pot-mid-destin/): American in Miramar Beach, Destin, Florida.
+- [The Ocean Club Restaurant](https://www.eatingindestin.com/restaurants/the-ocean-club-restaurant-miramar-beach/): Seafood in Miramar Beach, near Destin, Florida.
 - [The Pancakery](https://www.eatingindestin.com/restaurants/the-pancakery-mid-destin/): American in Mid-Destin, Destin, Florida.
 - [The Rooftop](https://www.eatingindestin.com/restaurants/the-rooftop-crystal-beach/): Seafood, American in Crystal Beach, Destin, Florida.
 - [The Spice & Tea Exchange](https://www.eatingindestin.com/restaurants/the-spice-and-tea-exchange-destin-commons/): American in Destin Commons, Destin, Florida.
@@ -250,6 +270,7 @@ Search by restaurant name, or look for restaurants and food in Destin, Miramar B
 - [Tommy Bahama Restaurant & Bar](https://www.eatingindestin.com/restaurants/tommy-bahama-restaurant-and-bar-grand-boulevard/): American, Seafood in Grand Boulevard, Miramar Beach, near Destin, Florida.
 - [Tony Larue's New Orleans Snoballs](https://www.eatingindestin.com/restaurants/tony-larue-s-new-orleans-snoballs-sandestin/): Dessert, American in Sandestin, Miramar Beach, near Destin, Florida.
 - [Tropical Smoothie Cafe Destin](https://www.eatingindestin.com/restaurants/tropical-smoothie-cafe-destin-mid-destin/): American in Mid-Destin, Destin, Florida.
+- [Tuscany Italian Bistro](https://www.eatingindestin.com/restaurants/tuscany-italian-bistro-miramar-beach/): Italian, Seafood in Miramar Beach, near Destin, Florida.
 - [Uncle Buck's FishBowl & Grill](https://www.eatingindestin.com/restaurants/uncle-buck-s-fishbowl-and-grill-destin-commons/): American in Destin Commons, Destin, Florida.
 - [Vin'tij Food & Wine](https://www.eatingindestin.com/restaurants/vin-tij-food-and-wine-grand-boulevard/): American in Grand Boulevard, Miramar Beach, near Destin, Florida.
 - [Waffle House Destin](https://www.eatingindestin.com/restaurants/waffle-house-destin-mid-destin/): American in Mid-Destin, Destin, Florida.
