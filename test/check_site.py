@@ -185,21 +185,16 @@ check(
     missing_photos
     == [
         "crafty-siren-destin-harbor",
-        "drizzle-destin-harbor",
-        "empanola-destin-mid-destin",
         "everbowl-miramar-beach",
         "harbor-tavern-destin-harbor",
         "lone-wolf-pizza-co-mid-destin",
         "o-quigley-s-seafood-steamer-mid-destin",
         "parlor-doughnuts-destin-mid-destin",
-        "pizza-by-the-sea-miramar-beach",
-        "que-pasa-mexican-kitchen-tequila-mid-destin",
-        "shrimp-basket-mid-destin",
         "sundries-general-market-sandestin",
     ],
     f"unexpected monogram listings: {missing_photos}",
 )
-check(len(photos) == 224, f"expected 224 restaurant photos, got {len(photos)}")
+check(len(photos) == 229, f"expected 229 restaurant photos, got {len(photos)}")
 check(build.local_listing_photo("not-a-restaurant") is None, "a slug without a dropped file should stay a monogram")
 check(build.listing_photos("sundries-general-market-sandestin") == [], "Sundries General Market has no photo folder")
 check(build.listing_photos("crafty-siren-destin-harbor") == [], "Crafty Siren has no photo folder")
