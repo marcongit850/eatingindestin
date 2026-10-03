@@ -324,7 +324,7 @@ check(
     "/api/list-restaurant" in list_js and 'querySelector(\'[name="company"]\')' in list_js,
     "listing form script should post the honeypot with the full form",
 )
-check("Thanks. We have your listing." in list_js, "listing form script should thank the restaurant")
+check("Thanks!  We will review and get back to you shortly." in list_js, "listing form script should thank the restaurant")
 social = listing_main.split("<h2>Social and media</h2>", 1)[-1].split("<h2>Anything else</h2>", 1)[0]
 check(
     social.find('name="facebook"') < social.find('name="instagram"') < social.find('name="videoUrl"') < social.find('name="photos"'),
