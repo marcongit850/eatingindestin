@@ -1696,6 +1696,74 @@ def build_home(restaurants: list[dict], areas: list[dict], hero: str | None) -> 
     )
 
 
+def directory_video_tour() -> str:
+    """Portrait clip for the restaurants index. Poster until play, then stop returns to the poster."""
+    return (
+        '<figure class="video-tour" aria-label="Video tour">'
+        '<div class="video-tour-frame">'
+        '<video id="video-tour" controls playsinline preload="none" '
+        'poster="/images/eating-in-destin-tour-poster.jpg" width="540" height="960">'
+        '<source src="/videos/eating-in-destin-tour.mp4" type="video/mp4">'
+        "</video>"
+        '<img class="video-tour-poster" src="/images/eating-in-destin-tour-poster.jpg" alt="Video tour" width="540" height="960">'
+        '<button type="button" class="video-tour-control" hidden>'
+        '<svg class="video-tour-icon video-tour-icon-play" viewBox="0 0 24 24" aria-hidden="true" focusable="false">'
+        '<path fill="currentColor" d="M9 6.5v11l9-5.5-9-5.5z"/>'
+        "</svg>"
+        '<svg class="video-tour-icon video-tour-icon-stop" viewBox="0 0 24 24" aria-hidden="true" focusable="false" hidden>'
+        '<path fill="currentColor" d="M7 7h10v10H7z"/>'
+        "</svg>"
+        '<span class="sr-only">Play video tour</span>'
+        "</button></div>"
+        "<script>\n"
+        "!function(){\n"
+        '  var root=document.querySelector(".video-tour");\n'
+        "  if(!root)return;\n"
+        '  var video=root.querySelector("video");\n'
+        '  var button=root.querySelector(".video-tour-control");\n'
+        '  var label=button&&button.querySelector(".sr-only");\n'
+        '  var playIcon=root.querySelector(".video-tour-icon-play");\n'
+        '  var stopIcon=root.querySelector(".video-tour-icon-stop");\n'
+        "  if(!video||!button||!label||!playIcon||!stopIcon)return;\n"
+        "  var token=0;\n"
+        "  function setPlaying(on){\n"
+        '    button.setAttribute("aria-pressed",on?"true":"false");\n'
+        '    label.textContent=on?"Stop video tour":"Play video tour";\n'
+        "    playIcon.hidden=on;\n"
+        "    stopIcon.hidden=!on;\n"
+        "  }\n"
+        "  function showPoster(){\n"
+        "    video.pause();\n"
+        "    try{video.currentTime=0;}catch(err){}\n"
+        '    root.classList.remove("is-playing");\n'
+        "    setPlaying(false);\n"
+        "  }\n"
+        "  function start(){\n"
+        "    var mine=++token;\n"
+        "    video.muted=false;\n"
+        "    setPlaying(true);\n"
+        "    var pending=video.play();\n"
+        "    if(pending&&pending.then){\n"
+        "      pending.then(function(){if(mine!==token)showPoster();}).catch(function(){if(mine===token)showPoster();});\n"
+        "    }\n"
+        "  }\n"
+        '  button.addEventListener("click",function(){\n'
+        "    if(video.paused||video.ended)start();\n"
+        "    else{token+=1;showPoster();}\n"
+        "  });\n"
+        '  video.addEventListener("playing",function(){\n'
+        '    if(!video.paused&&!video.ended)root.classList.add("is-playing");\n'
+        "  });\n"
+        '  video.addEventListener("ended",function(){token+=1;showPoster();});\n'
+        '  video.removeAttribute("controls");\n'
+        '  root.classList.add("is-ready");\n'
+        "  button.hidden=false;\n"
+        "  setPlaying(false);\n"
+        "}();\n"
+        "</script></figure>"
+    )
+
+
 def build_directory(restaurants: list[dict], areas: list[dict], cuisines: list[str]) -> None:
     pending = (
         "<script>!function(){var p=new URLSearchParams(location.search);"
@@ -1705,10 +1773,13 @@ def build_directory(restaurants: list[dict], areas: list[dict], cuisines: list[s
     cards = "".join(card(restaurant) for restaurant in restaurants)
     body = (
         '<div class="wrap page-intro">'
+        '<div class="directory-intro">'
+        f"{directory_video_tour()}"
         f'{crumb_nav([("Home", "/"), ("Restaurants", "/restaurants/")])}'
         '<p class="kicker">Directory</p>'
         '<h1 id="listing-title">Restaurants in Destin</h1>'
         '<p class="lede">Food in Destin and Miramar Beach, Florida. Filter by area, meal, or a few words.</p>'
+        "</div>"
         f'{view_switch("listing")}'
         f"{filter_form(areas, cuisines)}"
         f'<p id="result-count" class="count" aria-live="polite">{len(restaurants)} restaurants</p>'
