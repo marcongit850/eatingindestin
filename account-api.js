@@ -1,6 +1,7 @@
 /**
  * Same-origin account API for one guide.
- * Keep this file identical in eatingon30A and eatingindestin.
+ * Account routes and request field names match eatingon30A.
+ * Sheet token env names in this copy are for the eatingindestin Worker.
  * The browser talks only to this origin. This Worker calls the shared
  * eating-accounts Worker with ACCOUNTS_SHARED_SECRET.
  *
@@ -8,11 +9,21 @@
  * This Worker sets ea_session for its own host only (HttpOnly, SameSite=Lax,
  * Secure on https, no Domain attribute). The accounts Worker holds ea_central
  * on its own host and hands this Worker a one-time code.
+ *
+ * Sign-in coupon boxes use the same request fields on both guides:
+ * coupons30a and couponsDestin. marketingOptIn forwarded to eating-accounts
+ * is true when either box is checked. After eating-accounts accepts the
+ * magic link, a checked box appends one coupon row through the same Apps
+ * Script webhook as /api/subscribe. This path does not send a Resend coupon
+ * email. On eatingindestin, GOOGLE_SHEETS_WEBHOOK_TOKEN writes site Destin
+ * and optional GOOGLE_SHEETS_WEBHOOK_TOKEN_30A writes site 30A. A missing
+ * token or a sheet error does not fail the magic link.
  */
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SESSION = "ea_session";
 const SESSION_SECONDS = 30 * 24 * 60 * 60;
+const SIGN_IN_SOURCE = "https://www.eatingindestin.com/account/";
 
 export function safeNext(value) {
   const text = String(value || "");
@@ -96,8 +107,52 @@ async function accountsJson(response) {
   return { status: response.status, body };
 }
 
+function checked(value) {
+  return value === true || value === "yes";
+}
+
+function couponChoice(body) {
+  const source = body && typeof body === "object" ? body : {};
+  return {
+    coupons30a: checked(source.coupons30a),
+    couponsDestin: checked(source.couponsDestin),
+  };
+}
+
 function optedIn(body) {
+  const choice = couponChoice(body);
+  if (choice.coupons30a || choice.couponsDestin) return true;
   return body.marketingOptIn === true || body.marketing === true || body.marketing === "yes";
+}
+
+async function postCouponRow(env, email, site, token, fetchImpl) {
+  const url = env && env.GOOGLE_SHEETS_WEBHOOK_URL;
+  if (!url || !token) return;
+  try {
+    await fetchImpl(url, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        token,
+        site,
+        email,
+        coupons: true,
+        sourcePage: SIGN_IN_SOURCE,
+      }),
+    });
+  } catch {
+    // A sheet miss must not fail a magic link eating-accounts already accepted.
+  }
+}
+
+async function recordSignInCoupons(env, email, body, fetchImpl) {
+  const choice = couponChoice(body);
+  if (choice.couponsDestin) {
+    await postCouponRow(env, email, "Destin", env && env.GOOGLE_SHEETS_WEBHOOK_TOKEN, fetchImpl);
+  }
+  if (choice.coupons30a) {
+    await postCouponRow(env, email, "30A", env && env.GOOGLE_SHEETS_WEBHOOK_TOKEN_30A, fetchImpl);
+  }
 }
 
 async function readBody(request) {
@@ -112,6 +167,8 @@ async function readBody(request) {
       return {
         email: form.get("email"),
         marketing: form.get("marketing"),
+        coupons30a: form.get("coupons30a"),
+        couponsDestin: form.get("couponsDestin"),
         next: form.get("next"),
         slug: form.get("slug"),
         name: form.get("name"),
@@ -127,7 +184,7 @@ async function readBody(request) {
   return null;
 }
 
-export async function handleAccount(request, env) {
+export async function handleAccount(request, env, fetchImpl = fetch) {
   const url = new URL(request.url);
   const path = url.pathname;
   const site = siteId(env);
@@ -184,6 +241,9 @@ export async function handleAccount(request, env) {
         returnTo: returnTo.toString(),
       },
     }));
+    if (result.body && result.body.ok === true) {
+      await recordSignInCoupons(env, email, body, fetchImpl);
+    }
     return json(result.body, result.status);
   }
 
