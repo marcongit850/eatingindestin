@@ -438,6 +438,7 @@ test("finish sets a host-only session cookie and does not set Domain", async () 
   assert.match(cookie, /HttpOnly/);
   assert.match(cookie, /SameSite=Lax/);
   assert.match(cookie, /Secure/);
+  assert.match(cookie, /Max-Age=604800/);
   assert.equal(cookie.includes("Domain="), false);
 });
 
@@ -457,6 +458,35 @@ test("personal notes stay on the account pages and off public cards", () => {
   assert.match(script, /maxLength = 280/);
   assert.match(script, /view\.textContent = text/);
   assert.match(script, /panel\.hidden = true/);
+  const noteWrites = [];
+  const marker = "putSave({";
+  let index = 0;
+  while ((index = script.indexOf(marker, index)) !== -1) {
+    const start = index + "putSave(".length;
+    let depth = 0;
+    let end = start;
+    for (; end < script.length; end += 1) {
+      if (script[end] === "{") depth += 1;
+      else if (script[end] === "}") {
+        depth -= 1;
+        if (depth === 0) {
+          end += 1;
+          break;
+        }
+      }
+    }
+    const body = script.slice(start, end);
+    if (/\bnote\s*:/.test(body)) noteWrites.push(body);
+    index = end;
+  }
+  assert.equal(noteWrites.length, 2);
+  for (const body of noteWrites) {
+    assert.match(body, /saved:\s*true/);
+    assert.equal(/\bsaved:\s*false/.test(body), false);
+  }
+  const placesNote = noteWrites.find((body) => /site:\s*save\.site/.test(body));
+  assert.ok(placesNote);
+  assert.match(placesNote, /note:\s*text/);
   assert.equal(script.includes("—"), false);
   assert.equal(script.includes("–"), false);
   assert.equal(cards.includes("personal-note"), false);
