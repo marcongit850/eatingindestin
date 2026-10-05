@@ -110,6 +110,29 @@ check("The table" not in directory and "Narrow the guide" not in directory, "dir
 build_src = (ROOT / "scripts" / "build.py").read_text(encoding="utf-8")
 check(build_src.count("def build_detail(") == 1, "restaurant profiles should come from one template function")
 check(build_src.count("def card(") == 1, "directory cards should come from one template function")
+check(
+    'class="card card-place"' in directory
+    and 'class="card-link"' in directory
+    and 'data-slug="' in directory
+    and 'data-name="' in directory
+    and 'data-place-area="' in directory,
+    "directory cards should carry slug, name, and area for saves",
+)
+account_js = (ROOT / "account.js").read_text(encoding="utf-8")
+check(
+    ".card[data-slug][data-name]" in account_js and ".map-hit[data-slug][data-name]" in account_js,
+    "account.js should mount favorite and want to try on list and grid cards",
+)
+check("data-place-area" in account_js and "/api/account/saves" in account_js, "card saves should use the listing save payload")
+guides_index = (ROOT / "guides" / "index.html").read_text(encoding="utf-8")
+check("card-place" not in guides_index and "data-place-area" not in guides_index, "guide teasers are not restaurant cards")
+about_page = (ROOT / "about" / "index.html").read_text(encoding="utf-8")
+check("card-place" not in about_page and "save-bar" not in about_page, "pages without restaurant cards stay free of save controls")
+harbor_area = (ROOT / "areas" / "destin-harbor" / "index.html").read_text(encoding="utf-8")
+check(
+    'data-slug="harbor-docks-destin-harbor"' in harbor_area and 'class="card card-place"' in harbor_area,
+    "area grids should use the same saveable restaurant cards",
+)
 check('"name": "eatingindestin"' in wrangler, "worker name must stay eatingindestin")
 check("eatingindestin.com" not in wrangler, "wrangler must not attach the vanity domain")
 check("routes" not in wrangler, "wrangler must not declare custom routes")

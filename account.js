@@ -74,6 +74,76 @@
     return "/account/?next=" + encodeURIComponent(location.pathname);
   }
 
+  var savesPromise = null;
+  var savesCache = null;
+
+  function loadSaves() {
+    if (savesCache) return Promise.resolve(savesCache);
+    if (!savesPromise) {
+      savesPromise = me().then(function (payload) {
+        if (!payload || !payload.user) {
+          savesCache = [];
+          return savesCache;
+        }
+        return Promise.all([
+          fetch("/api/account/saves", { credentials: "same-origin" }).then(function (response) { return response.json(); }),
+          config()
+        ]).then(function (parts) {
+          var body = parts[0];
+          var cfg = parts[1];
+          var site = cfg && cfg.site;
+          savesCache = ((body && body.saves) || []).filter(function (save) {
+            return !site || save.site === site;
+          });
+          return savesCache;
+        }).catch(function () {
+          savesCache = [];
+          return savesCache;
+        });
+      });
+    }
+    return savesPromise;
+  }
+
+  function syncCache(slug, kind, saved, name, area) {
+    if (!savesCache) return;
+    savesCache = savesCache.filter(function (save) {
+      return !(save.slug === slug && save.kind === kind);
+    });
+    if (saved) savesCache.push({ slug: slug, kind: kind, name: name, area: area });
+  }
+
+  function paintBar(bar, slug) {
+    loadSaves().then(function (saves) {
+      var buttons = bar.querySelectorAll("[data-kind]");
+      for (var i = 0; i < buttons.length; i++) {
+        var button = buttons[i];
+        if (button.getAttribute("data-save-busy") === "1") continue;
+        var kind = button.getAttribute("data-kind");
+        var on = false;
+        for (var j = 0; j < saves.length; j++) {
+          if (saves[j].slug === slug && saves[j].kind === kind) {
+            on = true;
+            break;
+          }
+        }
+        setPressed(button, on);
+      }
+    });
+  }
+
+  function bindSaveBar(bar, slug, name, area) {
+    var note = bar.querySelector(".save-note");
+    bar.addEventListener("click", function (event) {
+      var button = event.target.closest("[data-kind]");
+      if (!button || !bar.contains(button)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      toggle(button, slug, name, area, note);
+    });
+    paintBar(bar, slug);
+  }
+
   function mountSaves() {
     var slug = listingSlug();
     var head = document.querySelector("article.profile .profile-head");
@@ -89,27 +159,43 @@
     var chips = head.querySelector(".chips");
     if (chips) head.insertBefore(bar, chips);
     else head.appendChild(bar);
-    var note = bar.querySelector(".save-note");
-    bar.addEventListener("click", function (event) {
-      var button = event.target.closest("[data-kind]");
-      if (!button) return;
-      toggle(button, slug, name, area, note);
+    bindSaveBar(bar, slug, name, area);
+  }
+
+  function mountCardSaves(root) {
+    var scope = root && root.querySelectorAll ? root : document;
+    var hosts = scope.querySelectorAll(".card[data-slug][data-name], .map-hit[data-slug][data-name]");
+    if (!hosts.length) return;
+    for (var i = 0; i < hosts.length; i++) {
+      var host = hosts[i];
+      if (host.querySelector(".save-bar")) continue;
+      var slug = host.getAttribute("data-slug") || "";
+      var name = host.getAttribute("data-name") || "";
+      if (!slug || !name) continue;
+      var area = host.getAttribute("data-place-area") || "";
+      var bar = document.createElement("div");
+      bar.className = "save-bar";
+      bar.innerHTML = buttonHtml("favorite", false) + buttonHtml("want", false) + '<p class="save-note" role="status"></p>';
+      host.appendChild(bar);
+      bindSaveBar(bar, slug, name, area);
+    }
+  }
+
+  function watchMapList() {
+    var list = document.querySelector("#map-list");
+    if (!list || list.getAttribute("data-save-watch") === "true") return;
+    list.setAttribute("data-save-watch", "true");
+    var queued = false;
+    var observer = new MutationObserver(function () {
+      if (queued) return;
+      queued = true;
+      queueMicrotask(function () {
+        queued = false;
+        mountCardSaves(list);
+      });
     });
-    me().then(function (payload) {
-      if (!payload || !payload.user) return;
-      return fetch("/api/account/saves", { credentials: "same-origin" })
-        .then(function (response) { return response.json(); })
-        .then(function (body) {
-          var saves = (body && body.saves) || [];
-          config().then(function (cfg) {
-            saves.forEach(function (save) {
-              if (save.slug !== slug || save.site !== cfg.site) return;
-              var button = bar.querySelector('[data-kind="' + save.kind + '"]');
-              if (button) setPressed(button, true);
-            });
-          });
-        });
-    });
+    observer.observe(list, { childList: true });
+    mountCardSaves(list);
   }
 
   function buttonHtml(kind, on) {
@@ -125,35 +211,43 @@
 
   function toggle(button, slug, name, area, note) {
     var kind = button.getAttribute("data-kind");
-    var next = button.getAttribute("aria-pressed") !== "true";
     me().then(function (payload) {
       if (!payload || !payload.user) {
         location.href = signInHref();
         return;
       }
-      setPressed(button, next);
-      fetch("/api/account/saves", {
-        method: "PUT",
-        credentials: "same-origin",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ slug: slug, name: name, area: area, kind: kind, saved: next })
-      }).then(function (response) {
-        if (response.status === 401) {
-          location.href = signInHref();
-          return null;
-        }
-        return response.json().then(function (body) { return { ok: response.ok, body: body }; });
-      }).then(function (result) {
-        if (!result) return;
-        if (!result.ok) {
+      return loadSaves().then(function () {
+        var next = button.getAttribute("aria-pressed") !== "true";
+        button.setAttribute("data-save-busy", "1");
+        setPressed(button, next);
+        syncCache(slug, kind, next, name, area);
+        return fetch("/api/account/saves", {
+          method: "PUT",
+          credentials: "same-origin",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ slug: slug, name: name, area: area, kind: kind, saved: next })
+        }).then(function (response) {
+          if (response.status === 401) {
+            location.href = signInHref();
+            return null;
+          }
+          return response.json().then(function (body) { return { ok: response.ok, body: body }; });
+        }).then(function (result) {
+          button.removeAttribute("data-save-busy");
+          if (!result) return;
+          if (!result.ok) {
+            setPressed(button, !next);
+            syncCache(slug, kind, !next, name, area);
+            if (note) note.textContent = (result.body && result.body.error) || "That place could not be saved.";
+            return;
+          }
+          if (note) note.textContent = next ? "Saved." : "Removed.";
+        }).catch(function () {
+          button.removeAttribute("data-save-busy");
           setPressed(button, !next);
-          note.textContent = (result.body && result.body.error) || "That place could not be saved.";
-          return;
-        }
-        note.textContent = next ? "Saved." : "Removed.";
-      }).catch(function () {
-        setPressed(button, !next);
-        note.textContent = "That place could not be saved.";
+          syncCache(slug, kind, !next, name, area);
+          if (note) note.textContent = "That place could not be saved.";
+        });
       });
     });
   }
@@ -397,6 +491,8 @@
   function boot() {
     refreshNav();
     mountSaves();
+    mountCardSaves(document);
+    watchMapList();
     var page = document.querySelector("[data-account-page]");
     if (!page) return;
     if (page.getAttribute("data-account-page") === "signin") mountSignIn(page);

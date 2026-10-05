@@ -119,10 +119,12 @@ export function mapListCard(item) {
     : `<span class="map-thumb ph" data-tone="${escapeHtml(listTone(item))}"><span class="mono" aria-hidden="true">${escapeHtml(monogram(item.name))}</span></span>`;
   const thumb = item.image ? `<span class="map-thumb">${media}</span>` : media;
   const address = item.address ? `<span class="map-address">${escapeHtml(item.address)}</span>` : "";
+  const placeArea = item.placeArea || item.area || "";
   return (
-    `<a class="map-hit" href="${href}">${thumb}<span class="map-copy">` +
+    `<article class="map-hit" data-slug="${escapeHtml(item.slug || "")}" data-name="${escapeHtml(item.name || "")}" data-place-area="${escapeHtml(placeArea)}">` +
+    `<a class="map-hit-link" href="${href}">${thumb}<span class="map-copy">` +
     `<strong>${escapeHtml(item.name || "")}</strong>` +
-    `<span class="map-meta">${escapeHtml(meta)}</span>${address}</span></a>`
+    `<span class="map-meta">${escapeHtml(meta)}</span>${address}</span></a></article>`
   );
 }
 
@@ -384,11 +386,12 @@ function bootMap() {
       if (list) {
         const holder = document.createElement("div");
         holder.innerHTML = mapListCard(item);
-        const link = holder.firstElementChild;
+        const card = holder.firstElementChild;
+        const link = card.querySelector("a") || card;
         const open = () => marker.openPopup();
         link.addEventListener("mouseenter", open);
         link.addEventListener("focus", open);
-        list.append(link);
+        list.append(card);
       }
     }
     const label = describeFilters(filters, areaNames, "Around Destin");

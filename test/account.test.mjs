@@ -37,6 +37,18 @@ test("sign-in coupon checkboxes are off unless the visitor checks them", () => {
   assert.equal(html.includes("2157446775153374"), false);
 });
 
+test("list and grid cards reuse the listing save controls", () => {
+  const js = readFileSync(new URL("../account.js", import.meta.url), "utf8");
+  assert.match(js, /\.card\[data-slug\]\[data-name\], \.map-hit\[data-slug\]\[data-name\]/);
+  assert.match(js, /data-place-area/);
+  assert.match(js, /method: "PUT"/);
+  assert.match(js, /\/api\/account\/saves/);
+  assert.match(js, /\/account\/\?next=/);
+  assert.match(js, /MutationObserver/);
+  assert.equal(js.includes("—"), false);
+  assert.equal(js.includes("–"), false);
+});
+
 test("my places page names both guides", () => {
   const html = readFileSync(new URL("../my-places/index.html", import.meta.url), "utf8");
   assert.match(html, /data-tab="favorite"/);
