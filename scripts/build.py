@@ -731,6 +731,11 @@ def media_block(image: str | None, alt: str, tone: str, label: str, eager: bool 
     )
 
 
+def place_area(restaurant: dict) -> str:
+    """Same area string the listing save bar sends."""
+    return restaurant["label"] or restaurant["area"]
+
+
 def card(restaurant: dict, heading: str = "h2") -> str:
     meals = " · ".join(restaurant["meals"])
     cuisines = ", ".join(restaurant["cuisines"])
@@ -742,9 +747,6 @@ def card(restaurant: dict, heading: str = "h2") -> str:
     yes_no = lambda flag: "yes" if flag else "no"
     attrs = " ".join(
         [
-            f'id="r-{e(restaurant["slug"])}"',
-            f'href="/restaurants/{e(restaurant["slug"])}/"',
-            'class="card"',
             f'data-area="{e(restaurant["areaSlug"])}"',
             f'data-meals="{e("|".join(restaurant["meals"]))}"',
             f'data-cuisines="{e("|".join(restaurant["cuisines"]))}"',
@@ -757,16 +759,20 @@ def card(restaurant: dict, heading: str = "h2") -> str:
             f'data-happyfood="{yes_no(restaurant["happyFood"])}"',
             f'data-happydrinks="{yes_no(restaurant["happyDrinks"])}"',
             f'data-search="{e(restaurant["search"])}"',
+            f'data-slug="{e(restaurant["slug"])}"',
+            f'data-name="{e(restaurant["name"])}"',
+            f'data-place-area="{e(place_area(restaurant))}"',
         ]
     )
     note = snippet(restaurant["notes"])
     note_html = f'<p class="note">{e(note)}</p>' if note else ""
     return (
-        f'<a {attrs}>'
+        f'<article id="r-{e(restaurant["slug"])}" class="card card-place" {attrs}>'
+        f'<a class="card-link" href="/restaurants/{e(restaurant["slug"])}/">'
         f'<div class="card-media">{media_block(restaurant["cardImage"], photo_alt(restaurant), restaurant["tone"], label, name=restaurant["name"])}</div>'
         f'<div class="card-body"><p class="card-area">{e(area_line)}</p>'
         f'<{heading}>{e(restaurant["name"])}</{heading}>'
-        f'<p class="meta">{e(" · ".join(bits))}</p>{note_html}</div></a>'
+        f'<p class="meta">{e(" · ".join(bits))}</p>{note_html}</div></a></article>'
     )
 
 
@@ -1506,6 +1512,7 @@ def public_record(restaurant: dict) -> dict:
         "happyFood": restaurant["happyFood"],
         "happyDrinks": restaurant["happyDrinks"],
         "image": restaurant["cardImage"],
+        "placeArea": place_area(restaurant),
     }
 
 
@@ -1913,7 +1920,10 @@ def build_detail(restaurant: dict, restaurants: list[dict]) -> None:
         if other["areaSlug"] == restaurant["areaSlug"] and other["slug"] != restaurant["slug"]
     ][:4]
     nearby_html = "".join(
-        f'<a class="map-hit" href="/restaurants/{e(other["slug"])}/"><strong>{e(other["name"])}</strong><span>{e(other["price"])}</span></a>'
+        f'<article class="map-hit" data-slug="{e(other["slug"])}" data-name="{e(other["name"])}" '
+        f'data-place-area="{e(place_area(other))}">'
+        f'<a class="map-hit-link" href="/restaurants/{e(other["slug"])}/">'
+        f'<strong>{e(other["name"])}</strong><span>{e(other["price"])}</span></a></article>'
         for other in nearby
     )
     map_html = ""

@@ -134,6 +134,10 @@ test("map list cards stay compact", () => {
   assert.match(photo, /class="map-thumb"/);
   assert.match(photo, /harbor-docks-destin-harbor\/01\.jpg/);
   assert.match(photo, /<strong>Harbor Docks<\/strong>/);
+  assert.match(photo, /data-slug="harbor-docks-destin-harbor"/);
+  assert.match(photo, /data-name="Harbor Docks"/);
+  assert.match(photo, /data-place-area="[^"]+"/);
+  assert.match(photo, /class="map-hit-link"/);
   assert.match(photo, /class="map-meta">Destin Harbor · \$\$/);
   assert.match(photo, /class="map-address">538 Harbor Blvd/);
   assert.doesNotMatch(photo, /class="map-thumb ph"/);

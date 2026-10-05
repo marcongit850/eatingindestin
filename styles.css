@@ -653,6 +653,19 @@ button:hover, .button:hover { background: #1a3c38; color: #f7f2ea; }
   color: inherit;
   min-height: 100%;
 }
+.card-place {
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 0.65rem;
+  align-content: start;
+}
+.card-link {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  gap: 0.9rem;
+  min-height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
 .card.is-hidden { display: none; }
 .card-media {
   position: relative;
@@ -841,6 +854,12 @@ button:hover, .button:hover { background: #1a3c38; color: #f7f2ea; }
   padding: 0.85rem 0;
   border-top: 1px solid var(--line);
 }
+.map-hit-link {
+  display: grid;
+  gap: 0.15rem;
+  color: inherit;
+  text-decoration: none;
+}
 .map-hit strong { font-family: var(--serif); font-weight: 500; font-size: 1.35rem; }
 .map-hit span { color: var(--muted); font-size: 0.85rem; }
 .map-hit .map-address { font-size: 0.78rem; font-weight: 300; line-height: 1.35; }
@@ -850,6 +869,16 @@ button:hover, .button:hover { background: #1a3c38; color: #f7f2ea; }
   gap: 0.55rem;
   align-items: center;
   padding: 0.38rem 0.15rem 0.38rem 0;
+}
+#map-list article.map-hit {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.28rem;
+  align-items: stretch;
+}
+#map-list .map-hit-link {
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 0.55rem;
+  align-items: center;
 }
 #map-list .map-thumb {
   width: 44px;
@@ -1010,6 +1039,16 @@ html.js-filter #cards .card { display: none; }
   #map { height: min(68vh, 640px); }
   .map-layout { grid-template-columns: minmax(0, 1.65fr) minmax(240px, 0.75fr); align-items: start; }
   #map-list { max-height: min(68vh, 640px); overflow-y: auto; }
+  #map-list .save-button {
+    flex-basis: 5.6rem;
+    min-height: 2.5rem;
+    padding: 0.32rem 0.4rem;
+  }
+  #map-list .save-button,
+  #map-list .save-button span {
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+  }
 }
 @media (min-width: 900px) {
   .about-intro {
@@ -1411,6 +1450,33 @@ html.js-filter #cards .card { display: none; }
   color: #f7f2ea;
 }
 .save-button:hover { background: var(--gulf-deep); color: #f7f2ea; }
+.card-place .save-bar,
+.map-hit .save-bar {
+  margin: 0;
+  gap: 0.4rem;
+}
+.card-place .save-button,
+.map-hit .save-button {
+  flex: 1 1 7.2rem;
+  min-height: 2.75rem;
+  padding: 0.4rem 0.55rem;
+}
+.map-hit .save-button,
+.map-hit .save-button span {
+  color: var(--ink);
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+}
+.map-hit .save-button[aria-pressed="true"],
+.map-hit .save-button[aria-pressed="true"] span,
+.map-hit .save-button:hover,
+.map-hit .save-button:hover span {
+  color: #f7f2ea;
+}
+.card-place .save-note:empty,
+.map-hit .save-note:empty {
+  display: none;
+}
 .save-note {
   flex-basis: 100%;
   margin: 0;
