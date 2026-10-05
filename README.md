@@ -97,6 +97,8 @@ Coupon signups are also posted to a Google Apps Script webhook, which appends a 
 
 The JSON response reports that separately as `recorded`. If either Sheets secret is missing, the worker skips the webhook and returns `recorded: false`. A row is recorded only when the webhook response is JSON and `ok` is true. A non-JSON body, including an Apps Script HTML page such as “Script function not found: doPost” on HTTP 200, and a JSON body with `ok: false`, are `recorded: false`. That miss leaves `delivered` as Resend reported it, so a signup Resend already accepted stays successful. Listing requests are not written to the sheet.
 
+Sign-in on `/account/` can append the same sheet when a visitor checks a coupon box. That path uses `GOOGLE_SHEETS_WEBHOOK_URL` plus a token for each tab. `GOOGLE_SHEETS_WEBHOOK_TOKEN` writes Destin. The 30A tab needs a separate dashboard secret, `GOOGLE_SHEETS_WEBHOOK_TOKEN_30A`, described under Shared accounts. That sign-in write does not send a Resend coupon email.
+
 ```bash
 npx wrangler deploy
 ```
@@ -123,7 +125,27 @@ npx wrangler secret put ACCOUNTS_SHARED_SECRET
 
 Resend mail for the magic link is sent by `eating-accounts`, not by this Worker. The secrets for that are documented in the eatingon30A repo: `RESEND_API_KEY`, `SUBSCRIBE_FROM`, and `ACCOUNTS_SHARED_SECRET` on `eating-accounts`, plus the D1 database id. Do not set `MAGIC_LINK_PREVIEW` in production.
 
-The marketing checkbox is off unless the visitor checks it.
+`/account/` has two coupon checkboxes, both off until the visitor checks them:
+
+- Email me coupons and updates from Eating on 30A.
+- Email me coupons and updates from Eating in Destin.
+
+Leave both unchecked to get only the sign-in link. The browser posts `coupons30a` and `couponsDestin`. `marketingOptIn` sent to `eating-accounts` is true when either box is checked. The magic-link email still comes from `eating-accounts`.
+
+After that Worker accepts the magic link, each checked box appends one coupon row through the Apps Script webhook already used by `/api/subscribe`. The row sets `coupons` to true and `sourcePage` to `https://www.eatingindestin.com/account/`. A checked Destin box posts `site` `Destin` with `GOOGLE_SHEETS_WEBHOOK_TOKEN` (the Destin tab). A checked 30A box posts `site` `30A` with `GOOGLE_SHEETS_WEBHOOK_TOKEN_30A` (the 30A tab). Both checked posts two rows. This path does not call Resend for the coupon signup.
+
+If the sheet request fails, sign-in still succeeds. If `GOOGLE_SHEETS_WEBHOOK_TOKEN_30A` is missing, the 30A row is skipped and the magic link is unchanged. The same is true when `GOOGLE_SHEETS_WEBHOOK_URL` or the Destin token is missing.
+
+Add `GOOGLE_SHEETS_WEBHOOK_TOKEN_30A` on the `eatingindestin` Worker in the Cloudflare dashboard. Do not put the value in `wrangler.jsonc`.
+
+1. Open the Cloudflare dashboard and go to Workers & Pages.
+2. Open the `eatingindestin` Worker.
+3. Open Settings, then Variables and Secrets.
+4. Add a secret named `GOOGLE_SHEETS_WEBHOOK_TOKEN_30A`.
+5. Paste the token that writes the 30A tab. That is the value already stored as `GOOGLE_SHEETS_WEBHOOK_TOKEN` on the Eating on 30A Worker.
+6. Leave `GOOGLE_SHEETS_WEBHOOK_URL` and `GOOGLE_SHEETS_WEBHOOK_TOKEN` as they are. The URL is the shared Apps Script webhook. `GOOGLE_SHEETS_WEBHOOK_TOKEN` writes the Destin tab.
+
+The new secret is available on the next request. A redeploy is not required.
 
 ## Pages
 
