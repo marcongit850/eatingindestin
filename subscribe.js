@@ -127,6 +127,7 @@
   });
 
   if (dismissed()) return;
+  if (document.querySelector('[data-account-page="places"]')) return;
   var wait = Math.max(0, DELAY - (Date.now() - visitStart()));
   window.setTimeout(function () {
     if (dismissed() || dialog.open) return;

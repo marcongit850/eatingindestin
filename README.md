@@ -136,6 +136,13 @@ After that Worker accepts the magic link, each checked box appends one coupon ro
 
 If the sheet request fails, sign-in still succeeds. If `GOOGLE_SHEETS_WEBHOOK_TOKEN_30A` is missing, the 30A row is skipped and the magic link is unchanged. The same is true when `GOOGLE_SHEETS_WEBHOOK_URL` or the Destin token is missing.
 
+A signed-in visitor can opt in later on `/my-places/`. The page keeps a Coupons and updates disclosure closed until they open it. It is a section on the page, and the coupon signup popup does not open there. Both checkboxes stay off until checked:
+
+- Email me coupons and updates from Eating on 30A.
+- Email me coupons and updates from Eating in Destin.
+
+Submit posts `coupons30a` and `couponsDestin` to `/api/account/coupons`. The Worker uses the session email and ignores any email in the body. Each checked box appends one row through the same sheet helpers. `sourcePage` is `https://www.eatingindestin.com/my-places/`. Destin uses `GOOGLE_SHEETS_WEBHOOK_TOKEN`. 30A uses `GOOGLE_SHEETS_WEBHOOK_TOKEN_30A`. This path does not send a Resend coupon email. A missing token or a sheet error still returns success. A signed-out request is refused and writes no row.
+
 Add `GOOGLE_SHEETS_WEBHOOK_TOKEN_30A` on the `eatingindestin` Worker in the Cloudflare dashboard. Do not put the value in `wrangler.jsonc`.
 
 1. Open the Cloudflare dashboard and go to Workers & Pages.
@@ -157,6 +164,6 @@ The new secret is available on the next request. A redeploy is not required.
 - `/guides/` and `/guides/<slug>/` meal, area, and favorites guides built from the same listings
 - `/about/` and `/contact/`
 - `/account/` email sign-in, shared with Eating on 30A
-- `/my-places/` favorites and want to try, labeled 30A or Destin
+- `/my-places/` favorites and want to try, labeled 30A or Destin. Signed-in visitors can opt in to coupons there.
 - `/list-your-restaurant/` full new listing or update form. `/contact/` stays the short note.
 - `sitemap.xml`, `robots.txt`, `llms.txt`

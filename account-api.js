@@ -18,12 +18,19 @@
  * email. On eatingindestin, GOOGLE_SHEETS_WEBHOOK_TOKEN writes site Destin
  * and optional GOOGLE_SHEETS_WEBHOOK_TOKEN_30A writes site 30A. A missing
  * token or a sheet error does not fail the magic link.
+ *
+ * Signed-in My places opt-in uses the same fields and the same sheet helpers.
+ * POST /api/account/coupons reads the email from the session and appends one
+ * row per checked box. sourcePage is the My places URL. This path does not
+ * send a Resend coupon email. A missing token or a sheet error still returns
+ * success. A signed-out request is refused and writes nothing.
  */
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SESSION = "ea_session";
 const SESSION_SECONDS = 30 * 24 * 60 * 60;
 const SIGN_IN_SOURCE = "https://www.eatingindestin.com/account/";
+const PLACES_SOURCE = "https://www.eatingindestin.com/my-places/";
 
 export function safeNext(value) {
   const text = String(value || "");
@@ -125,7 +132,7 @@ function optedIn(body) {
   return body.marketingOptIn === true || body.marketing === true || body.marketing === "yes";
 }
 
-async function postCouponRow(env, email, site, token, fetchImpl) {
+async function postCouponRow(env, email, site, token, fetchImpl, sourcePage = SIGN_IN_SOURCE) {
   const url = env && env.GOOGLE_SHEETS_WEBHOOK_URL;
   if (!url || !token) return;
   try {
@@ -137,21 +144,21 @@ async function postCouponRow(env, email, site, token, fetchImpl) {
         site,
         email,
         coupons: true,
-        sourcePage: SIGN_IN_SOURCE,
+        sourcePage,
       }),
     });
   } catch {
-    // A sheet miss must not fail a magic link eating-accounts already accepted.
+    // A sheet miss must not fail sign-in or a My places opt-in.
   }
 }
 
-async function recordSignInCoupons(env, email, body, fetchImpl) {
+async function recordCouponRows(env, email, body, fetchImpl, sourcePage = SIGN_IN_SOURCE) {
   const choice = couponChoice(body);
   if (choice.couponsDestin) {
-    await postCouponRow(env, email, "Destin", env && env.GOOGLE_SHEETS_WEBHOOK_TOKEN, fetchImpl);
+    await postCouponRow(env, email, "Destin", env && env.GOOGLE_SHEETS_WEBHOOK_TOKEN, fetchImpl, sourcePage);
   }
   if (choice.coupons30a) {
-    await postCouponRow(env, email, "30A", env && env.GOOGLE_SHEETS_WEBHOOK_TOKEN_30A, fetchImpl);
+    await postCouponRow(env, email, "30A", env && env.GOOGLE_SHEETS_WEBHOOK_TOKEN_30A, fetchImpl, sourcePage);
   }
 }
 
@@ -242,9 +249,26 @@ export async function handleAccount(request, env, fetchImpl = fetch) {
       },
     }));
     if (result.body && result.body.ok === true) {
-      await recordSignInCoupons(env, email, body, fetchImpl);
+      await recordCouponRows(env, email, body, fetchImpl);
     }
     return json(result.body, result.status);
+  }
+
+  if (path === "/api/account/coupons" && request.method === "POST") {
+    const session = readCookie(request, SESSION);
+    if (!session) return json({ ok: false, error: "Sign in to join the list." }, 401);
+    const me = await accountsJson(await accountsFetch(env, "/v1/me", { session }));
+    const user = me.body && me.body.user;
+    const email = user && String(user.email || "").trim();
+    if (!email || me.status >= 400) return json({ ok: false, error: "Sign in to join the list." }, 401);
+    const body = await readBody(request);
+    if (!body) return json({ ok: false, error: "Send the request as JSON." }, 400);
+    const choice = couponChoice(body);
+    if (!choice.coupons30a && !choice.couponsDestin) {
+      return json({ ok: false, error: "Choose at least one list." }, 400);
+    }
+    await recordCouponRows(env, email, choice, fetchImpl, PLACES_SOURCE);
+    return json({ ok: true });
   }
 
   if (path === "/api/account/me" && request.method === "GET") {

@@ -1570,3 +1570,17 @@ html.js-filter #cards .card { display: none; }
 .place-area { margin: 0; color: var(--muted); }
 .place-remove { margin-top: 0.55rem; justify-self: start; }
 .place-empty { color: var(--muted); }
+.places-coupons {
+  margin-top: 2.2rem;
+  max-width: 36rem;
+}
+.places-coupons[hidden] { display: none; }
+.places-coupons summary {
+  width: fit-content;
+  color: var(--muted);
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.places-coupons summary:hover { color: var(--coral-deep); }
+.places-coupons .account-form { margin-top: 0.85rem; }
+.places-coupons .account-form button[type="submit"] { justify-self: start; }
