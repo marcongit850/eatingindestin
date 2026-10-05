@@ -8,6 +8,7 @@ test
 package.json
 wrangler.jsonc
 worker.js
+account-api.js
 site.config.json
 data/*.csv
 **/.DS_Store
