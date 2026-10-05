@@ -403,6 +403,7 @@ body.home .nav a[aria-current="page"] { box-shadow: inset 0 -1px 0 rgba(247, 242
   pointer-events: none;
   z-index: 1;
 }
+.card-media::after { z-index: 3; }
 
 .essay-grid { display: grid; gap: 1.4rem 4rem; align-items: start; }
 .prose { max-width: 40rem; }
@@ -654,9 +655,16 @@ button:hover, .button:hover { background: #1a3c38; color: #f7f2ea; }
   min-height: 100%;
 }
 .card-place {
-  grid-template-rows: minmax(0, 1fr) auto;
-  gap: 0.65rem;
+  position: relative;
+  grid-template-rows: auto auto;
+  gap: 0.9rem;
   align-content: start;
+}
+.card-place > .card-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
 }
 .card-link {
   display: grid;
@@ -871,27 +879,40 @@ button:hover, .button:hover { background: #1a3c38; color: #f7f2ea; }
   padding: 0.38rem 0.15rem 0.38rem 0;
 }
 #map-list article.map-hit {
+  position: relative;
   grid-template-columns: minmax(0, 1fr);
-  gap: 0.28rem;
+  gap: 0.45rem;
   align-items: stretch;
+  padding: 0.7rem 0 0.85rem;
 }
 #map-list .map-hit-link {
-  grid-template-columns: 44px minmax(0, 1fr);
-  gap: 0.55rem;
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.15rem;
+  align-items: start;
+}
+#map-list .map-hit-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
 }
 #map-list .map-thumb {
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
+  position: relative;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  display: block;
   overflow: hidden;
   background: var(--gulf-deep);
   padding: 0;
   gap: 0;
 }
+#map-list .map-thumb.ph {
+  display: grid;
+  place-items: center;
+}
 #map-list .map-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-#map-list .map-thumb .mono { font-size: 0.95rem; line-height: 1; letter-spacing: 0.03em; }
+#map-list .map-thumb .mono { font-size: 2rem; line-height: 1; letter-spacing: 0.03em; }
 #map-list .map-copy { display: grid; gap: 0.02rem; min-width: 0; }
 #map-list .map-hit strong {
   font-size: 1.05rem;
@@ -1477,6 +1498,62 @@ html.js-filter #cards .card { display: none; }
 .map-hit .save-note:empty {
   display: none;
 }
+.card-media .save-bar,
+.map-thumb .save-bar {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 2.15rem 0.7rem 0.7rem;
+  background: linear-gradient(to top, rgba(16, 40, 37, 0.58) 0%, rgba(16, 40, 37, 0.24) 46%, rgba(16, 40, 37, 0) 100%);
+  pointer-events: none;
+}
+.card-media .save-bar .save-button,
+.map-thumb .save-bar .save-button,
+.card-media .save-bar .save-note,
+.map-thumb .save-bar .save-note {
+  pointer-events: auto;
+}
+.card-media .save-button,
+.map-thumb .save-button {
+  flex: 0 1 auto;
+  min-height: 0;
+  background: rgba(251, 247, 241, 0.94);
+  color: var(--ink);
+  border-color: transparent;
+  white-space: nowrap;
+}
+#map-list .map-thumb .save-button {
+  flex: 0 1 auto;
+  min-height: 0;
+  padding: 0.4rem 0.65rem;
+}
+#map-list .map-thumb .save-button,
+#map-list .map-thumb .save-button span {
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+}
+.card-media .save-button span,
+.map-thumb .save-button span {
+  color: inherit;
+}
+.card-media .save-button[aria-pressed="true"],
+.map-thumb .save-button[aria-pressed="true"],
+.card-media .save-button:hover,
+.map-thumb .save-button:hover {
+  background: var(--gulf-deep);
+  border-color: transparent;
+  color: #f7f2ea;
+}
+.card-media .save-note,
+.map-thumb .save-note {
+  min-height: 0;
+  color: #f7f2ea;
+  text-shadow: 0 1px 2px rgba(16, 40, 37, 0.55);
+}
+.more .card-grid { margin-top: 1rem; }
 .save-note {
   flex-basis: 100%;
   margin: 0;

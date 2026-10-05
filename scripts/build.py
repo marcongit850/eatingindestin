@@ -768,8 +768,8 @@ def card(restaurant: dict, heading: str = "h2") -> str:
     note_html = f'<p class="note">{e(note)}</p>' if note else ""
     return (
         f'<article id="r-{e(restaurant["slug"])}" class="card card-place" {attrs}>'
-        f'<a class="card-link" href="/restaurants/{e(restaurant["slug"])}/">'
         f'<div class="card-media">{media_block(restaurant["cardImage"], photo_alt(restaurant), restaurant["tone"], label, name=restaurant["name"])}</div>'
+        f'<a class="card-link" href="/restaurants/{e(restaurant["slug"])}/">'
         f'<div class="card-body"><p class="card-area">{e(area_line)}</p>'
         f'<{heading}>{e(restaurant["name"])}</{heading}>'
         f'<p class="meta">{e(" · ".join(bits))}</p>{note_html}</div></a></article>'
@@ -1919,13 +1919,7 @@ def build_detail(restaurant: dict, restaurants: list[dict]) -> None:
         for other in restaurants
         if other["areaSlug"] == restaurant["areaSlug"] and other["slug"] != restaurant["slug"]
     ][:4]
-    nearby_html = "".join(
-        f'<article class="map-hit" data-slug="{e(other["slug"])}" data-name="{e(other["name"])}" '
-        f'data-place-area="{e(place_area(other))}">'
-        f'<a class="map-hit-link" href="/restaurants/{e(other["slug"])}/">'
-        f'<strong>{e(other["name"])}</strong><span>{e(other["price"])}</span></a></article>'
-        for other in nearby
-    )
+    nearby_html = "".join(card(other, "h3") for other in nearby)
     map_html = ""
     if restaurant["lat"] is not None and restaurant["lng"] is not None:
         map_html = (
@@ -1951,7 +1945,7 @@ def build_detail(restaurant: dict, restaurants: list[dict]) -> None:
     if nearby_html:
         more = (
             f'<section class="wrap more"><h2>Also in {e(restaurant["area"])}</h2>'
-            f'<div class="map-list">{nearby_html}</div>'
+            f'<div class="card-grid">{nearby_html}</div>'
             f'<p><a class="text-link" href="{e(area_page)}">Restaurants in {e(restaurant["area"])}</a></p>'
             f"{claim_link}</section>"
         )
