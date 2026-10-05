@@ -33,7 +33,7 @@
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SESSION = "ea_session";
-const SESSION_SECONDS = 30 * 24 * 60 * 60;
+const SESSION_SECONDS = 7 * 24 * 60 * 60;
 const SIGN_IN_SOURCE = "https://www.eatingindestin.com/account/";
 const PLACES_SOURCE = "https://www.eatingindestin.com/my-places/";
 
