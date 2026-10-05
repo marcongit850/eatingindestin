@@ -784,6 +784,27 @@ check("Strict-Transport-Security: max-age=31536000; includeSubDomains" in header
 check("Content-Security-Policy:" in headers and "https://tile.openstreetmap.org" in headers, "headers should allow OpenStreetMap tiles in the content security policy")
 check("https://fonts.googleapis.com" in headers and "https://fonts.gstatic.com" in headers, "headers should still allow the Google fonts the pages load")
 check("'unsafe-inline'" in headers, "headers should allow the inline scripts and Leaflet styles already on the pages")
+csp_line = next(line for line in headers.splitlines() if "Content-Security-Policy:" in line)
+csp_policy = csp_line.split(":", 1)[1]
+
+
+def csp_sources(policy: str, directive: str) -> str:
+    for part in policy.split(";"):
+        tokens = part.strip().split()
+        if tokens and tokens[0] == directive:
+            return " ".join(tokens[1:])
+    return ""
+
+
+script_src = csp_sources(csp_policy, "script-src")
+connect_src = csp_sources(csp_policy, "connect-src")
+img_src = csp_sources(csp_policy, "img-src")
+check("https://www.googletagmanager.com" in script_src, "script-src should allow the GA4 gtag.js host")
+check("https://www.googletagmanager.com" in connect_src, "connect-src should allow googletagmanager")
+check("https://*.google-analytics.com" in connect_src, "connect-src should allow google-analytics hosts")
+check("https://*.analytics.google.com" in connect_src, "connect-src should allow analytics.google.com hosts")
+check("https://*.google-analytics.com" in img_src, "img-src should allow the GA4 image beacon")
+check(build.GA_MEASUREMENT_ID == "G-ZW0KS7V7QV", "GA4 measurement id should be the approved property")
 check('class="hp"' in shared_footer and shared_footer.count('name="company"') == 2, "both subscribe forms should include a honeypot")
 check('data.get("company")' in subscribe_js, "subscribe script should send the honeypot field")
 listing_js = (ROOT / "listing.js").read_text(encoding="utf-8")
@@ -826,6 +847,7 @@ def check_link_targets(text: str, label: str) -> None:
 check_link_targets(shared_header, "header")
 check_link_targets(shared_footer, "footer")
 check_link_targets(site_js, "site.js")
+ga_snippet = build.ga_tag()
 for page in html_pages:
     text = page.read_text(encoding="utf-8")
     rel = page.relative_to(ROOT).as_posix()
@@ -835,6 +857,9 @@ for page in html_pages:
     check('src="/header.js"' in text and 'src="/footer.js"' in text, f"{rel} does not load the shared header and footer scripts")
     check("<header class=\"site-header\">" not in text, f"{rel} still inlines the header")
     check("footer-mark" not in text, f"{rel} still inlines the footer")
+    head, _, _ = text.partition("</head>")
+    check(head.count(ga_snippet) == 1, f"{rel} should include the GA4 tag once in head")
+    check(text.count(build.GA_MEASUREMENT_ID) == 2, f"{rel} should mention the GA4 id only inside the tag")
 
 blob = "\n".join([home, directory, site_js, styles, (ROOT / "map" / "index.html").read_text(encoding="utf-8")])
 for banned in ("maps.googleapis", "places.googleapis", "airtable.com", "maps.google.com"):
