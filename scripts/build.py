@@ -27,6 +27,9 @@ HERO_IMAGE = "/images/hero-beachside-dining.jpg"
 HERO_WEBP = "/images/hero-beachside-dining.webp"
 HERO_ALT = "Fishing boats in Destin Harbor with a spread of shrimp, oysters, and fresh fish."
 
+# Approved GA4 measurement ID. The shared layout is the only place that emits it.
+GA_MEASUREMENT_ID = "G-ZW0KS7V7QV"
+
 # Display order for area lists. Keep this sequence; it is not a geographic sort.
 AREA_ORDER = [
     "miramar-beach",
@@ -1361,6 +1364,20 @@ def graph(*nodes: dict) -> dict:
     return {"@context": "https://schema.org", "@graph": list(nodes)}
 
 
+def ga_tag() -> str:
+    """Standard GA4 gtag.js snippet for every page head."""
+    mid = GA_MEASUREMENT_ID
+    return (
+        f'<script async src="https://www.googletagmanager.com/gtag/js?id={mid}"></script>\n'
+        "<script>\n"
+        "window.dataLayer = window.dataLayer || [];\n"
+        "function gtag(){dataLayer.push(arguments);}\n"
+        "gtag('js', new Date());\n"
+        f"gtag('config', '{mid}');\n"
+        "</script>\n"
+    )
+
+
 def layout(
     title: str,
     description: str,
@@ -1388,7 +1405,8 @@ def layout(
         '<html lang="en">\n<head>\n'
         '<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
-        f"<title>{e(title)}</title>\n"
+        + ga_tag()
+        + f"<title>{e(title)}</title>\n"
         f'<meta name="description" content="{e(description)}">\n'
         f'<link rel="canonical" href="{e(canonical)}">\n'
         + robots
