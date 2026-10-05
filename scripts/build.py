@@ -2311,6 +2311,22 @@ def build_account_pages() -> None:
         "</div>"
         '<div id="place-list" class="place-list" data-places></div>'
         '<p class="account-status" data-places-status role="status" aria-live="polite"></p>'
+        '<details class="places-coupons" data-places-coupons hidden>'
+        "<summary>Coupons and updates</summary>"
+        '<form class="account-form" action="/api/account/coupons" method="post" data-places-coupons-form>'
+        '<p class="account-hint">This uses the email on your account.</p>'
+        '<label class="account-optin">'
+        '<input name="coupons30a" type="checkbox" value="yes">'
+        "<span>Email me coupons and updates from Eating on 30A.</span>"
+        "</label>"
+        '<label class="account-optin">'
+        '<input name="couponsDestin" type="checkbox" value="yes">'
+        "<span>Email me coupons and updates from Eating in Destin.</span>"
+        "</label>"
+        '<button type="submit">Submit</button>'
+        '<p class="account-status" data-coupons-status role="status" aria-live="polite"></p>'
+        "</form>"
+        "</details>"
         "</div>"
     )
     write(

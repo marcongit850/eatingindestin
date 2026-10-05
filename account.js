@@ -358,9 +358,58 @@
     });
   }
 
+  function mountPlaceCoupons(root) {
+    var box = root.querySelector("[data-places-coupons]");
+    var form = box && box.querySelector("[data-places-coupons-form]");
+    if (!box || !form || form.getAttribute("data-bound") === "yes") return;
+    form.setAttribute("data-bound", "yes");
+    var note = form.querySelector("[data-coupons-status]");
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      var coupons30a = form.coupons30a && form.coupons30a.checked === true;
+      var couponsDestin = form.couponsDestin && form.couponsDestin.checked === true;
+      if (note) note.textContent = "";
+      if (!coupons30a && !couponsDestin) {
+        if (note) note.textContent = "Choose at least one list.";
+        return;
+      }
+      var button = form.querySelector('button[type="submit"]');
+      if (button) button.disabled = true;
+      fetch("/api/account/coupons", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ coupons30a: coupons30a, couponsDestin: couponsDestin })
+      }).then(function (response) {
+        if (response.status === 401) {
+          location.href = "/account/?need=1&next=" + encodeURIComponent("/my-places/");
+          return null;
+        }
+        return response.json().then(function (body) {
+          return { ok: response.ok, body: body };
+        }).catch(function () {
+          return { ok: false, body: {} };
+        });
+      }).then(function (result) {
+        if (!result) return;
+        if (!result.ok) {
+          if (note) note.textContent = (result.body && result.body.error) || "That signup could not be saved.";
+          return;
+        }
+        form.reset();
+        if (note) note.textContent = "Thanks. We have your signup.";
+      }).catch(function () {
+        if (note) note.textContent = "That signup could not be saved.";
+      }).then(function () {
+        if (button) button.disabled = false;
+      });
+    });
+  }
+
   function mountPlaces(root) {
     var list = root.querySelector("[data-places]");
     var status = root.querySelector("[data-places-status]");
+    mountPlaceCoupons(root);
     var kind = "favorite";
     var siteFilter = "all";
     var saves = [];
@@ -456,6 +505,8 @@
         showSignedOut();
         return;
       }
+      var coupons = root.querySelector("[data-places-coupons]");
+      if (coupons) coupons.hidden = false;
       fetch("/api/account/saves", { credentials: "same-origin" })
         .then(function (response) { return response.json(); })
         .then(function (body) {

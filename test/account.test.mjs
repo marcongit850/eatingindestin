@@ -49,14 +49,35 @@ test("list and grid cards reuse the listing save controls", () => {
   assert.equal(js.includes("–"), false);
 });
 
-test("my places page names both guides", () => {
+test("my places page names both guides and keeps coupon opt-in quiet", () => {
   const html = readFileSync(new URL("../my-places/index.html", import.meta.url), "utf8");
+  const client = readFileSync(new URL("../account.js", import.meta.url), "utf8");
+  const subscribe = readFileSync(new URL("../subscribe.js", import.meta.url), "utf8");
   assert.match(html, /data-tab="favorite"/);
   assert.match(html, /data-tab="want"/);
   assert.match(html, /data-site-filter="30a"/);
   assert.match(html, /data-site-filter="destin"/);
   assert.match(html, /Each card is labeled 30A or Destin/);
+  assert.match(html, /data-places-coupons hidden/);
+  assert.match(html, /<summary>Coupons and updates<\/summary>/);
+  assert.equal(html.includes("<dialog"), false);
+  assert.equal(html.includes("subscribe-popup"), false);
+  assert.equal(html.includes('type="email"'), false);
+  const coupons30a = html.match(/<input name="coupons30a"[^>]*>/);
+  const couponsDestin = html.match(/<input name="couponsDestin"[^>]*>/);
+  assert.ok(coupons30a, "30A coupon checkbox should be on My places");
+  assert.ok(couponsDestin, "Destin coupon checkbox should be on My places");
+  assert.equal(coupons30a[0].includes("checked"), false);
+  assert.equal(couponsDestin[0].includes("checked"), false);
+  assert.match(html, /Email me coupons and updates from Eating on 30A\./);
+  assert.match(html, /Email me coupons and updates from Eating in Destin\./);
+  assert.match(html, /This uses the email on your account\./);
+  assert.match(client, /JSON\.stringify\(\{ coupons30a: coupons30a, couponsDestin: couponsDestin \}\)/);
+  assert.match(client, /coupons\.hidden = false/);
+  assert.equal(client.includes("showModal"), false);
+  assert.match(subscribe, /data-account-page="places"/);
   assert.equal(html.includes("—"), false);
+  assert.equal(html.includes("–"), false);
 });
 
 test("destin requests stay on this guide and do not opt in by default", async () => {
@@ -258,6 +279,149 @@ test("a form post with one coupon box opts in without calling Resend", async () 
     coupons: true,
     sourcePage: "https://www.eatingindestin.com/account/",
   }]);
+});
+
+function signedIn(email = "guest@example.com") {
+  return (request) => {
+    assert.equal(new URL(request.url).pathname, "/v1/me");
+    assert.equal(request.headers.get("x-session"), "session-token");
+    return Promise.resolve(new Response(JSON.stringify({
+      ok: true,
+      user: { email },
+    }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    }));
+  };
+}
+
+function placesRequest(body, { jsonBody = true, cookie = "ea_session=session-token" } = {}) {
+  const headers = {};
+  if (cookie) headers.cookie = cookie;
+  let payload = body;
+  if (jsonBody) {
+    headers["content-type"] = "application/json";
+    payload = JSON.stringify(body);
+  } else {
+    headers["content-type"] = "application/x-www-form-urlencoded";
+  }
+  return new Request(`${origin}/api/account/coupons`, { method: "POST", headers, body: payload });
+}
+
+test("a signed-in My places opt-in appends sheet rows for the session email", async () => {
+  const sheets = [];
+  const response = await handleAccount(
+    placesRequest({ coupons30a: true, couponsDestin: true, email: "other@example.com" }),
+    sheetEnv(signedIn("Guest@example.com")),
+    async (url, init) => {
+      sheets.push({ url, init });
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    },
+  );
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { ok: true });
+  assert.deepEqual(sheets.map((call) => call.url), [sheetUrl, sheetUrl]);
+  assert.deepEqual(sheets.map((call) => JSON.parse(call.init.body)), [
+    {
+      token: "destin-token",
+      site: "Destin",
+      email: "Guest@example.com",
+      coupons: true,
+      sourcePage: "https://www.eatingindestin.com/my-places/",
+    },
+    {
+      token: "thirty-token",
+      site: "30A",
+      email: "Guest@example.com",
+      coupons: true,
+      sourcePage: "https://www.eatingindestin.com/my-places/",
+    },
+  ]);
+  assert.equal(sheets.some((call) => String(call.url).includes("resend.com")), false);
+});
+
+test("My places writes only the checked guide and skips a missing 30A token", async () => {
+  const sheets = [];
+  const only30a = await handleAccount(
+    placesRequest(new URLSearchParams({ coupons30a: "yes", email: "other@example.com" }), { jsonBody: false }),
+    sheetEnv(signedIn()),
+    async (url, init) => {
+      sheets.push(JSON.parse(init.body));
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    },
+  );
+  assert.equal(only30a.status, 200);
+  assert.deepEqual(sheets, [{
+    token: "thirty-token",
+    site: "30A",
+    email: "guest@example.com",
+    coupons: true,
+    sourcePage: "https://www.eatingindestin.com/my-places/",
+  }]);
+
+  const skipped = [];
+  const missing = await handleAccount(
+    placesRequest({ coupons30a: true, couponsDestin: true }),
+    sheetEnv(signedIn(), { GOOGLE_SHEETS_WEBHOOK_TOKEN_30A: "" }),
+    async (url, init) => {
+      skipped.push(JSON.parse(init.body).site);
+      return new Response(JSON.stringify({ ok: true }), { status: 200 });
+    },
+  );
+  assert.equal(missing.status, 200);
+  assert.deepEqual(await missing.json(), { ok: true });
+  assert.deepEqual(skipped, ["Destin"]);
+});
+
+test("My places opt-in refuses a signed-out visitor and an empty choice", async () => {
+  let called = false;
+  const signedOut = await handleAccount(
+    placesRequest({ couponsDestin: true }, { cookie: "" }),
+    sheetEnv(() => {
+      called = true;
+      return Promise.resolve(new Response("{}", { status: 200 }));
+    }),
+    () => {
+      called = true;
+      return Promise.resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    },
+  );
+  assert.equal(signedOut.status, 401);
+  assert.equal(called, false);
+
+  const anonymous = await handleAccount(
+    placesRequest({ couponsDestin: true }),
+    sheetEnv(() => Promise.resolve(new Response(JSON.stringify({ ok: true, user: null }), { status: 200 }))),
+    () => {
+      throw new Error("sheet should not be called");
+    },
+  );
+  assert.equal(anonymous.status, 401);
+
+  const empty = await handleAccount(
+    placesRequest({ coupons30a: false, couponsDestin: false, email: "guest@example.com" }),
+    sheetEnv(signedIn()),
+    () => {
+      throw new Error("sheet should not be called");
+    },
+  );
+  assert.equal(empty.status, 400);
+  assert.deepEqual(await empty.json(), { ok: false, error: "Choose at least one list." });
+});
+
+test("a My places sheet failure still accepts the opt-in and does not call Resend", async () => {
+  const urls = [];
+  const response = await handleAccount(
+    placesRequest({ couponsDestin: true }),
+    sheetEnv(signedIn()),
+    (url) => {
+      urls.push(String(url));
+      return Promise.reject(new Error("webhook down"));
+    },
+  );
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { ok: true });
+  assert.deepEqual(urls, [sheetUrl]);
 });
 
 test("finish sets a host-only session cookie and does not set Domain", async () => {
