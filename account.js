@@ -176,7 +176,9 @@
       var bar = document.createElement("div");
       bar.className = "save-bar";
       bar.innerHTML = buttonHtml("favorite", false) + buttonHtml("want", false) + '<p class="save-note" role="status"></p>';
-      host.appendChild(bar);
+      var photo = host.querySelector(".card-media, .map-thumb");
+      if (photo) photo.appendChild(bar);
+      else host.appendChild(bar);
       bindSaveBar(bar, slug, name, area);
     }
   }
