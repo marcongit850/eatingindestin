@@ -58,6 +58,7 @@ test("my places page names both guides and keeps coupon opt-in quiet", () => {
   assert.match(html, /data-site-filter="30a"/);
   assert.match(html, /data-site-filter="destin"/);
   assert.match(html, /Each card is labeled 30A or Destin/);
+  assert.match(html, /Notes stay private on your account\. Shown on My places for each saved restaurant \(Favorites and Want to try\)\./);
   assert.match(html, /data-places-coupons hidden/);
   assert.match(html, /<summary>Coupons and updates<\/summary>/);
   assert.equal(html.includes("<dialog"), false);
@@ -438,6 +439,137 @@ test("finish sets a host-only session cookie and does not set Domain", async () 
   assert.match(cookie, /SameSite=Lax/);
   assert.match(cookie, /Secure/);
   assert.equal(cookie.includes("Domain="), false);
+});
+
+test("personal notes stay on the account pages and off public cards", () => {
+  const script = readFileSync(new URL("../account.js", import.meta.url), "utf8");
+  const css = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
+  const page = readFileSync(new URL("../restaurants/harbor-docks-destin-harbor/index.html", import.meta.url), "utf8");
+  const directory = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const cards = script.slice(script.indexOf("function mountCardSaves"), script.indexOf("function watchMapList"));
+  assert.match(script, /Add a personal note\.\.\./);
+  assert.match(script, /Only you can see this\. It also shows on My places\. About 280 characters\./);
+  assert.match(script, /data-note-save/);
+  assert.match(script, /data-note-clear/);
+  assert.match(script, /Save note/);
+  assert.match(script, /Edit note/);
+  assert.match(script, /maxlength="280"/);
+  assert.match(script, /maxLength = 280/);
+  assert.match(script, /view\.textContent = text/);
+  assert.match(script, /panel\.hidden = true/);
+  assert.equal(script.includes("—"), false);
+  assert.equal(script.includes("–"), false);
+  assert.equal(cards.includes("personal-note"), false);
+  assert.equal(cards.includes("Your note"), false);
+  assert.match(css, /\.personal-note \{/);
+  assert.match(css, /\.place-note-empty \{/);
+  assert.match(css, /var\(--ink\)/);
+  assert.match(css, /var\(--gulf\)/);
+  assert.equal(page.includes("personal-note"), false);
+  assert.equal(page.includes("Only you can see this"), false);
+  assert.equal(directory.includes("personal-note"), false);
+  assert.equal(directory.includes("Your note"), false);
+});
+
+test("a save forwards the note, and a cross-guide note update does not create a save", async () => {
+  const calls = [];
+  const env = envWith(async (request) => {
+    calls.push({ method: request.method, path: new URL(request.url).pathname, body: await request.json() });
+    return new Response(JSON.stringify({ ok: true, saved: true, note: "Window seat." }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  });
+
+  const saved = await handleAccount(new Request(`${origin}/api/account/saves`, {
+    method: "PUT",
+    headers: { "content-type": "application/json", cookie: "ea_session=session-token" },
+    body: JSON.stringify({
+      slug: "harbor-docks-destin-harbor",
+      name: "Harbor Docks",
+      area: "Destin Harbor",
+      kind: "favorite",
+      saved: true,
+      note: "  Window seat.  ",
+    }),
+  }), env);
+  assert.equal(saved.status, 200);
+  assert.deepEqual(await saved.json(), { ok: true, saved: true, note: "Window seat." });
+  assert.deepEqual(calls, [{
+    method: "PUT",
+    path: "/v1/saves",
+    body: {
+      slug: "harbor-docks-destin-harbor",
+      name: "Harbor Docks",
+      area: "Destin Harbor",
+      kind: "favorite",
+      site: "destin",
+      saved: true,
+      note: "  Window seat.  ",
+    },
+  }]);
+
+  calls.length = 0;
+  const cross = await handleAccount(new Request(`${origin}/api/account/saves`, {
+    method: "PUT",
+    headers: { "content-type": "application/json", cookie: "ea_session=session-token" },
+    body: JSON.stringify({
+      slug: "the-donut-hole-inlet-beach",
+      name: "The Donut Hole",
+      area: "Inlet Beach",
+      kind: "want",
+      site: "30a",
+      note: "Booth by the window.",
+    }),
+  }), env);
+  assert.equal(cross.status, 200);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].body.site, "30a");
+  assert.equal(calls[0].body.note, "Booth by the window.");
+  assert.equal(Object.hasOwn(calls[0].body, "saved"), false);
+
+  calls.length = 0;
+  const edited = await handleAccount(new Request(`${origin}/api/account/saves`, {
+    method: "PUT",
+    headers: { "content-type": "application/json", cookie: "ea_session=session-token" },
+    body: JSON.stringify({
+      slug: "the-donut-hole-inlet-beach",
+      name: "The Donut Hole",
+      area: "Inlet Beach",
+      kind: "want",
+      site: "30a",
+      saved: true,
+      note: "Booth by the window.",
+    }),
+  }), env);
+  assert.equal(edited.status, 200);
+  assert.equal(calls[0].body.site, "30a");
+  assert.equal(calls[0].body.saved, true);
+  assert.equal(calls[0].body.note, "Booth by the window.");
+
+  const blocked = await handleAccount(new Request(`${origin}/api/account/saves`, {
+    method: "PUT",
+    headers: { "content-type": "application/json", cookie: "ea_session=session-token" },
+    body: JSON.stringify({
+      slug: "new-30a-place",
+      name: "New Place",
+      area: "Inlet Beach",
+      kind: "favorite",
+      site: "30a",
+      saved: true,
+    }),
+  }), env);
+  assert.equal(blocked.status, 400);
+  assert.deepEqual(await blocked.json(), { ok: false, error: "Save this place on its own guide." });
+  assert.equal(calls.length, 1);
+
+  const empty = await handleAccount(new Request(`${origin}/api/account/saves`, {
+    method: "PUT",
+    headers: { "content-type": "application/json", cookie: "ea_session=session-token" },
+    body: JSON.stringify({ slug: "harbor-docks-destin-harbor", kind: "favorite" }),
+  }), env);
+  assert.equal(empty.status, 400);
+  assert.equal(calls.length, 1);
 });
 
 test("the site worker answers account config without touching assets", async () => {

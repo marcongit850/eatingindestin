@@ -24,6 +24,11 @@
  * row per checked box. sourcePage is the My places URL. This path does not
  * send a Resend coupon email. A missing token or a sheet error still returns
  * success. A signed-out request is refused and writes nothing.
+ *
+ * PUT /api/account/saves forwards note when the body includes it.
+ * A note can be updated on a save that already exists on the other guide.
+ * That call omits saved, so it cannot create a new save there.
+ * Saving a place still has to happen on its own guide.
  */
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -299,22 +304,32 @@ export async function handleAccount(request, env, fetchImpl = fetch) {
   if (path === "/api/account/saves" && request.method === "PUT") {
     const body = await readBody(request);
     if (!body) return json({ ok: false, error: "Send the request as JSON." }, 400);
+    const hasSaved = Object.hasOwn(body, "saved");
+    const hasNote = Object.hasOwn(body, "note");
     const saved = body.saved === true || body.saved === "true";
-    const targetSite = saved ? site : String(body.site || site);
-    if (saved && body.site && body.site !== site) {
+    const requestedSite = String(body.site || site);
+    if (requestedSite !== "30a" && requestedSite !== "destin") {
+      return json({ ok: false, error: "That place could not be saved." }, 400);
+    }
+    if (!hasSaved && !hasNote) {
+      return json({ ok: false, error: "That place could not be saved." }, 400);
+    }
+    if (saved && requestedSite !== site && !hasNote) {
       return json({ ok: false, error: "Save this place on its own guide." }, 400);
     }
+    const forward = {
+      slug: body.slug,
+      name: body.name,
+      area: body.area,
+      kind: body.kind,
+      site: requestedSite,
+    };
+    if (hasSaved) forward.saved = saved;
+    if (hasNote) forward.note = body.note;
     const result = await accountsJson(await accountsFetch(env, "/v1/saves", {
       method: "PUT",
       session: readCookie(request, SESSION),
-      body: {
-        slug: body.slug,
-        name: body.name,
-        area: body.area,
-        kind: body.kind,
-        site: targetSite,
-        saved,
-      },
+      body: forward,
     }));
     return json(result.body, result.status);
   }

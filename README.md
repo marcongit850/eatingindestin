@@ -141,7 +141,9 @@ A signed-in visitor can opt in later on `/my-places/`. The page keeps a Coupons 
 - Email me coupons and updates from Eating on 30A.
 - Email me coupons and updates from Eating in Destin.
 
-Submit posts `coupons30a` and `couponsDestin` to `/api/account/coupons`. The Worker uses the session email and ignores any email in the body. Each checked box appends one row through the same sheet helpers. `sourcePage` is `https://www.eatingindestin.com/my-places/`. Destin uses `GOOGLE_SHEETS_WEBHOOK_TOKEN`. 30A uses `GOOGLE_SHEETS_WEBHOOK_TOKEN_30A`. This path does not send a Resend coupon email. A missing token or a sheet error still returns success. A signed-out request is refused and writes no row.
+Submit posts `coupons30a` and `couponsDestin` to `/api/account/coupons`. The Worker uses the session email and ignores any email in the body. Each checked box appends one row through the same sheet helpers. `sourcePage` is `https://www.eatingindestin.com/my-places/`. Destin uses `GOOGLE_SHEETS_WEBHOOK_TOKEN`. 30A uses `GOOGLE_SHEETS_WEBHOOK_TOKEN_30A`. This path does not send a Resend coupon email. A missing token or a sheet error still returns success. A signed-out request is refused and writes no row. The coupon checkboxes stay off until the visitor checks them.
+
+A signed-in visitor can keep a short private note on each saved restaurant. The note is stored on the shared `saves` table in the `eating-accounts` D1 database. This Worker only forwards it. `PUT /api/account/saves` includes `note` when the request has one. A note update for a save that already exists on Eating on 30A is forwarded without creating a new save. Saving a place still has to happen on its own guide. The note shows on My places for Favorites and Want to try, and under Favorite / Want to try on a listing when that place is saved. It is not shown on list or grid cards, and it is not shown to a signed-out visitor. About 280 characters. Clearing the note keeps the save. Removing the save deletes that row, note included.
 
 Add `GOOGLE_SHEETS_WEBHOOK_TOKEN_30A` on the `eatingindestin` Worker in the Cloudflare dashboard. Do not put the value in `wrangler.jsonc`.
 
