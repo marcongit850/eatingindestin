@@ -1,4 +1,5 @@
 import listingOptions from "./data/listing-options.json" with { type: "json" };
+import { handleAccount } from "./account-api.js";
 
 /**
  * Static assets are served by the assets binding.
@@ -766,6 +767,7 @@ export default {
     if (url.pathname === "/api/subscribe") return handleSubscribe(request, env);
     if (url.pathname === "/api/listing") return handleListing(request, env);
     if (url.pathname === "/api/list-restaurant") return handleListRestaurant(request, env);
+    if (url.pathname.startsWith("/api/account/")) return handleAccount(request, env);
     return env.ASSETS.fetch(request);
   },
 };

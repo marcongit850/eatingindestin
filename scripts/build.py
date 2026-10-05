@@ -2250,6 +2250,105 @@ def build_about() -> None:
     )
 
 
+def build_account_pages() -> None:
+    """Sign-in and My places. noindex. GA4 still comes from layout()."""
+    signin_title = "Sign in | Eating in Destin"
+    signin_description = (
+        "Sign in with an email link. One account works on Eating in Destin and Eating on 30A, for restaurants in Destin and Miramar Beach."
+    )
+    places_title = "My places | Eating in Destin"
+    places_description = (
+        "Favorites and places to try on Eating in Destin and Eating on 30A. Each save is labeled Destin or 30A so the guides stay separate."
+    )
+    signin = (
+        '<div class="wrap page-intro account-page" data-account-page="signin">'
+        f'{crumb_nav([("Home", "/"), ("Sign in", "/account/")])}'
+        '<p class="kicker">One account</p>'
+        '<h1 class="form-title">Sign in</h1>'
+        '<p class="lede">The same account works on Eating on 30A and Eating in Destin.</p>'
+        '<form class="account-form" action="/api/account/request" method="post" data-magic>'
+        '<label><span>Email <abbr title="required">*</abbr></span>'
+        '<input name="email" type="email" required maxlength="200" autocomplete="email" inputmode="email" placeholder="you@example.com"></label>'
+        '<label class="account-optin">'
+        '<input name="marketing" type="checkbox" value="yes">'
+        "<span>Email me occasional updates from Eating on 30A and Eating in Destin.</span>"
+        "</label>"
+        '<p class="account-hint">Leave this unchecked if you only want the sign-in link.</p>'
+        '<button type="submit">Email me a sign-in link</button>'
+        '<p class="account-status" role="status" aria-live="polite"></p>'
+        "</form>"
+        '<div class="account-signed" data-signed hidden></div>'
+        "</div>"
+    )
+    places = (
+        '<div class="wrap page-intro account-page" data-account-page="places">'
+        f'{crumb_nav([("Home", "/"), ("My places", "/my-places/")])}'
+        '<p class="kicker">Your list</p>'
+        '<h1 class="form-title">My places</h1>'
+        "<p class=\"lede\">Favorites and places you want to try. Each card is labeled 30A or Destin, so the two guides stay separate.</p>"
+        '<div class="account-tabs" role="tablist" aria-label="Saved places">'
+        '<button type="button" role="tab" aria-selected="true" aria-controls="place-list" data-tab="favorite">Favorites</button>'
+        '<button type="button" role="tab" aria-selected="false" aria-controls="place-list" data-tab="want">Want to try</button>'
+        "</div>"
+        '<div class="account-sites" role="group" aria-label="Which guide">'
+        '<button type="button" data-site-filter="all" aria-pressed="true">All</button>'
+        '<button type="button" data-site-filter="30a" aria-pressed="false">30A</button>'
+        '<button type="button" data-site-filter="destin" aria-pressed="false">Destin</button>'
+        "</div>"
+        '<div id="place-list" class="place-list" data-places></div>'
+        '<p class="account-status" data-places-status role="status" aria-live="polite"></p>'
+        "</div>"
+    )
+    write(
+        ROOT / "account" / "index.html",
+        layout(
+            signin_title,
+            signin_description,
+            "/account/",
+            "account",
+            signin,
+            json_ld(
+                graph(
+                    {
+                        "@type": "WebPage",
+                        "name": "Sign in",
+                        "description": signin_description,
+                        "url": ORIGIN + "/account/",
+                        "isPartOf": {"@id": ORIGIN + "/#website"},
+                    },
+                    breadcrumbs([("Home", "/"), ("Sign in", "/account/")]),
+                )
+            ),
+            noindex=True,
+            include_js=False,
+        ),
+    )
+    write(
+        ROOT / "my-places" / "index.html",
+        layout(
+            places_title,
+            places_description,
+            "/my-places/",
+            "places",
+            places,
+            json_ld(
+                graph(
+                    {
+                        "@type": "WebPage",
+                        "name": "My places",
+                        "description": places_description,
+                        "url": ORIGIN + "/my-places/",
+                        "isPartOf": {"@id": ORIGIN + "/#website"},
+                    },
+                    breadcrumbs([("Home", "/"), ("My places", "/my-places/")]),
+                )
+            ),
+            noindex=True,
+            include_js=False,
+        ),
+    )
+
+
 def build_contact() -> None:
     body = (
         '<div class="wrap page-intro">'
@@ -2755,6 +2854,7 @@ def main() -> None:
     guides = build_guides(restaurants, areas)
     build_about()
     build_contact()
+    build_account_pages()
     build_list_restaurant(areas, cuisines, foods)
     build_404()
     build_sitemap(restaurants, areas, guides)

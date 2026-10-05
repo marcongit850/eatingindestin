@@ -7,6 +7,13 @@
   "name": "eatingindestin",
   "main": "worker.js",
   "compatibility_date": "2026-09-29",
+  // Shared accounts live on the eating-accounts Worker in the eatingon30A repo.
+  // Change ACCOUNTS_ORIGIN if that workers.dev hostname differs. Set the same
+  // ACCOUNTS_SHARED_SECRET with wrangler secret put. Do not put the secret here.
+  "vars": {
+    "ACCOUNT_SITE": "destin",
+    "ACCOUNTS_ORIGIN": "https://eating-accounts.352marc.workers.dev"
+  },
   "assets": {
     "directory": ".",
     "binding": "ASSETS",

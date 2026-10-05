@@ -105,6 +105,26 @@ Leave the custom domain out of `wrangler.jsonc`. Canonical URLs use `https://www
 
 Homepage meal and area links go to `/restaurants/?meal=Dinner` and `/restaurants/?area=destin-harbor`. The directory reads those query parameters and hides the other cards. The map page honors the same parameters.
 
+## Shared accounts
+
+This guide shares one account with Eating on 30A. The account store is the `eating-accounts` Worker and its D1 database, in the [eatingon30A](https://github.com/marcongit850/eatingon30A) repository under `accounts/`. Deploy that Worker first. This site does not keep its own user database.
+
+Sign-in is an email magic link. Google sign-in is not in this phase.
+
+`eatingindestin.com` and `eatingon30a.com` do not share a parent domain, so one cookie cannot be read on both. Do not set a `Domain` attribute. This Worker sets `ea_session` for its own host only (HttpOnly, SameSite=Lax, Secure on https, no Domain). The accounts Worker sets `ea_central` on its own host. A magic link opens the accounts host, which redirects back here with a one-time code. This Worker exchanges that code for `ea_session`. Opening Sign in or My places on the other guide does the same, so a visitor who already signed in does not need a second email. Signing out deletes every session for that account.
+
+`wrangler.jsonc` sets `ACCOUNT_SITE` to `destin` and `ACCOUNTS_ORIGIN` to `https://eating-accounts.352marc.workers.dev`. Change the origin if the accounts hostname differs. Do not add a custom domain binding in this file.
+
+Set the same shared secret used by `eating-accounts` and Eating on 30A:
+
+```bash
+npx wrangler secret put ACCOUNTS_SHARED_SECRET
+```
+
+Resend mail for the magic link is sent by `eating-accounts`, not by this Worker. The secrets for that are documented in the eatingon30A repo: `RESEND_API_KEY`, `SUBSCRIBE_FROM`, and `ACCOUNTS_SHARED_SECRET` on `eating-accounts`, plus the D1 database id. Do not set `MAGIC_LINK_PREVIEW` in production.
+
+The marketing checkbox is off unless the visitor checks it.
+
 ## Pages
 
 - `/` meal and area entry points that filter the directory
@@ -114,5 +134,7 @@ Homepage meal and area links go to `/restaurants/?meal=Dinner` and `/restaurants
 - `/areas/` and `/areas/<slug>/` area notes
 - `/guides/` and `/guides/<slug>/` meal, area, and favorites guides built from the same listings
 - `/about/` and `/contact/`
+- `/account/` email sign-in, shared with Eating on 30A
+- `/my-places/` favorites and want to try, labeled 30A or Destin
 - `/list-your-restaurant/` full new listing or update form. `/contact/` stays the short note.
 - `sitemap.xml`, `robots.txt`, `llms.txt`
