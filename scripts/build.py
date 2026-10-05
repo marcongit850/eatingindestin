@@ -150,7 +150,8 @@ LISTING_AMENITIES = (
     ("groups", "Groups of 12+", ""),
     ("music", "Live music", "Seasonal / subject to change."),
 )
-LISTING_TITLE = "List your restaurant | Eating in Destin"
+LISTING_HEADING = "List or Update your restaurant"
+LISTING_TITLE = f"{LISTING_HEADING} | Eating in Destin"
 LISTING_DESCRIPTION = (
     "Add or update a restaurant listing in the Destin area. "
     "Hours, cuisine, amenities, and photos for Destin and Miramar Beach."
@@ -2398,9 +2399,9 @@ def build_list_restaurant(areas: list[dict], cuisines: list[str], foods: list[st
     body = (
         '<div class="wrap page-intro">\n'
         '<div class="prose">\n'
-        f'{crumb_nav([("Home", "/"), ("List your restaurant", LISTING_PAGE)])}\n'
+        f'{crumb_nav([("Home", "/"), (LISTING_HEADING, LISTING_PAGE)])}\n'
         '<p class="kicker">For restaurants</p>\n'
-        "<h1>List your restaurant</h1>\n"
+        f"<h1>{LISTING_HEADING}</h1>\n"
         "<p>Own or manage a restaurant in the Destin area? Use this form to add a new listing "
         "or to update one that is already on the site.</p>\n"
         "<p>We review every submission before it goes on the guide. For a short note, the "
@@ -2496,12 +2497,12 @@ def build_list_restaurant(areas: list[dict], cuisines: list[str], foods: list[st
                 graph(
                     {
                         "@type": "WebPage",
-                        "name": "List your restaurant",
+                        "name": LISTING_HEADING,
                         "url": ORIGIN + LISTING_PAGE,
                         "isPartOf": {"@id": ORIGIN + "/#website"},
                         "description": LISTING_DESCRIPTION,
                     },
-                    breadcrumbs([("Home", "/"), ("List your restaurant", LISTING_PAGE)]),
+                    breadcrumbs([("Home", "/"), (LISTING_HEADING, LISTING_PAGE)]),
                 )
             ),
             include_js=False,

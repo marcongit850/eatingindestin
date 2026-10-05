@@ -297,7 +297,12 @@ check(
 )
 listing_page = (ROOT / "list-your-restaurant" / "index.html").read_text(encoding="utf-8")
 listing_main = listing_page.split("<main", 1)[-1].split("</main>", 1)[0]
-check("List your restaurant" in listing_page and 'rel="canonical" href="https://www.eatingindestin.com/list-your-restaurant/"' in listing_page, "listing form page should have a canonical URL")
+check(
+    "<h1>List or Update your restaurant</h1>" in listing_page
+    and "<title>List or Update your restaurant | Eating in Destin</title>" in listing_page
+    and 'rel="canonical" href="https://www.eatingindestin.com/list-your-restaurant/"' in listing_page,
+    "listing form page should title listing and updates and have a canonical URL",
+)
 check('action="/api/list-restaurant"' in listing_page and "data-list-restaurant" in listing_page, "listing form should post to the restaurant endpoint")
 check('src="/list-restaurant.js"' in listing_page, "listing form page should load its script")
 check(
