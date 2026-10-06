@@ -126,11 +126,24 @@
     remember();
   });
 
+  function member() {
+    return fetch("/api/account/me", {
+      credentials: "same-origin",
+      headers: { accept: "application/json" },
+    })
+      .then(function (response) { return response.json(); })
+      .then(function (data) { return Boolean(data && data.user); })
+      .catch(function () { return false; });
+  }
+
   if (dismissed()) return;
   if (document.querySelector('[data-account-page="places"]')) return;
   var wait = Math.max(0, DELAY - (Date.now() - visitStart()));
   window.setTimeout(function () {
     if (dismissed() || dialog.open) return;
-    dialog.showModal();
+    member().then(function (signedIn) {
+      if (signedIn || dismissed() || dialog.open) return;
+      dialog.showModal();
+    });
   }, wait);
 })();

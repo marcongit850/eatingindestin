@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import vm from "node:vm";
 import { handleAccount } from "../account-api.js";
 import worker from "../worker.js";
 
@@ -77,8 +78,121 @@ test("my places page names both guides and keeps coupon opt-in quiet", () => {
   assert.match(client, /coupons\.hidden = false/);
   assert.equal(client.includes("showModal"), false);
   assert.match(subscribe, /data-account-page="places"/);
+  assert.match(subscribe, /\/api\/account\/me/);
   assert.equal(html.includes("—"), false);
   assert.equal(html.includes("–"), false);
+});
+
+function loadCouponPopup(options = {}) {
+  const fetches = [];
+  const dialog = {
+    open: false,
+    shown: 0,
+    showModal() {
+      this.open = true;
+      this.shown += 1;
+    },
+    close() {
+      this.open = false;
+    },
+    querySelectorAll() {
+      return [];
+    },
+    addEventListener() {},
+  };
+  const session = new Map();
+  const local = new Map();
+  function memory(map) {
+    return {
+      getItem(key) {
+        return map.has(key) ? map.get(key) : null;
+      },
+      setItem(key, value) {
+        map.set(key, String(value));
+      },
+    };
+  }
+  const timers = [];
+  const windowStub = {
+    sessionStorage: memory(session),
+    localStorage: memory(local),
+    setTimeout(fn, ms) {
+      timers.push({ fn, ms });
+      return timers.length;
+    },
+  };
+  if (options.sid) windowStub.sessionStorage.setItem("eidestin-sid", options.sid);
+  if (options.dismissed) windowStub.localStorage.setItem("eidestin-coupon-popup", options.dismissed);
+  const documentStub = {
+    getElementById(id) {
+      return id === "subscribe-popup" ? dialog : null;
+    },
+    querySelectorAll() {
+      return [];
+    },
+    querySelector(selector) {
+      if (selector === '[data-account-page="places"]' && options.places) return { hidden: false };
+      return null;
+    },
+  };
+  const sandbox = {
+    window: windowStub,
+    document: documentStub,
+    fetch(url, init) {
+      fetches.push({ url: String(url), init });
+      if (options.fail) return Promise.reject(new Error("offline"));
+      const body = options.body === undefined ? { ok: true, user: options.user ?? null } : options.body;
+      return Promise.resolve({
+        ok: true,
+        json() {
+          if (options.invalidJson) return Promise.reject(new Error("bad json"));
+          return Promise.resolve(body);
+        },
+      });
+    },
+  };
+  vm.runInNewContext(readFileSync(new URL("../subscribe.js", import.meta.url), "utf8"), sandbox);
+  return { dialog, timers, fetches };
+}
+
+async function firePopup(popup) {
+  const scheduled = popup.timers.splice(0, popup.timers.length);
+  for (const timer of scheduled) timer.fn();
+  await new Promise((resolve) => setImmediate(resolve));
+}
+
+test("coupon popup stays closed when account/me reports a user", async () => {
+  const signedIn = loadCouponPopup({ user: { email: "guest@example.com" } });
+  assert.equal(signedIn.timers.length, 1);
+  assert.ok(signedIn.timers[0].ms <= 30000 && signedIn.timers[0].ms > 29000);
+  await firePopup(signedIn);
+  assert.equal(signedIn.fetches.length, 1);
+  assert.equal(signedIn.fetches[0].url, "/api/account/me");
+  assert.equal(signedIn.fetches[0].init.credentials, "same-origin");
+  assert.equal(signedIn.dialog.shown, 0);
+  assert.equal(signedIn.dialog.open, false);
+
+  const signedOut = loadCouponPopup({ user: null });
+  await firePopup(signedOut);
+  assert.equal(signedOut.fetches[0].url, "/api/account/me");
+  assert.equal(signedOut.dialog.shown, 1);
+  assert.equal(signedOut.dialog.open, true);
+
+  const offline = loadCouponPopup({ fail: true });
+  await firePopup(offline);
+  assert.equal(offline.dialog.shown, 1);
+
+  const broken = loadCouponPopup({ invalidJson: true });
+  await firePopup(broken);
+  assert.equal(broken.dialog.shown, 1);
+
+  const places = loadCouponPopup({ places: true, user: null });
+  assert.equal(places.timers.length, 0);
+  assert.equal(places.fetches.length, 0);
+
+  const dismissed = loadCouponPopup({ sid: "visit-1", dismissed: "visit-1", user: null });
+  assert.equal(dismissed.timers.length, 0);
+  assert.equal(dismissed.fetches.length, 0);
 });
 
 test("destin requests stay on this guide and do not opt in by default", async () => {

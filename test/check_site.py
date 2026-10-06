@@ -796,6 +796,10 @@ check('id="subscribe-popup"' in shared_footer and "Coupons or restaurant updates
 subscribe_js = (ROOT / "subscribe.js").read_text(encoding="utf-8")
 check("We’ll send coupons or updates to that address." in subscribe_js, "success message should mention coupons or updates")
 check("30000" in subscribe_js and "localStorage" in subscribe_js, "popup should wait 30s and remember dismiss in localStorage")
+check(
+    '"/api/account/me"' in subscribe_js and 'credentials: "same-origin"' in subscribe_js,
+    "popup should ask /api/account/me before it opens for a signed-in visitor",
+)
 worker_js = (ROOT / "worker.js").read_text(encoding="utf-8")
 check("CONTACT_EMAIL" in worker_js and "RESEND_API_KEY" in worker_js and "SUBSCRIBE_FROM" in worker_js, "signup mail should name its env vars")
 check("GOOGLE_SHEETS_WEBHOOK_URL" in worker_js and "GOOGLE_SHEETS_WEBHOOK_TOKEN" in worker_js, "signup sheet should name its env vars")
