@@ -97,6 +97,16 @@ Coupon signups are also posted to a Google Apps Script webhook, which appends a 
 
 The JSON response reports that separately as `recorded`. If either Sheets secret is missing, the worker skips the webhook and returns `recorded: false`. A row is recorded only when the webhook response is JSON and `ok` is true. A non-JSON body, including an Apps Script HTML page such as “Script function not found: doPost” on HTTP 200, and a JSON body with `ok: false`, are `recorded: false`. That miss leaves `delivered` as Resend reported it, so a signup Resend already accepted stays successful. Listing requests are not written to the sheet.
 
+The same guest signup is also added to the Destin Zoho Campaigns list when the Zoho secrets below are set. That call runs beside the Apps Script webhook and does not replace it. `delivered` and `recorded` stay the Resend and Sheets results. A Zoho miss does not change that response. Listing requests are not sent to Zoho.
+
+Zoho is skipped when any of these three secrets is missing:
+
+- `ZOHO_CLIENT_ID`
+- `ZOHO_CLIENT_SECRET`
+- `ZOHO_REFRESH_TOKEN`
+
+Guest `POST /api/subscribe` also needs `ZOHO_LIST_KEY_DESTIN`. The Worker refreshes an access token with `grant_type=refresh_token` at `https://accounts.zoho.com/oauth/v2/token`, then calls `https://campaigns.zoho.com/api/v1.1/json/listsubscribe` with `resfmt` `JSON`, that list key, `contactinfo` set to the contact email, and source `eatingindestin-subscribe`. Do not put these values in `wrangler.jsonc` or in git. Set them with `npx wrangler secret put`.
+
 Sign-in on `/account/` can append the same sheet when a visitor checks a coupon box. That path uses `GOOGLE_SHEETS_WEBHOOK_URL` plus a token for each tab. `GOOGLE_SHEETS_WEBHOOK_TOKEN` writes Destin. The 30A tab needs a separate dashboard secret, `GOOGLE_SHEETS_WEBHOOK_TOKEN_30A`, described under Shared accounts. That sign-in write does not send a Resend coupon email.
 
 ```bash
@@ -134,6 +144,8 @@ Leave both unchecked to get only the sign-in link. The browser posts `coupons30a
 
 After that Worker accepts the magic link, each checked box appends one coupon row through the Apps Script webhook already used by `/api/subscribe`. The row sets `coupons` to true and `sourcePage` to `https://www.eatingindestin.com/account/`. A checked Destin box posts `site` `Destin` with `GOOGLE_SHEETS_WEBHOOK_TOKEN` (the Destin tab). A checked 30A box posts `site` `30A` with `GOOGLE_SHEETS_WEBHOOK_TOKEN_30A` (the 30A tab). Both checked posts two rows. This path does not call Resend for the coupon signup.
 
+The same checked boxes subscribe that email in Zoho Campaigns when `ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET`, and `ZOHO_REFRESH_TOKEN` are set. A Destin box uses `ZOHO_LIST_KEY_DESTIN`. A 30A box uses `ZOHO_LIST_KEY_30A`. Both checked subscribe both lists. The source is `eatingindestin-account`. A missing list key skips that list. A missing OAuth secret skips Zoho. A Zoho error does not fail the magic link.
+
 If the sheet request fails, sign-in still succeeds. If `GOOGLE_SHEETS_WEBHOOK_TOKEN_30A` is missing, the 30A row is skipped and the magic link is unchanged. The same is true when `GOOGLE_SHEETS_WEBHOOK_URL` or the Destin token is missing.
 
 A signed-in visitor can opt in later on `/my-places/`. The page keeps a Coupons and updates disclosure closed until they open it. It is a section on the page, and the coupon signup popup does not open there. The same popup stays closed on every page when `/api/account/me` reports a user. A signed-out visitor still sees it after 30 seconds. Both checkboxes stay off until checked:
@@ -141,7 +153,7 @@ A signed-in visitor can opt in later on `/my-places/`. The page keeps a Coupons 
 - Email me coupons and updates from Eating on 30A.
 - Email me coupons and updates from Eating in Destin.
 
-Submit posts `coupons30a` and `couponsDestin` to `/api/account/coupons`. The Worker uses the session email and ignores any email in the body. Each checked box appends one row through the same sheet helpers. `sourcePage` is `https://www.eatingindestin.com/my-places/`. Destin uses `GOOGLE_SHEETS_WEBHOOK_TOKEN`. 30A uses `GOOGLE_SHEETS_WEBHOOK_TOKEN_30A`. This path does not send a Resend coupon email. A missing token or a sheet error still returns success. A signed-out request is refused and writes no row. The coupon checkboxes stay off until the visitor checks them.
+Submit posts `coupons30a` and `couponsDestin` to `/api/account/coupons`. The Worker uses the session email and ignores any email in the body. Each checked box appends one row through the same sheet helpers. `sourcePage` is `https://www.eatingindestin.com/my-places/`. Destin uses `GOOGLE_SHEETS_WEBHOOK_TOKEN`. 30A uses `GOOGLE_SHEETS_WEBHOOK_TOKEN_30A`. This path does not send a Resend coupon email. A missing token or a sheet error still returns success. The same boxes subscribe the Destin and 30A Zoho lists, using `ZOHO_LIST_KEY_DESTIN` and `ZOHO_LIST_KEY_30A`, with source `eatingindestin-account`. A missing Zoho secret or a Zoho error still returns success. A signed-out request is refused and writes no row. The coupon checkboxes stay off until the visitor checks them.
 
 A signed-in visitor can keep a short private note on each saved restaurant. The note is stored on the shared `saves` table in the `eating-accounts` D1 database. This Worker only forwards it. `PUT /api/account/saves` includes `note` when the request has one. A note update for a save that already exists on Eating on 30A is forwarded without creating a new save. Saving a place still has to happen on its own guide. The note shows on My places for Favorites and Want to try, and under Favorite / Want to try on a listing when that place is saved. It is not shown on list or grid cards, and it is not shown to a signed-out visitor. About 280 characters. Clearing the note keeps the save. Removing the save deletes that row, note included.
 

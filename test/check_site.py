@@ -886,6 +886,20 @@ check(
 worker_js = (ROOT / "worker.js").read_text(encoding="utf-8")
 check("CONTACT_EMAIL" in worker_js and "RESEND_API_KEY" in worker_js and "SUBSCRIBE_FROM" in worker_js, "signup mail should name its env vars")
 check("GOOGLE_SHEETS_WEBHOOK_URL" in worker_js and "GOOGLE_SHEETS_WEBHOOK_TOKEN" in worker_js, "signup sheet should name its env vars")
+zoho_js = (ROOT / "zoho.js").read_text(encoding="utf-8")
+account_api = (ROOT / "account-api.js").read_text(encoding="utf-8")
+for name in (
+    "ZOHO_CLIENT_ID",
+    "ZOHO_CLIENT_SECRET",
+    "ZOHO_REFRESH_TOKEN",
+    "ZOHO_LIST_KEY_DESTIN",
+    "ZOHO_LIST_KEY_30A",
+):
+    check(name in zoho_js, f"zoho helper should name {name}")
+check("https://accounts.zoho.com/oauth/v2/token" in zoho_js, "zoho helper should refresh the access token")
+check("https://campaigns.zoho.com/api/v1.1/json/listsubscribe" in zoho_js, "zoho helper should call listsubscribe")
+check("eatingindestin-subscribe" in zoho_js and "eatingindestin-account" in zoho_js, "zoho helper should name the signup sources")
+check("subscribeZohoLists" in worker_js and "subscribeZohoLists" in account_api, "guest signup and account opt-in should call Zoho")
 check('pathname === "/api/listing"' in worker_js and "reply_to" in worker_js, "listing mail should use the same Resend secrets and a reply address")
 check('pathname === "/api/list-restaurant"' in worker_js, "full restaurant form should post to its own endpoint")
 check("run_worker_first" in wrangler and '"main": "worker.js"' in wrangler, "api subscribe should be served by the worker")

@@ -18,18 +18,26 @@
  * email. On eatingindestin, GOOGLE_SHEETS_WEBHOOK_TOKEN writes site Destin
  * and optional GOOGLE_SHEETS_WEBHOOK_TOKEN_30A writes site 30A. A missing
  * token or a sheet error does not fail the magic link.
+ * The same checked boxes subscribe that email in Zoho Campaigns when the
+ * OAuth secrets and list key are set. Destin uses ZOHO_LIST_KEY_DESTIN.
+ * 30A uses ZOHO_LIST_KEY_30A. A missing secret or a Zoho error does not
+ * fail the magic link.
  *
  * Signed-in My places opt-in uses the same fields and the same sheet helpers.
  * POST /api/account/coupons reads the email from the session and appends one
  * row per checked box. sourcePage is the My places URL. This path does not
  * send a Resend coupon email. A missing token or a sheet error still returns
- * success. A signed-out request is refused and writes nothing.
+ * success. The same boxes subscribe the Destin and 30A Zoho lists when those
+ * secrets are set. A Zoho miss still returns success. A signed-out request
+ * is refused and writes nothing.
  *
  * PUT /api/account/saves forwards note when the body includes it.
  * A note can be updated on a save that already exists on the other guide.
  * That call omits saved, so it cannot create a new save there.
  * Saving a place still has to happen on its own guide.
  */
+
+import { subscribeZohoLists, ZOHO_SOURCE_ACCOUNT } from "./zoho.js";
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SESSION = "ea_session";
@@ -159,12 +167,21 @@ async function postCouponRow(env, email, site, token, fetchImpl, sourcePage = SI
 
 async function recordCouponRows(env, email, body, fetchImpl, sourcePage = SIGN_IN_SOURCE) {
   const choice = couponChoice(body);
-  if (choice.couponsDestin) {
-    await postCouponRow(env, email, "Destin", env && env.GOOGLE_SHEETS_WEBHOOK_TOKEN, fetchImpl, sourcePage);
-  }
-  if (choice.coupons30a) {
-    await postCouponRow(env, email, "30A", env && env.GOOGLE_SHEETS_WEBHOOK_TOKEN_30A, fetchImpl, sourcePage);
-  }
+  const lists = [];
+  if (choice.couponsDestin) lists.push("destin");
+  if (choice.coupons30a) lists.push("30a");
+  const sheets = (async () => {
+    if (choice.couponsDestin) {
+      await postCouponRow(env, email, "Destin", env && env.GOOGLE_SHEETS_WEBHOOK_TOKEN, fetchImpl, sourcePage);
+    }
+    if (choice.coupons30a) {
+      await postCouponRow(env, email, "30A", env && env.GOOGLE_SHEETS_WEBHOOK_TOKEN_30A, fetchImpl, sourcePage);
+    }
+  })();
+  await Promise.all([
+    sheets,
+    subscribeZohoLists(env, email, lists, ZOHO_SOURCE_ACCOUNT, fetchImpl),
+  ]);
 }
 
 async function readBody(request) {

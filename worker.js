@@ -1,5 +1,6 @@
 import listingOptions from "./data/listing-options.json" with { type: "json" };
 import { handleAccount } from "./account-api.js";
+import { subscribeZohoLists, ZOHO_SOURCE_SUBSCRIBE } from "./zoho.js";
 
 /**
  * Static assets are served by the assets binding.
@@ -11,14 +12,18 @@ import { handleAccount } from "./account-api.js";
  * RESEND_API_KEY, SUBSCRIBE_FROM (a verified Resend sender), CONTACT_EMAIL.
  * A coupon signup is also appended through an Apps Script webhook when
  * GOOGLE_SHEETS_WEBHOOK_URL and GOOGLE_SHEETS_WEBHOOK_TOKEN are set.
+ * The same signup is added to the Destin Zoho Campaigns list when
+ * ZOHO_CLIENT_ID, ZOHO_CLIENT_SECRET, ZOHO_REFRESH_TOKEN, and
+ * ZOHO_LIST_KEY_DESTIN are set. That call runs beside the sheet webhook.
+ * A missing Zoho secret or a Zoho error does not change the response.
  * `delivered` is the Resend result and `recorded` is the sheet result.
  * The sheet is recorded only when the webhook returns JSON with `ok: true`.
  * An HTTP 200 HTML error, other non-JSON body, or `{ok:false}` is not a
  * recording. A sheet miss leaves a Resend success as a success.
- * Listing requests are not written to the sheet.
+ * Listing requests are not written to the sheet or to Zoho.
  *
  * Spam: a filled honeypot is answered with the normal success response and is
- * not emailed or recorded. Subscribe and the short listing form treat
+ * not emailed, recorded, or added to Zoho. Subscribe and the short listing form treat
  * `company`, `hp_field`, and `website` as the honeypot. The full restaurant
  * form treats `company` and `hp_field` only, because `website` is the
  * restaurant site. Bodies over 16 KB are rejected, except the full restaurant
@@ -139,7 +144,10 @@ export async function deliverSubscribe(payload, env, fetchImpl = fetch) {
     fetchImpl,
     "The signup could not be sent.",
   );
-  const sheet = await postSheets(payload, env, fetchImpl);
+  const [sheet] = await Promise.all([
+    postSheets(payload, env, fetchImpl),
+    subscribeZohoLists(env, payload.email, ["destin"], ZOHO_SOURCE_SUBSCRIBE, fetchImpl),
+  ]);
   return { ...mailed, recorded: sheet.recorded };
 }
 
