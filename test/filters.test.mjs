@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { FEATURED_ROTATE_MS, describeFilters, featuredIndex, featuredStatusForStep, filtersAreBlank, filtersFromParams, framePins, inGuideFrame, mapListCard, markerPopup, matches, monogram, shouldAutoRotateFeatured, spreadOverlaps, stepFeatured, viewHref } from "../site.js";
+import { FEATURED_ROTATE_MS, GALLERY_WINDOW, describeFilters, featuredIndex, featuredStatusForStep, filtersAreBlank, filtersFromParams, framePins, galleryCountLabel, galleryStart, inGuideFrame, mapListCard, markerPopup, matches, monogram, shouldAutoRotateFeatured, spreadOverlaps, stepFeatured, viewHref } from "../site.js";
 
 const restaurants = JSON.parse(readFileSync(new URL("../data/restaurants.json", import.meta.url), "utf8"));
 
@@ -201,6 +201,27 @@ test("featured auto-rotate waits eight seconds unless someone is using the cover
   assert.equal(shouldAutoRotateFeatured({ ...running, count: 1 }), false);
   assert.equal(shouldAutoRotateFeatured({ ...running, count: 0 }), false);
   assert.equal(shouldAutoRotateFeatured(), false);
+});
+
+test("listing gallery steps one photo and stops at the ends", () => {
+  assert.equal(GALLERY_WINDOW, 4);
+  assert.equal(galleryStart(0, 0, 9), 0);
+  assert.equal(galleryStart(0, -1, 9), 0);
+  assert.equal(galleryStart(0, 1, 9), 1);
+  assert.equal(galleryStart(4, 1, 9), 5);
+  assert.equal(galleryStart(5, 1, 9), 5);
+  assert.equal(galleryStart(5, -1, 9), 4);
+  assert.equal(galleryStart(0, 1, 4), 0);
+  assert.equal(galleryStart(0, 1, 3), 0);
+  assert.equal(galleryStart(0, -1, 1), 0);
+  assert.equal(galleryStart(2, 1, 0), 0);
+  assert.equal(galleryCountLabel(4, 9), "4 of 9 photos");
+  assert.equal(galleryCountLabel(5, 9), "5 of 9 photos");
+  assert.equal(galleryCountLabel(9, 9), "9 of 9 photos");
+  assert.equal(galleryCountLabel(4, 4), "4 of 4 photos");
+  assert.equal(galleryCountLabel(3, 3), "3 of 3 photos");
+  assert.equal(galleryCountLabel(2, 2), "2 of 2 photos");
+  assert.equal(galleryCountLabel(1, 1), "1 of 1 photo");
 });
 
 test("featured status is announced only for a user step", () => {

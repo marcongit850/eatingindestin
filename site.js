@@ -175,6 +175,30 @@ export function shouldAutoRotateFeatured({
   return (Number(count) || 0) > 1;
 }
 
+/** Photos visible at once in the listing gallery. */
+export const GALLERY_WINDOW = 4;
+
+/**
+ * Step the listing gallery by one photo and stop at either end.
+ * `start` is the index of the first photo in the 2×2 window.
+ */
+export function galleryStart(start, delta, total, size = GALLERY_WINDOW) {
+  const count = Math.max(0, Math.trunc(Number(total)) || 0);
+  const windowSize = Math.max(1, Math.trunc(Number(size)) || GALLERY_WINDOW);
+  const maxStart = Math.max(0, count - windowSize);
+  const current = Math.min(Math.max(0, Math.trunc(Number(start)) || 0), maxStart);
+  const move = Math.trunc(Number(delta)) || 0;
+  return Math.min(Math.max(0, current + move), maxStart);
+}
+
+/** Counter under the gallery. `end` is the last photo number currently in view. */
+export function galleryCountLabel(end, total) {
+  const count = Math.max(0, Math.trunc(Number(total)) || 0);
+  const shown = Math.min(count, Math.max(0, Math.trunc(Number(end)) || 0));
+  const noun = count === 1 ? "photo" : "photos";
+  return `${shown} of ${count} ${noun}`;
+}
+
 /** Live-region text for a featured step. Null leaves the region untouched. */
 export function featuredStatusForStep(name, index, count, { announce = false } = {}) {
   if (!announce) return null;
@@ -567,8 +591,66 @@ function bootFeatured() {
   syncTimer();
 }
 
+function bootGallery() {
+  const galleries = document.querySelectorAll(".profile-gallery");
+  galleries.forEach((root) => {
+    if (root.dataset.galleryBound === "true") return;
+    const cells = [...root.querySelectorAll(".profile-gallery-cell")];
+    const total = cells.length;
+    if (total <= GALLERY_WINDOW) return;
+    const prev = root.querySelector('[data-gallery-step="-1"]');
+    const next = root.querySelector('[data-gallery-step="1"]');
+    const count = root.querySelector(".profile-gallery-count");
+    if (!prev || !next || !count) return;
+    root.dataset.galleryBound = "true";
+    let start = 0;
+
+    const render = () => {
+      start = galleryStart(start, 0, total);
+      const end = Math.min(total, start + GALLERY_WINDOW);
+      cells.forEach((cell, index) => {
+        cell.hidden = index < start || index >= end;
+      });
+      const label = galleryCountLabel(end, total);
+      if (count.textContent !== label) count.textContent = label;
+      prev.disabled = start <= 0;
+      next.disabled = start >= total - GALLERY_WINDOW;
+      prev.hidden = false;
+      next.hidden = false;
+      root.classList.add("is-paged");
+    };
+
+    const step = (delta) => {
+      const nextStart = galleryStart(start, delta, total);
+      if (nextStart === start) return;
+      start = nextStart;
+      render();
+    };
+
+    root.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const button = target.closest("[data-gallery-step]");
+      if (!button || !root.contains(button) || button.disabled) return;
+      step(Number(button.getAttribute("data-gallery-step")));
+    });
+
+    root.addEventListener("keydown", (event) => {
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      const target = event.target;
+      if (!(target instanceof Element) || !target.closest(".profile-gallery-arrow")) return;
+      event.preventDefault();
+      step(event.key === "ArrowLeft" ? -1 : 1);
+    });
+
+    render();
+  });
+}
+
 function boot() {
   bootFeatured();
+  bootGallery();
   if (document.querySelector("#cards") && document.querySelector("#filters")) bootDirectory();
   if (document.querySelector("#map")) bootMap();
   if (document.querySelector("#detail-map")) bootDetailMap();
