@@ -893,20 +893,23 @@ button:hover, .button:hover { background: #1a3c38; color: #f7f2ea; }
 .logo { width: 72px; height: 72px; object-fit: contain; margin: 0 0 0.8rem; background: transparent; border: 0; }
 .more { padding-bottom: 3.5rem; }
 .more h2 { margin-bottom: 0.4rem; }
-.profile-claim {
-  margin: 1.5rem 0 0;
-  font-size: 0.82rem;
+.listing-claim {
+  margin: 1.75rem 0 0;
+  font-size: 0.92rem;
   font-weight: 300;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 1.15rem;
+  line-height: 1.4;
 }
-.profile-claim a {
+.listing-claim a {
   color: var(--muted);
   text-decoration: none;
   border-bottom: 1px solid var(--line);
+  padding-bottom: 0.05rem;
 }
-.profile-claim a:hover { color: var(--ink); }
+.listing-claim a:hover,
+.listing-claim a:focus-visible {
+  color: var(--ink);
+  border-bottom-color: var(--coral);
+}
 .profile-map { padding-bottom: 2.2rem; }
 #detail-map, #map {
   height: 380px;
@@ -1624,7 +1627,6 @@ html.js-filter #cards .card { display: none; }
   color: #f7f2ea;
   text-shadow: 0 1px 2px rgba(16, 40, 37, 0.55);
 }
-.more .card-grid { margin-top: 1rem; }
 .save-note {
   flex-basis: 100%;
   margin: 0;

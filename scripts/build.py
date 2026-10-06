@@ -2011,7 +2011,14 @@ def build_detail(restaurant: dict, restaurants: list[dict]) -> None:
         for other in restaurants
         if other["areaSlug"] == restaurant["areaSlug"] and other["slug"] != restaurant["slug"]
     ][:4]
-    nearby_html = "".join(card(other, "h3") for other in nearby)
+    nearby_html = "".join(
+        (
+            f'<a class="map-hit" href="/restaurants/{e(other["slug"])}/">'
+            f'<strong>{e(other["name"])}</strong>'
+            f'<span>{e(other["price"])}</span></a>'
+        )
+        for other in nearby
+    )
     map_html = ""
     if restaurant["lat"] is not None and restaurant["lng"] is not None:
         map_html = (
@@ -2029,23 +2036,18 @@ def build_detail(restaurant: dict, restaurants: list[dict]) -> None:
     category_bit = f' · {e(restaurant["category"])}' if restaurant["category"] else ""
     map_block = f'<div class="wrap profile-map">{map_html}</div>' if map_html else ""
     claim_link = (
-        '<p class="profile-claim">'
+        '<p class="listing-claim">'
         f'<a href="{e(list_update_href(restaurant["name"], restaurant["slug"]))}">Update this listing</a>'
+        ' <span aria-hidden="true">/</span> '
         f'<a href="{LISTING_PAGE}">List your restaurant</a>'
         "</p>"
     )
-    if nearby_html:
-        more = (
-            f'<section class="wrap more"><h2>Also in {e(restaurant["area"])}</h2>'
-            f'<div class="card-grid">{nearby_html}</div>'
-            f'<p><a class="text-link" href="{e(area_page)}">Restaurants in {e(restaurant["area"])}</a></p>'
-            f"{claim_link}</section>"
-        )
-    else:
-        more = (
-            f'<section class="wrap more"><p><a class="text-link" href="{e(area_page)}">Restaurants in {e(restaurant["area"])}</a></p>'
-            f"{claim_link}</section>"
-        )
+    more = (
+        f'<section class="wrap more"><h2>Also in {e(restaurant["area"])}</h2>'
+        f'<div class="map-list">{nearby_html}</div>'
+        f'<p><a class="text-link" href="{e(area_page)}">All restaurants in {e(restaurant["area"])}</a></p>'
+        f"{claim_link}</section>"
+    )
     profile_crumbs = [
         ("Home", "/"),
         ("Restaurants", "/restaurants/"),

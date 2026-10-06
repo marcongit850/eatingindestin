@@ -217,9 +217,12 @@ for restaurant in restaurants:
     check("maps.googleapis" not in page and "airtable" not in page.lower(), f"detail page calls a paid API {restaurant['slug']}")
     update = build.e(build.list_update_href(restaurant["name"], restaurant["slug"]))
     check(
-        f'class="profile-claim"><a href="{update}">Update this listing</a>' in page,
+        f'class="listing-claim"><a href="{update}">Update this listing</a> <span aria-hidden="true">/</span> <a href="{build.LISTING_PAGE}">List your restaurant</a>' in page,
         f"detail page missing update link {restaurant['slug']}",
     )
+    check('class="card-grid"' not in page and 'class="card card-place"' not in page, f"nearby should be text links {restaurant['slug']}")
+    check(f'>All restaurants in {build.e(restaurant["area"])}</a>' in page, f"area link missing {restaurant['slug']}")
+    check('class="map-list"' in page, f"nearby list missing {restaurant['slug']}")
     check(
         'href="/list-your-restaurant/">List your restaurant</a>' in page,
         f"detail page missing list link {restaurant['slug']}",
@@ -416,7 +419,7 @@ check(
     'queryValue(params, "restaurant", 160)' in listing_js and 'queryValue(params, "subject", 4000)' in listing_js,
     "listing script should read restaurant and subject from the query string",
 )
-check('class="profile-claim"' not in directory, "directory cards should not repeat the claim link")
+check('class="listing-claim"' not in directory and 'class="profile-claim"' not in directory, "directory cards should not repeat the claim link")
 check("Marc" not in listing_js and "Thanks. We have your note." in listing_js, "listing script should thank without a personal name")
 check(".listing-form" in styles and ".listing-status" in styles, "listing form should use the site styles")
 check("See the restaurants" in about and "Open the directory" not in about, "about button should invite visitors in")
