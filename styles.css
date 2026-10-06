@@ -1437,10 +1437,6 @@ html.js-filter #cards .card { display: none; }
   display: grid;
   gap: 0.45rem;
 }
-.listing-hours {
-  display: grid;
-  gap: 0.9rem 1.25rem;
-}
 .listing-form fieldset.listing-checks {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
@@ -1515,9 +1511,6 @@ html.js-filter #cards .card { display: none; }
   text-transform: uppercase;
 }
 .listing-file-names button:hover { background: transparent; color: var(--coral-deep); }
-@media (min-width: 720px) {
-  .listing-hours { grid-template-columns: 1fr 1fr; }
-}
 
 .save-bar {
   display: flex;

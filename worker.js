@@ -411,13 +411,8 @@ export function parseListRestaurant(body) {
   if (price && !listingOptions.prices.includes(price)) return { error: "Choose a price range." };
   const description = plain(body.description, 800);
   if (description.tooLong) return { error: "Keep the description under 800 characters." };
-  const hours = {};
-  for (const day of listingOptions.days) {
-    const raw = String(body[day.name] || "").trim();
-    const text = oneLine(body[day.name], 80);
-    if (raw && !text) return { error: `Keep ${day.label} hours under 80 characters.` };
-    hours[day.name] = text;
-  }
+  const hours = plain(body.hours, 1000);
+  if (hours.tooLong) return { error: "Keep the hours under 1,000 characters." };
   const seasonal = plain(body.seasonal, 300);
   if (seasonal.tooLong) return { error: "Keep the seasonal note under 300 characters." };
   const cuisines = choiceList(body.cuisines, listingOptions.cuisines, 0, "", "Choose cuisine types from the list.");
@@ -462,7 +457,7 @@ export function parseListRestaurant(body) {
       website: website.value,
       price,
       description: description.text,
-      hours,
+      hours: hours.text,
       seasonal: seasonal.text,
       cuisines: cuisines.value,
       meals: meals.value,
@@ -477,7 +472,6 @@ export function parseListRestaurant(body) {
 
 export async function deliverListRestaurant(payload, env, fetchImpl = fetch) {
   const intentLabel = payload.intent === "new" ? "New listing" : payload.intent === "update" ? "Update an existing listing" : "Not provided";
-  const hourLines = listingOptions.days.map((day) => `${day.label}: ${showValue(payload.hours[day.name])}`);
   const amenityLines = listingOptions.amenities.map((item) => `${item.label}: ${yesNoLabel(payload.amenities[item.name])}`);
   const musicNote = listingOptions.amenities.find((item) => item.name === "music");
   const imageNames = Array.isArray(payload.images) ? payload.images.map((image) => image.filename).filter(Boolean) : [];
@@ -504,7 +498,7 @@ export async function deliverListRestaurant(payload, env, fetchImpl = fetch) {
     showValue(payload.description),
     "",
     "Hours",
-    ...hourLines,
+    showValue(payload.hours),
     `Seasonal note: ${showValue(payload.seasonal)}`,
     "",
     "What they serve",

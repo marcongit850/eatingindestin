@@ -132,15 +132,6 @@ LISTING_ROLES = (
 )
 LISTING_MEALS = ("Breakfast", "Brunch", "Lunch", "Dinner", "Late night")
 LISTING_PRICES = ("$", "$$", "$$$", "$$$$")
-LISTING_DAYS = (
-    ("mon", "Monday"),
-    ("tue", "Tuesday"),
-    ("wed", "Wednesday"),
-    ("thu", "Thursday"),
-    ("fri", "Friday"),
-    ("sat", "Saturday"),
-    ("sun", "Sunday"),
-)
 LISTING_AMENITIES = (
     ("outdoor", "Outdoor dining", ""),
     ("happyDrinks", "Happy hour (drinks)", ""),
@@ -2586,7 +2577,6 @@ def listing_options_payload(areas: list[dict], cuisines: list[str], foods: list[
         "amenities": [
             {"name": name, "label": label, "note": note} for name, label, note in LISTING_AMENITIES
         ],
-        "days": [{"name": name, "label": label} for name, label in LISTING_DAYS],
     }
 
 
@@ -2596,10 +2586,6 @@ def build_list_restaurant(areas: list[dict], cuisines: list[str], foods: list[st
     area_options = ['<option value="">Choose an area</option>']
     for area in areas:
         area_options.append(f'<option value="{e(area["slug"])}">{e(area["fullName"])}</option>')
-    hours = "".join(
-        listing_text(name, label, maxlength=80, placeholder="11am to 10pm, or Closed")
-        for name, label in LISTING_DAYS
-    )
     amenities = []
     for name, label, note in LISTING_AMENITIES:
         legend = e(label) + ("*" if note else "")
@@ -2661,8 +2647,10 @@ def build_list_restaurant(areas: list[dict], cuisines: list[str], foods: list[st
         + '<label><span>Short description / vibe</span>'
         + '<textarea name="description" maxlength="800" rows="4"></textarea></label>\n'
         "<h2>Hours</h2>\n"
-        '<p class="listing-note">Give the hours for each day, or write Closed.</p>\n'
-        f'<div class="listing-hours">{hours}</div>\n'
+        '<label><span>Hours</span>'
+        '<textarea name="hours" maxlength="1000" rows="4" '
+        'placeholder="11am to 10pm, or one line per day"></textarea></label>\n'
+        '<p class="listing-note">Write the hours the way they should appear on the listing.</p>\n'
         + listing_text("seasonal", "Seasonal note", maxlength=300, placeholder="Optional")
         + "\n"
         "<h2>What they serve</h2>\n"

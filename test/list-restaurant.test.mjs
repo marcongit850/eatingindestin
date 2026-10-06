@@ -39,13 +39,7 @@ function sample(overrides = {}) {
     kids: "yes",
     groups: "no",
     music: "yes",
-    mon: "11am to 10pm",
-    tue: "11am to 10pm",
-    wed: "11am to 10pm",
-    thu: "11am to 10pm",
-    fri: "11am to 11pm",
-    sat: "11am to 11pm",
-    sun: "Closed",
+    hours: "Monday: 11am to 10pm\nTuesday: 11am to 10pm\nWednesday: 11am to 10pm\nThursday: 11am to 10pm\nFriday: 11am to 11pm\nSaturday: 11am to 11pm\nSunday: Closed",
   };
   return { ...body, ...overrides };
 }
@@ -96,7 +90,9 @@ test("parseListRestaurant requires a name and email and lets every other field s
   assert.equal(parseListRestaurant(sample({ cuisines: ["Not a cuisine"] })).error, "Choose cuisine types from the list.");
   assert.deepEqual(parseListRestaurant(sample({ meals: [] })).value.meals, []);
   assert.equal(parseListRestaurant(sample({ meals: ["Desserts"] })).error, "Choose meals from the list.");
-  assert.equal(parseListRestaurant(sample({ mon: "" })).value.hours.mon, "");
+  assert.equal(parseListRestaurant(sample({ hours: "" })).value.hours, "");
+  assert.equal(parseListRestaurant(sample({ hours: "x".repeat(1001) })).error, "Keep the hours under 1,000 characters.");
+  assert.equal(parseListRestaurant(sample({ hours: "Mon to Sun, 11am to 10pm" })).value.hours, "Mon to Sun, 11am to 10pm");
   assert.equal(parseListRestaurant(sample({ music: "" })).value.amenities.music, "");
   assert.equal(parseListRestaurant(sample({ music: "maybe" })).error, "Choose yes or no for live music.");
   assert.equal(parseListRestaurant(sample({ authorized: false })).value.authorized, false);
@@ -212,7 +208,7 @@ test("a name and email are enough to send the listing email", async () => {
     "Phone: Not provided",
     "Price range: Not provided",
     "Short description / vibe:\nNot provided",
-    "Monday: Not provided",
+    "Hours\nNot provided",
     "Cuisine types: Not provided",
     "Meals: Not provided",
     "Outdoor dining: Not provided",
