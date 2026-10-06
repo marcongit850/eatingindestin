@@ -1,15 +1,6 @@
 (function () {
   var EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   var URL = /^https?:\/\/\S+$/i;
-  var DAYS = [
-    ["mon", "Monday"],
-    ["tue", "Tuesday"],
-    ["wed", "Wednesday"],
-    ["thu", "Thursday"],
-    ["fri", "Friday"],
-    ["sat", "Saturday"],
-    ["sun", "Sunday"],
-  ];
   var AMENITIES = [
     ["outdoor", "outdoor dining"],
     ["happyDrinks", "happy hour (drinks)"],
@@ -103,6 +94,7 @@
       website: text(form, "website"),
       price: radio(form, "price"),
       description: text(form, "description"),
+      hours: text(form, "hours"),
       seasonal: text(form, "seasonal"),
       cuisines: selected(form, "cuisines"),
       meals: selected(form, "meals"),
@@ -114,9 +106,6 @@
       authorized: Boolean(form.querySelector('input[name="authorized"]:checked')),
       company: (form.querySelector('[name="company"]') || { value: "" }).value,
     };
-    DAYS.forEach(function (day) {
-      body[day[0]] = text(form, day[0]);
-    });
     AMENITIES.forEach(function (item) {
       body[item[0]] = radio(form, item[0]);
     });
@@ -142,6 +131,7 @@
       return { message: "Choose a price range.", field: "price" };
     }
     if (body.description.length > 800) return { message: "Keep the description under 800 characters.", field: "description" };
+    if (body.hours.length > 1000) return { message: "Keep the hours under 1,000 characters.", field: "hours" };
     if (body.seasonal.length > 300) return { message: "Keep the seasonal note under 300 characters.", field: "seasonal" };
     for (var urlIndex = 0; urlIndex < URL_FIELDS.length; urlIndex += 1) {
       var value = body[URL_FIELDS[urlIndex][0]];

@@ -368,6 +368,17 @@ check(
     "listing form page should title listing and updates and have a canonical URL",
 )
 check('action="/api/list-restaurant"' in listing_page and "data-list-restaurant" in listing_page, "listing form should post to the restaurant endpoint")
+check(
+    '<textarea name="hours" maxlength="1000"' in listing_main
+    and 'name="mon"' not in listing_main
+    and 'name="tue"' not in listing_main
+    and 'name="sun"' not in listing_main,
+    "listing form should collect hours in one text box",
+)
+check(
+    "Write the hours the way they should appear on the listing." in listing_main,
+    "listing form should explain the hours box",
+)
 check('src="/list-restaurant.js"' in listing_page, "listing form page should load its script")
 check(
     'class="hp"' in listing_page and 'name="company"' in listing_page and 'tabindex="-1"' in listing_page,
@@ -393,6 +404,10 @@ list_js = (ROOT / "list-restaurant.js").read_text(encoding="utf-8")
 check(
     "/api/list-restaurant" in list_js and 'querySelector(\'[name="company"]\')' in list_js,
     "listing form script should post the honeypot with the full form",
+)
+check(
+    'hours: text(form, "hours")' in list_js and '["mon"' not in list_js,
+    "listing form script should send the hours text box",
 )
 check("Thanks!  We will review and get back to you shortly." in list_js, "listing form script should thank the restaurant")
 social = listing_main.split("<h2>Social and media</h2>", 1)[-1].split("<h2>Anything else</h2>", 1)[0]
