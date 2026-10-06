@@ -13,6 +13,8 @@
   // Shared accounts live on the eating-accounts Worker in the eatingon30A repo.
   // Change ACCOUNTS_ORIGIN if that workers.dev hostname differs. Set the same
   // ACCOUNTS_SHARED_SECRET with wrangler secret put. Do not put the secret here.
+  // Listing edits and photos use that same Worker: D1 database eating-accounts
+  // and R2 bucket eating-listings. Do not add a Destin database or photo bucket.
   "vars": {
     "ACCOUNT_SITE": "destin",
     "ACCOUNTS_ORIGIN": "https://eating-accounts.352marc.workers.dev"

@@ -1,5 +1,7 @@
 import listingOptions from "./data/listing-options.json" with { type: "json" };
 import { handleAccount } from "./account-api.js";
+import { handleAdmin } from "./admin-api.js";
+import { servePublic } from "./public-site.js";
 import { subscribeZohoLists, ZOHO_SOURCE_SUBSCRIBE } from "./zoho.js";
 
 /**
@@ -31,6 +33,12 @@ import { subscribeZohoLists, ZOHO_SOURCE_SUBSCRIBE } from "./zoho.js";
  * PNG, and WebP images, up to 2 MB each and 6 MB together. Those files are
  * attached to the listing email and are not saved on the site. Each
  * Cloudflare IP may POST five times a minute across the forms.
+ *
+ * /api/admin and /media/photos talk to the shared eating-accounts Worker.
+ * Listing rows stay in that Worker's database. Photos stay in the shared
+ * eating-listings bucket. This Worker does not bind its own database or bucket.
+ * A draft or deleted row is removed from the public HTML, map JSON, sitemap,
+ * and llms files. With no admin rows, the built files are returned unchanged.
  */
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -759,6 +767,14 @@ export async function handleListRestaurant(request, env, fetchImpl = fetch) {
   return html ? thanksPage("Thanks!  We will review and get back to you shortly.", 200) : json(result, 200);
 }
 
+function withAdminRobots(url, response) {
+  const admin = url.pathname === "/admin" || url.pathname.startsWith("/admin/");
+  if (!admin) return response;
+  const headers = new Headers(response.headers);
+  if (!headers.has("x-robots-tag")) headers.set("x-robots-tag", "noindex");
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -776,6 +792,9 @@ export default {
     if (url.pathname === "/api/listing") return handleListing(request, env);
     if (url.pathname === "/api/list-restaurant") return handleListRestaurant(request, env);
     if (url.pathname.startsWith("/api/account/")) return handleAccount(request, env);
-    return env.ASSETS.fetch(request);
+    if (url.pathname.startsWith("/api/admin/") || url.pathname.startsWith("/media/photos/")) {
+      return handleAdmin(request, env);
+    }
+    return withAdminRobots(url, await servePublic(request, await env.ASSETS.fetch(request), env));
   },
 };
