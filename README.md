@@ -136,7 +136,7 @@ After that Worker accepts the magic link, each checked box appends one coupon ro
 
 If the sheet request fails, sign-in still succeeds. If `GOOGLE_SHEETS_WEBHOOK_TOKEN_30A` is missing, the 30A row is skipped and the magic link is unchanged. The same is true when `GOOGLE_SHEETS_WEBHOOK_URL` or the Destin token is missing.
 
-A signed-in visitor can opt in later on `/my-places/`. The page keeps a Coupons and updates disclosure closed until they open it. It is a section on the page, and the coupon signup popup does not open there. Both checkboxes stay off until checked:
+A signed-in visitor can opt in later on `/my-places/`. The page keeps a Coupons and updates disclosure closed until they open it. It is a section on the page, and the coupon signup popup does not open there. The same popup stays closed on every page when `/api/account/me` reports a user. A signed-out visitor still sees it after 30 seconds. Both checkboxes stay off until checked:
 
 - Email me coupons and updates from Eating on 30A.
 - Email me coupons and updates from Eating in Destin.
