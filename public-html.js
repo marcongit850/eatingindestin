@@ -429,7 +429,7 @@ export function renderProfile(listing, nearby = []) {
     ["Also", socials.join(" · ")],
   ].filter(([, value]) => value).map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${value}</dd></div>`).join("");
   const also = nearby.filter((item) => item.slug !== listing.slug && item.areaSlug === listing.areaSlug).slice(0, 4);
-  const alsoHtml = also.map((item) => renderCard(item, "h3")).join("");
+  const alsoHtml = also.map((item) => `<a class="map-hit" href="/restaurants/${escapeHtml(item.slug)}/"><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml(item.price || "")}</span></a>`).join("");
   const image = listing.photos && listing.photos[0] ? listing.photos[0].src : "";
   const title = `${listing.name} in ${listing.area} | Eating in Destin`;
   const description = snippet(`${listing.name} in ${listing.area}, Destin and Miramar Beach, Florida. ${listing.notes || "Hours, the address, and a map are on this page."}`.trim(), 160);
@@ -443,10 +443,8 @@ export function renderProfile(listing, nearby = []) {
   const map = listing.lat != null && listing.lng != null
     ? `<div class="wrap profile-map"><div id="detail-map" data-lat="${listing.lat}" data-lng="${listing.lng}" data-name="${escapeHtml(listing.name)}" data-slug="${escapeHtml(listing.slug)}" data-area="${escapeHtml(listing.area)}" data-address="${escapeHtml(listing.address)}" data-image="${escapeHtml(image)}" role="region" aria-label="Map"></div><link rel="stylesheet" href="/vendor/leaflet/leaflet.css"><script src="/vendor/leaflet/leaflet.js"></script></div>`
     : "";
-  const claim = `<p class="profile-claim"><a href="${escapeHtml(listUpdateHref(listing))}">Update this listing</a><a href="/list-your-restaurant/">List your restaurant</a></p>`;
-  const more = alsoHtml
-    ? `<section class="wrap more"><h2>Also in ${escapeHtml(listing.area)}</h2><div class="card-grid">${alsoHtml}</div><p><a class="text-link" href="${escapeHtml(areaPage)}">Restaurants in ${escapeHtml(listing.area)}</a></p>${claim}</section>`
-    : `<section class="wrap more"><p><a class="text-link" href="${escapeHtml(areaPage)}">Restaurants in ${escapeHtml(listing.area)}</a></p>${claim}</section>`;
+  const claim = `<p class="listing-claim"><a href="${escapeHtml(listUpdateHref(listing))}">Update this listing</a> <span aria-hidden="true">/</span> <a href="/list-your-restaurant/">List your restaurant</a></p>`;
+  const more = `<section class="wrap more"><h2>Also in ${escapeHtml(listing.area)}</h2><div class="map-list">${alsoHtml}</div><p><a class="text-link" href="${escapeHtml(areaPage)}">All restaurants in ${escapeHtml(listing.area)}</a></p>${claim}</section>`;
   const story = paragraphs(listing.notes) || `<p>${escapeHtml(listing.name)} is in ${escapeHtml(listing.area)}.</p>`;
   const music = listing.music ? `<p class="music-note">${escapeHtml(MUSIC_NOTE)}</p>` : "";
   return `<!DOCTYPE html>
