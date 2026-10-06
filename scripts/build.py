@@ -338,7 +338,7 @@ def local_listing_photo(slug: str) -> str | None:
 
 
 def listing_photos(slug: str) -> list[str]:
-    """Photos for one listing. 01 is the cover; later frames are extras on the profile."""
+    """Photos for one listing, in frame order. 01 is the cover; the rest follow it in the gallery."""
     folder = PHOTO_DIR / slug
     found: list[str] = []
     if folder.is_dir():
@@ -708,15 +708,66 @@ def placeholder(tone: str, label: str, name: str = "", hidden: bool = False) -> 
     )
 
 
-def filmstrip(restaurant: dict) -> str:
-    extras = (restaurant.get("photos") or [])[1:]
-    if not extras:
-        return ""
-    frames = "".join(
-        f'<img src="{e(src)}" alt="{e(photo_alt(restaurant))}" loading="lazy">'
-        for src in extras
+GALLERY_WINDOW = 4
+
+
+def gallery_count_label(end: int, total: int) -> str:
+    """Counter under the 2×2 window. `end` is the last photo number currently in view."""
+    count = max(0, int(total))
+    shown = min(count, max(0, int(end)))
+    noun = "photo" if count == 1 else "photos"
+    return f"{shown} of {count} {noun}"
+
+
+def gallery_arrow(step: int) -> str:
+    """Chevron beside the grid. Hidden until the page script binds paging."""
+    label = "Previous photos" if step < 0 else "Next photos"
+    path = "M14.5 5.5 8 12l6.5 6.5" if step < 0 else "M9.5 5.5 16 12l-6.5 6.5"
+    return (
+        f'<button type="button" class="profile-gallery-arrow" data-gallery-step="{step}" '
+        f'aria-label="{label}" hidden>'
+        '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">'
+        f'<path d="{path}" fill="none" stroke="currentColor" stroke-width="1.75" '
+        'stroke-linecap="round" stroke-linejoin="round"></path></svg></button>'
     )
-    return f'<div class="profile-film" data-count="{len(extras)}">{frames}</div>'
+
+
+def profile_gallery(restaurant: dict) -> str:
+    """2×2 photo window for a restaurant page. Area pages and guides keep the hero."""
+    photos = list(restaurant.get("photos") or [])
+    hero = restaurant.get("heroImage")
+    if hero and hero not in photos:
+        photos.insert(0, hero)
+    if not photos:
+        return (
+            '<div class="profile-hero">'
+            f'{media_block(None, photo_alt(restaurant), restaurant["tone"], shot_label(restaurant), name=restaurant["name"])}'
+            "</div>"
+        )
+    alt = photo_alt(restaurant)
+    total = len(photos)
+    cells = []
+    for index, src in enumerate(photos):
+        hidden = " hidden" if index >= GALLERY_WINDOW else ""
+        loading = "eager" if index < GALLERY_WINDOW else "lazy"
+        cells.append(
+            f'<div class="profile-gallery-cell"{hidden}>'
+            f'<img src="{e(src)}" alt="{e(alt)}" loading="{loading}">'
+            "</div>"
+        )
+    prev_arrow = gallery_arrow(-1) if total > GALLERY_WINDOW else ""
+    next_arrow = gallery_arrow(1) if total > GALLERY_WINDOW else ""
+    count = gallery_count_label(min(GALLERY_WINDOW, total), total)
+    return (
+        f'<section class="profile-gallery" data-total="{total}" aria-label="Photos">'
+        '<div class="profile-gallery-frame">'
+        f"{prev_arrow}"
+        f'<div class="profile-gallery-grid" data-count="{total}">{"".join(cells)}</div>'
+        f"{next_arrow}"
+        "</div>"
+        f'<p class="profile-gallery-count" aria-live="polite">{count}</p>'
+        "</section>"
+    )
 
 
 def media_block(image: str | None, alt: str, tone: str, label: str, eager: bool = False, name: str = "") -> str:
@@ -1962,8 +2013,7 @@ def build_detail(restaurant: dict, restaurants: list[dict]) -> None:
     ]
     body = (
         '<article class="profile">'
-        f'<div class="profile-hero">{media_block(restaurant["heroImage"], photo_alt(restaurant), restaurant["tone"], shot_label(restaurant), eager=True, name=restaurant["name"])}</div>'
-        f"{filmstrip(restaurant)}"
+        f"{profile_gallery(restaurant)}"
         '<div class="wrap profile-head">'
         f"{crumb_nav(profile_crumbs)}"
         f'<p class="eyebrow"><a href="{e(area_href)}">{e(area_line)}</a>{price_bit}{category_bit}</p>'

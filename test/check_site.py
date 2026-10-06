@@ -171,7 +171,48 @@ for restaurant in restaurants:
     check("h1-place" not in page, f"detail page should not add a place subtitle {restaurant['slug']}")
     check('aria-label="Related guides"' not in page, f"listing should not add a related-guides nav {restaurant['slug']}")
     check("Other locations" not in page, f"listing should not add an other-locations block {restaurant['slug']}")
-    check('class="profile"' in page and 'class="profile-hero"' in page, f"detail page left the shared profile template {restaurant['slug']}")
+    check('class="profile"' in page, f"detail page left the shared profile template {restaurant['slug']}")
+    listing_photos = build.listing_photos(restaurant["slug"])
+    if listing_photos:
+        check('class="profile-gallery"' in page, f"detail page should use the photo gallery {restaurant['slug']}")
+        check(
+            'class="profile-hero"' not in page and 'class="profile-film"' not in page,
+            f"detail page should retire the hero and film strip {restaurant['slug']}",
+        )
+        gallery = page.split('class="profile-gallery"', 1)[1].split('class="wrap profile-head"', 1)[0]
+        check(f'data-total="{len(listing_photos)}"' in gallery, f"gallery should count every photo {restaurant['slug']}")
+        visible_end = min(build.GALLERY_WINDOW, len(listing_photos))
+        check(
+            build.gallery_count_label(visible_end, len(listing_photos)) in gallery,
+            f"gallery counter {restaurant['slug']}",
+        )
+        positions = [gallery.index(src) for src in listing_photos]
+        check(positions == sorted(positions), f"gallery should keep photo order {restaurant['slug']}")
+        check(gallery.count("<img") == len(listing_photos), f"gallery should use the same photos {restaurant['slug']}")
+        if len(listing_photos) > build.GALLERY_WINDOW:
+            check(
+                'data-gallery-step="-1"' in gallery and 'data-gallery-step="1"' in gallery,
+                f"gallery arrows {restaurant['slug']}",
+            )
+            check(
+                gallery.count('class="profile-gallery-cell" hidden') == len(listing_photos) - build.GALLERY_WINDOW,
+                f"gallery should hide photos past the first four {restaurant['slug']}",
+            )
+        else:
+            check("data-gallery-step" not in gallery, f"gallery should hide arrows when every photo fits {restaurant['slug']}")
+            check(
+                'class="profile-gallery-cell" hidden' not in gallery,
+                f"gallery should show every photo when there are four or fewer {restaurant['slug']}",
+            )
+    else:
+        check(
+            'class="profile-hero"' in page and 'class="ph"' in page,
+            f"a listing without a photo should keep the monogram {restaurant['slug']}",
+        )
+        check(
+            'class="profile-gallery"' not in page and 'class="profile-film"' not in page,
+            f"a listing without a photo should not invent a gallery {restaurant['slug']}",
+        )
     check('class="video-tour"' not in page, f"video tour should stay off the listing page {restaurant['slug']}")
     check("maps.googleapis" not in page and "airtable" not in page.lower(), f"detail page calls a paid API {restaurant['slug']}")
     update = build.e(build.list_update_href(restaurant["name"], restaurant["slug"]))
@@ -564,11 +605,11 @@ if card:
     check("Breakfast" in tag and "Lunch" in tag and "Dinner" in tag, "Harbor Docks meal data")
 
 harbor_page = (ROOT / "restaurants" / "harbor-docks-destin-harbor" / "index.html").read_text(encoding="utf-8")
-harbor_hero = harbor_page.split('class="profile-hero"', 1)[1].split('class="profile-film"', 1)[0]
-check("/images/restaurants/harbor-docks-destin-harbor/01.jpg" in harbor_hero, "Harbor Docks hero should be the supplied cover")
+harbor_gallery = harbor_page.split('class="profile-gallery"', 1)[1].split('class="wrap profile-head"', 1)[0]
+check("/images/restaurants/harbor-docks-destin-harbor/01.jpg" in harbor_gallery, "Harbor Docks gallery should open with the supplied cover")
 check(
-    'class="profile-film"' in harbor_page and "/images/restaurants/harbor-docks-destin-harbor/02.jpg" in harbor_page,
-    "Harbor Docks profile should show the extra photos",
+    "/images/restaurants/harbor-docks-destin-harbor/02.jpg" in harbor_gallery and 'class="profile-film"' not in harbor_page,
+    "Harbor Docks gallery should show the extra photos without the film strip",
 )
 check('<ul class="chips">' in harbor_page and "Good for groups 12+" in harbor_page, "Harbor Docks should chip verified group dining")
 check("class=\"amenities\"" not in harbor_page, "listing amenities should stay in the existing chips")
@@ -576,20 +617,60 @@ check("Takes reservations" not in (ROOT / "restaurants" / "captain-dave-s-on-the
 sundries = (ROOT / "restaurants" / "sundries-general-market-sandestin" / "index.html").read_text(encoding="utf-8")
 sundries_hero = sundries.split('class="profile-hero"', 1)[1].split('class="wrap profile-head"', 1)[0]
 check('class="ph"' in sundries_hero and 'class="mono"' in sundries_hero, "a listing without a photo should keep the monogram")
-check("<img" not in sundries_hero and 'class="profile-film"' not in sundries, "Sundries General Market should stay a monogram")
+check("<img" not in sundries_hero and 'class="profile-film"' not in sundries and 'class="profile-gallery"' not in sundries, "Sundries General Market should stay a monogram")
 for slug, extras in (
     ("moo-la-la-ice-cream-and-desserts-sandestin", ("02.jpg", "03.jpg")),
+    ("cracker-barrel-destin-mid-destin", ("02.jpg",)),
+    ("boardwalk-fry-co-destin-harbor", ()),
 ):
     page = (ROOT / "restaurants" / slug / "index.html").read_text(encoding="utf-8")
-    hero = page.split('class="profile-hero"', 1)[1].split('class="wrap profile-head"', 1)[0]
-    check(f"/images/restaurants/{slug}/01.jpg" in hero, f"{slug} hero should be the supplied cover")
-    check(
-        re.search(r'<div class="ph"[^>]*\shidden>', hero) is not None,
-        f"{slug} monogram should stay a hidden fallback behind the photo",
-    )
-    check(hero.index("<img") < hero.index('class="ph"'), f"{slug} should show the photo ahead of the monogram")
+    gallery = page.split('class="profile-gallery"', 1)[1].split('class="wrap profile-head"', 1)[0]
+    check(f"/images/restaurants/{slug}/01.jpg" in gallery, f"{slug} gallery should open with the supplied cover")
+    check('class="ph"' not in gallery, f"{slug} gallery should show photos without a monogram placeholder")
+    check("data-gallery-step" not in gallery, f"{slug} should hide arrows when the photos fit")
     for extra in extras:
-        check(f"/images/restaurants/{slug}/{extra}" in page, f"{slug} profile should show {extra}")
+        check(f"/images/restaurants/{slug}/{extra}" in gallery, f"{slug} gallery should show {extra}")
+check(">3 of 3 photos<" in (ROOT / "restaurants" / "moo-la-la-ice-cream-and-desserts-sandestin" / "index.html").read_text(encoding="utf-8"), "three photos should count every frame")
+check(">2 of 2 photos<" in (ROOT / "restaurants" / "cracker-barrel-destin-mid-destin" / "index.html").read_text(encoding="utf-8"), "two photos should count every frame")
+check(">1 of 1 photo<" in (ROOT / "restaurants" / "boardwalk-fry-co-destin-harbor" / "index.html").read_text(encoding="utf-8"), "one photo should use the singular counter")
+
+def gallery_sample(urls: list[str]) -> dict:
+    return {
+        "name": "Harbor Dock",
+        "area": "Grayton Beach",
+        "tone": "seafood",
+        "foods": ["Seafood"],
+        "cuisines": ["Seafood"],
+        "photos": urls,
+        "heroImage": urls[0] if urls else None,
+    }
+
+nine = [f"/images/restaurants/example/{index:02d}.jpg" for index in range(1, 10)]
+paged = build.profile_gallery(gallery_sample(nine))
+check('data-total="9"' in paged and ">4 of 9 photos<" in paged, "five or more photos should open on a 2×2 window")
+check(paged.count("<img") == 9, "paged gallery should keep every photo in the page")
+check(paged.count('class="profile-gallery-cell" hidden') == 5, "only the first four photos are visible before paging")
+check(
+    'data-gallery-step="-1" aria-label="Previous photos" hidden' in paged
+    and 'data-gallery-step="1" aria-label="Next photos" hidden' in paged,
+    "paged gallery should label both arrows and hide them until the script binds them",
+)
+check(
+    paged.index('data-gallery-step="-1"') < paged.index("profile-gallery-grid") < paged.index('data-gallery-step="1"'),
+    "arrows sit on either side of the grid",
+)
+four = build.profile_gallery(gallery_sample(nine[:4]))
+check(">4 of 4 photos<" in four and "data-gallery-step" not in four and four.count("<img") == 4, "four photos fill the grid with no arrows")
+one = build.profile_gallery(gallery_sample(nine[:1]))
+check(">1 of 1 photo<" in one and 'data-count="1"' in one and "data-gallery-step" not in one, "a single photo should count as one photo")
+empty = build.profile_gallery(gallery_sample([]))
+check('class="profile-hero"' in empty and 'class="mono"' in empty and "<img" not in empty, "no photos should stay a monogram")
+check(build.GALLERY_WINDOW == 4, "the gallery window should stay four photos")
+check("galleryStart" in site_js and "galleryCountLabel" in site_js and "bootGallery" in site_js, "listing pages should page the photo gallery from site.js")
+check(".profile-gallery-grid" in styles and ".profile-gallery-count" in styles, "listing gallery should be styled")
+check("repeat(2, minmax(0, 1fr))" in styles.split(".profile-gallery-grid", 1)[1][:240], "listing gallery should stay a 2×2 grid")
+check('class="profile-gallery"' not in home and 'class="profile-gallery"' not in directory, "directory and homepage should not use the listing gallery")
+check('class="profile-gallery"' not in map_page, "map page should not use the listing gallery")
 check("static.wixstatic.com" not in home and "static.wixstatic.com" not in harbor_page, "Destin pages should not hotlink Wix photos")
 for area in areas:
     slug = area["slug"]
@@ -604,6 +685,7 @@ for area in areas:
     area_hero = area_page.split('class="profile-hero"', 1)[1].split('class="wrap page-intro"', 1)[0]
     check(f'src="/images/areas/{slug}.jpg"' in area_hero, f"{slug} area page should use its cover")
     check('class="ph"' not in area_hero, f"{slug} area page hero should not use a monogram")
+    check('class="profile-gallery"' not in area_page, f"{slug} area page should keep the single hero")
 
 shared_header = (ROOT / "includes" / "header.html").read_text(encoding="utf-8")
 shared_footer = (ROOT / "includes" / "footer.html").read_text(encoding="utf-8")
@@ -651,6 +733,7 @@ for guide in picks:
     check(re.search(r"\b\d+\s+restaurants\b", prose, re.I) is None, f"{guide['slug']} hard-codes a restaurant count")
     hero = page.split('class="profile-hero"', 1)[1].split('class="wrap page-intro"', 1)[0]
     check(f'src="{guide["teaser_image"]}"' in hero, f"{guide['slug']} hero should use its own cover")
+    check('class="profile-gallery"' not in page, f"{guide['slug']} should keep the single hero")
     check(f'src="{guide["teaser_image"]}"' in guide_index, f"{guide['slug']} hub card should use its cover")
     check((ROOT / guide["teaser_image"].lstrip("/")).is_file(), f"missing cover for {guide['slug']}")
     check(
