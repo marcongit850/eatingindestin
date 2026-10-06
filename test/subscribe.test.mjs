@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { ZOHO_LISTSUBSCRIBE_URL, ZOHO_TOKEN_URL } from "../zoho.js";
 import { CANONICAL_HOST, deliverSubscribe, handleSubscribe, parseSubscribe } from "../worker.js";
 
 const signup = { email: "guest@example.com", audience: "local", coupons: true };
@@ -13,6 +14,20 @@ const sheetsEnv = {
   GOOGLE_SHEETS_WEBHOOK_TOKEN: "sheet-token",
 };
 const bothEnv = { ...resendEnv, ...sheetsEnv };
+const zohoEnv = {
+  ZOHO_CLIENT_ID: "zoho-client",
+  ZOHO_CLIENT_SECRET: "zoho-secret",
+  ZOHO_REFRESH_TOKEN: "zoho-refresh",
+  ZOHO_LIST_KEY_DESTIN: "destin-list-key",
+  ZOHO_LIST_KEY_30A: "thirty-list-key",
+};
+
+function tokenResponse() {
+  return Promise.resolve(new Response(JSON.stringify({ access_token: "zoho-access", expires_in: 3600 }), {
+    status: 200,
+    headers: { "content-type": "application/json" },
+  }));
+}
 
 function okResponse() {
   return Promise.resolve(new Response(JSON.stringify({ ok: true }), {
@@ -388,4 +403,186 @@ test("the sixth signup from one IP in a minute is rate limited", async () => {
   });
   assert.equal(other.status, 200);
   assert.equal(calls, 12);
+});
+
+test("Zoho listsubscribe runs beside Resend and Sheets", async () => {
+  const calls = [];
+  const result = await deliverSubscribe(signup, { ...bothEnv, ...zohoEnv }, (url, init) => {
+    calls.push({ url: String(url), init });
+    if (String(url) === ZOHO_TOKEN_URL) return tokenResponse();
+    return okResponse();
+  });
+  assert.deepEqual(result, { ok: true, delivered: true, recorded: true });
+  assert.deepEqual(calls.map((call) => call.url.startsWith(ZOHO_LISTSUBSCRIBE_URL) ? ZOHO_LISTSUBSCRIBE_URL : call.url), [
+    "https://api.resend.com/emails",
+    sheetsEnv.GOOGLE_SHEETS_WEBHOOK_URL,
+    ZOHO_TOKEN_URL,
+    ZOHO_LISTSUBSCRIBE_URL,
+  ]);
+  assert.deepEqual(JSON.parse(calls[1].init.body), {
+    token: "sheet-token",
+    site: "Destin",
+    email: "guest@example.com",
+    audience: "local",
+    coupons: true,
+    sourcePage: `https://${CANONICAL_HOST}/`,
+  });
+  const mail = JSON.parse(calls[0].init.body);
+  assert.equal(mail.text.includes("zoho-secret"), false);
+  assert.equal(mail.text.includes("destin-list-key"), false);
+  const tokenBody = new URLSearchParams(calls[2].init.body);
+  assert.equal(calls[2].init.method, "POST");
+  assert.equal(calls[2].init.headers["content-type"], "application/x-www-form-urlencoded");
+  assert.equal(tokenBody.get("grant_type"), "refresh_token");
+  assert.equal(tokenBody.get("client_id"), "zoho-client");
+  assert.equal(tokenBody.get("client_secret"), "zoho-secret");
+  assert.equal(tokenBody.get("refresh_token"), "zoho-refresh");
+  const subscribed = new URL(calls[3].url);
+  assert.equal(subscribed.searchParams.get("resfmt"), "JSON");
+  assert.equal(subscribed.searchParams.get("listkey"), "destin-list-key");
+  assert.equal(subscribed.searchParams.get("contactinfo"), "{Contact Email:guest@example.com}");
+  assert.equal(subscribed.searchParams.get("source"), "eatingindestin-subscribe");
+  assert.equal(calls[3].init.method, "POST");
+  assert.equal(calls[3].init.headers.authorization, "Zoho-oauthtoken zoho-access");
+  assert.equal(calls.some((call) => call.url.includes("thirty-list-key")), false);
+});
+
+test("a guest signup with coupons unchecked still subscribes the Destin list", async () => {
+  const calls = [];
+  const result = await deliverSubscribe(
+    { email: "guest@example.com", audience: "", coupons: false },
+    zohoEnv,
+    (url, init) => {
+      calls.push({ url: String(url), init });
+      if (String(url) === ZOHO_TOKEN_URL) return tokenResponse();
+      return okResponse();
+    },
+  );
+  assert.deepEqual(result, { ok: true, delivered: false, recorded: false });
+  const subscribed = calls.find((call) => call.url.startsWith(ZOHO_LISTSUBSCRIBE_URL));
+  assert.equal(new URL(subscribed.url).searchParams.get("listkey"), "destin-list-key");
+  assert.equal(new URL(subscribed.url).searchParams.get("contactinfo"), "{Contact Email:guest@example.com}");
+  assert.equal(new URL(subscribed.url).searchParams.get("source"), "eatingindestin-subscribe");
+});
+
+test("Zoho credentials without a Destin list key skip the token refresh", async () => {
+  let called = false;
+  const result = await deliverSubscribe(signup, { ...zohoEnv, ZOHO_LIST_KEY_DESTIN: "" }, () => {
+    called = true;
+    return okResponse();
+  });
+  assert.equal(called, false);
+  assert.deepEqual(result, { ok: true, delivered: false, recorded: false });
+});
+
+test("a partial Zoho secret skips listsubscribe", async () => {
+  let called = false;
+  const result = await deliverSubscribe(signup, {
+    ZOHO_CLIENT_ID: "zoho-client",
+    ZOHO_REFRESH_TOKEN: "zoho-refresh",
+    ZOHO_LIST_KEY_DESTIN: "destin-list-key",
+  }, () => {
+    called = true;
+    return okResponse();
+  });
+  assert.equal(called, false);
+  assert.deepEqual(result, { ok: true, delivered: false, recorded: false });
+});
+
+test("a Zoho failure still reports Resend and Sheets", async () => {
+  const urls = [];
+  const result = await deliverSubscribe(signup, { ...bothEnv, ...zohoEnv }, (url) => {
+    const href = String(url);
+    urls.push(href);
+    if (href === ZOHO_TOKEN_URL) return Promise.resolve(new Response("no", { status: 401 }));
+    if (href.startsWith(ZOHO_LISTSUBSCRIBE_URL)) return Promise.resolve(new Response("no", { status: 500 }));
+    return okResponse();
+  });
+  assert.deepEqual(result, { ok: true, delivered: true, recorded: true });
+  assert.equal(urls.some((href) => href.startsWith(ZOHO_LISTSUBSCRIBE_URL)), false);
+});
+
+test("a Zoho network error still reports Resend and Sheets", async () => {
+  const result = await deliverSubscribe(signup, { ...bothEnv, ...zohoEnv }, (url) => {
+    if (String(url) === ZOHO_TOKEN_URL) return Promise.reject(new Error("zoho down"));
+    return okResponse();
+  });
+  assert.deepEqual(result, { ok: true, delivered: true, recorded: true });
+});
+
+test("a token response without an access token skips listsubscribe", async () => {
+  const urls = [];
+  const result = await deliverSubscribe(signup, { ...bothEnv, ...zohoEnv }, (url) => {
+    const href = String(url);
+    urls.push(href);
+    if (href === ZOHO_TOKEN_URL) {
+      return Promise.resolve(new Response(JSON.stringify({ error: "invalid_client" }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }));
+    }
+    return okResponse();
+  });
+  assert.deepEqual(result, { ok: true, delivered: true, recorded: true });
+  assert.equal(urls.some((href) => href.startsWith(ZOHO_LISTSUBSCRIBE_URL)), false);
+});
+
+test("a non-JSON token response skips listsubscribe", async () => {
+  const urls = [];
+  const result = await deliverSubscribe(signup, zohoEnv, (url) => {
+    const href = String(url);
+    urls.push(href);
+    if (href === ZOHO_TOKEN_URL) return Promise.resolve(new Response("nope", { status: 200, headers: { "content-type": "text/plain" } }));
+    return okResponse();
+  });
+  assert.deepEqual(result, { ok: true, delivered: false, recorded: false });
+  assert.equal(urls.some((href) => href.startsWith(ZOHO_LISTSUBSCRIBE_URL)), false);
+});
+
+test("a listsubscribe error still reports Resend and Sheets", async () => {
+  const result = await deliverSubscribe(signup, { ...bothEnv, ...zohoEnv }, (url) => {
+    const href = String(url);
+    if (href === ZOHO_TOKEN_URL) return tokenResponse();
+    if (href.startsWith(ZOHO_LISTSUBSCRIBE_URL)) return Promise.reject(new Error("list down"));
+    return okResponse();
+  });
+  assert.deepEqual(result, { ok: true, delivered: true, recorded: true });
+});
+
+test("a form post still returns HTML when Zoho is configured", async () => {
+  const calls = [];
+  const request = new Request("https://www.eatingindestin.com/api/subscribe", {
+    method: "POST",
+    headers: {
+      "content-type": "application/x-www-form-urlencoded",
+      "cf-connecting-ip": "198.51.100.40",
+    },
+    body: new URLSearchParams({ email: "guest@example.com", audience: "local", coupons: "yes" }),
+  });
+  const response = await handleSubscribe(request, { ...bothEnv, ...zohoEnv }, (url) => {
+    calls.push(String(url));
+    if (String(url) === ZOHO_TOKEN_URL) return tokenResponse();
+    return okResponse();
+  });
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get("content-type"), /text\/html/);
+  assert.match(await response.text(), /Thanks\. We have your signup\./);
+  assert.equal(calls.filter((url) => url.startsWith(ZOHO_LISTSUBSCRIBE_URL)).length, 1);
+  assert.equal(calls.includes(sheetsEnv.GOOGLE_SHEETS_WEBHOOK_URL), true);
+  assert.equal(calls.includes("https://api.resend.com/emails"), true);
+});
+
+test("a filled honeypot does not call Zoho", async () => {
+  let called = false;
+  const response = await handleSubscribe(
+    postSignup({ ...signup, company: "Acme Bots" }, "198.51.100.41"),
+    { ...bothEnv, ...zohoEnv },
+    () => {
+      called = true;
+      return okResponse();
+    },
+  );
+  assert.equal(called, false);
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { ok: true, delivered: false, recorded: false });
 });

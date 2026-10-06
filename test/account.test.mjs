@@ -4,6 +4,7 @@ import test from "node:test";
 import vm from "node:vm";
 import { handleAccount } from "../account-api.js";
 import worker from "../worker.js";
+import { ZOHO_LISTSUBSCRIBE_URL, ZOHO_TOKEN_URL } from "../zoho.js";
 
 const origin = "https://www.eatingindestin.com";
 
@@ -238,6 +239,32 @@ test("a checked marketing box is forwarded as an opt-in and does not write a she
 });
 
 const sheetUrl = "https://script.google.com/macros/s/example/exec";
+const zohoEnv = {
+  ZOHO_CLIENT_ID: "zoho-client",
+  ZOHO_CLIENT_SECRET: "zoho-secret",
+  ZOHO_REFRESH_TOKEN: "zoho-refresh",
+  ZOHO_LIST_KEY_DESTIN: "destin-list-key",
+  ZOHO_LIST_KEY_30A: "thirty-list-key",
+};
+
+function zohoAwareFetch(calls) {
+  return async (url, init) => {
+    calls.push({ url: String(url), init });
+    if (String(url) === ZOHO_TOKEN_URL) {
+      return new Response(JSON.stringify({ access_token: "zoho-access" }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    }
+    return new Response(JSON.stringify({ ok: true }), { status: 200 });
+  };
+}
+
+function zohoLists(calls) {
+  return calls
+    .filter((call) => call.url.startsWith(ZOHO_LISTSUBSCRIBE_URL))
+    .map((call) => new URL(call.url));
+}
 
 function sheetEnv(fetchImpl, extra = {}) {
   return {
@@ -537,6 +564,169 @@ test("a My places sheet failure still accepts the opt-in and does not call Resen
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { ok: true });
   assert.deepEqual(urls, [sheetUrl]);
+});
+
+test("checked coupon boxes subscribe the matching Zoho lists beside the sheet rows", async () => {
+  const calls = [];
+  const { response, payload } = await requestCoupons(
+    { coupons30a: true, couponsDestin: true },
+    sheetEnv(acceptedAccounts(), zohoEnv),
+    zohoAwareFetch(calls),
+  );
+  assert.equal(response.status, 200);
+  assert.deepEqual(payload, { ok: true, delivered: true });
+  assert.deepEqual(calls.filter((call) => call.url === sheetUrl).map((call) => JSON.parse(call.init.body)), [
+    {
+      token: "destin-token",
+      site: "Destin",
+      email: "Guest@example.com",
+      coupons: true,
+      sourcePage: "https://www.eatingindestin.com/account/",
+    },
+    {
+      token: "thirty-token",
+      site: "30A",
+      email: "Guest@example.com",
+      coupons: true,
+      sourcePage: "https://www.eatingindestin.com/account/",
+    },
+  ]);
+  const tokenCalls = calls.filter((call) => call.url === ZOHO_TOKEN_URL);
+  assert.equal(tokenCalls.length, 1);
+  const token = new URLSearchParams(tokenCalls[0].init.body);
+  assert.equal(token.get("grant_type"), "refresh_token");
+  assert.equal(token.get("client_id"), "zoho-client");
+  assert.equal(token.get("client_secret"), "zoho-secret");
+  assert.equal(token.get("refresh_token"), "zoho-refresh");
+  const lists = zohoLists(calls);
+  assert.deepEqual(lists.map((url) => url.searchParams.get("listkey")), ["destin-list-key", "thirty-list-key"]);
+  assert.deepEqual(lists.map((url) => url.searchParams.get("resfmt")), ["JSON", "JSON"]);
+  assert.deepEqual(lists.map((url) => url.searchParams.get("contactinfo")), [
+    "{Contact Email:Guest@example.com}",
+    "{Contact Email:Guest@example.com}",
+  ]);
+  assert.deepEqual(lists.map((url) => url.searchParams.get("source")), [
+    "eatingindestin-account",
+    "eatingindestin-account",
+  ]);
+  const listCall = calls.find((call) => call.url.startsWith(ZOHO_LISTSUBSCRIBE_URL));
+  assert.equal(listCall.init.method, "POST");
+  assert.equal(listCall.init.headers.authorization, "Zoho-oauthtoken zoho-access");
+  assert.equal(calls.some((call) => String(call.url).includes("resend.com")), false);
+});
+
+test("only the checked guide is subscribed in Zoho", async () => {
+  const calls = [];
+  const onlyDestin = await requestCoupons(
+    { coupons30a: false, couponsDestin: true },
+    sheetEnv(acceptedAccounts(), zohoEnv),
+    zohoAwareFetch(calls),
+  );
+  assert.equal(onlyDestin.payload.ok, true);
+  assert.deepEqual(calls.filter((call) => call.url === sheetUrl).map((call) => JSON.parse(call.init.body).site), ["Destin"]);
+  assert.deepEqual(zohoLists(calls).map((url) => url.searchParams.get("listkey")), ["destin-list-key"]);
+});
+
+test("a missing 30A Zoho list key skips that list and still writes both sheet rows", async () => {
+  const calls = [];
+  const { payload } = await requestCoupons(
+    { coupons30a: true, couponsDestin: true },
+    sheetEnv(acceptedAccounts(), { ...zohoEnv, ZOHO_LIST_KEY_30A: "" }),
+    zohoAwareFetch(calls),
+  );
+  assert.equal(payload.ok, true);
+  assert.deepEqual(calls.filter((call) => call.url === sheetUrl).map((call) => JSON.parse(call.init.body).site), ["Destin", "30A"]);
+  assert.deepEqual(zohoLists(calls).map((url) => url.searchParams.get("listkey")), ["destin-list-key"]);
+});
+
+test("missing Zoho OAuth secrets skip listsubscribe and still write the sheet", async () => {
+  const calls = [];
+  const { response, payload } = await requestCoupons(
+    { coupons30a: true, couponsDestin: true },
+    sheetEnv(acceptedAccounts(), { ...zohoEnv, ZOHO_CLIENT_SECRET: "" }),
+    zohoAwareFetch(calls),
+  );
+  assert.equal(response.status, 200);
+  assert.deepEqual(payload, { ok: true, delivered: true });
+  assert.deepEqual(calls.map((call) => call.url), [sheetUrl, sheetUrl]);
+});
+
+test("a marketing opt-in without a coupon box does not subscribe in Zoho", async () => {
+  let called = false;
+  const response = await handleAccount(new Request(`${origin}/api/account/request`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email: "guest@example.com", marketingOptIn: true }),
+  }), sheetEnv(async () => new Response(JSON.stringify({ ok: true, delivered: true }), { status: 200 }), zohoEnv), () => {
+    called = true;
+    return new Response(JSON.stringify({ ok: true }), { status: 200 });
+  });
+  assert.equal(response.status, 200);
+  assert.equal(called, false);
+});
+
+test("a Zoho failure still returns the accepted magic link and the sheet rows", async () => {
+  const sites = [];
+  const { response, payload } = await requestCoupons(
+    { couponsDestin: true, coupons30a: true },
+    sheetEnv(acceptedAccounts(), zohoEnv),
+    async (url, init) => {
+      const href = String(url);
+      if (href === sheetUrl) {
+        sites.push(JSON.parse(init.body).site);
+        return new Response(JSON.stringify({ ok: true }), { status: 200 });
+      }
+      throw new Error("zoho down");
+    },
+  );
+  assert.equal(response.status, 200);
+  assert.deepEqual(payload, { ok: true, delivered: true });
+  assert.deepEqual(sites, ["Destin", "30A"]);
+});
+
+test("a refused magic link does not subscribe in Zoho", async () => {
+  let called = false;
+  const response = await handleAccount(new Request(`${origin}/api/account/request`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email: "guest@example.com", couponsDestin: true, coupons30a: true }),
+  }), sheetEnv(() => Promise.resolve(new Response(JSON.stringify({
+    ok: false,
+    error: "The sign-in email could not be sent.",
+  }), { status: 502 })), zohoEnv), () => {
+    called = true;
+    return Promise.resolve(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+  });
+  assert.equal(response.status, 502);
+  assert.equal(called, false);
+});
+
+test("My places opt-in subscribes the session email to the checked Zoho lists", async () => {
+  const calls = [];
+  const response = await handleAccount(
+    placesRequest({ coupons30a: true, couponsDestin: true, email: "other@example.com" }),
+    sheetEnv(signedIn("Guest@example.com"), zohoEnv),
+    zohoAwareFetch(calls),
+  );
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { ok: true });
+  const sheets = calls.filter((call) => call.url === sheetUrl).map((call) => JSON.parse(call.init.body));
+  assert.equal(sheets[0].email, "Guest@example.com");
+  assert.equal(sheets[1].email, "Guest@example.com");
+  assert.equal(sheets[0].sourcePage, "https://www.eatingindestin.com/my-places/");
+  assert.equal(sheets[1].sourcePage, "https://www.eatingindestin.com/my-places/");
+  const lists = zohoLists(calls);
+  assert.deepEqual(lists.map((url) => url.searchParams.get("listkey")), ["destin-list-key", "thirty-list-key"]);
+  assert.deepEqual(lists.map((url) => url.searchParams.get("contactinfo")), [
+    "{Contact Email:Guest@example.com}",
+    "{Contact Email:Guest@example.com}",
+  ]);
+  assert.deepEqual(lists.map((url) => url.searchParams.get("source")), [
+    "eatingindestin-account",
+    "eatingindestin-account",
+  ]);
+  assert.equal(calls.some((call) => call.url.includes("other@example.com")), false);
+  assert.equal(calls.some((call) => String(call.url).includes("resend.com")), false);
 });
 
 test("finish sets a host-only session cookie and does not set Domain", async () => {
