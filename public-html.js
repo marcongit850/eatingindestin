@@ -302,16 +302,44 @@ export function patchHtml(html, pathname, { hidden = [], placed = [] } = {}) {
   return next;
 }
 
-export function patchSitemap(xml, { hidden = [], placed = [] } = {}) {
+function decodeLoc(value) {
+  return String(value || "")
+    .replaceAll("&amp;", "&")
+    .replaceAll("&lt;", "<")
+    .replaceAll("&gt;", ">")
+    .replaceAll("&quot;", '"')
+    .replaceAll("&#39;", "'")
+    .replaceAll("&apos;", "'");
+}
+
+export function restaurantSlugFromLoc(loc) {
+  const match = decodeLoc(loc).match(/\/restaurants\/([^/]+)\/?$/);
+  return match ? match[1] : "";
+}
+
+function dropRestaurantUrl(xml, slug) {
+  const loc = `${ORIGIN}/restaurants/${slug}/`;
+  const pattern = loc.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return xml.replace(new RegExp(`\\s*<url>\\s*<loc>${pattern}</loc>[\\s\\S]*?</url>`, "g"), "");
+}
+
+export function patchSitemap(xml, { hidden = [], placed = [], liveSlugs = null } = {}) {
   const refresh = new Set([...hidden, ...placed].map((listing) => listing.slug));
   let next = xml;
-  for (const slug of refresh) {
-    const loc = `${ORIGIN}/restaurants/${slug}/`;
-    next = next.replace(new RegExp(`\\s*<url>\\s*<loc>${loc.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}</loc>[\\s\\S]*?</url>`, "g"), "");
-  }
-  const urls = placed.map((listing) => `  <url>\n    <loc>${escapeHtml(`${ORIGIN}/restaurants/${listing.slug}/`)}</loc>\n  </url>`).join("\n");
+  for (const slug of refresh) next = dropRestaurantUrl(next, slug);
+  const urls = placed
+    .filter((listing) => listing.slug && !listing.slug.includes("&"))
+    .map((listing) => `  <url>\n    <loc>${escapeHtml(`${ORIGIN}/restaurants/${listing.slug}/`)}</loc>\n  </url>`)
+    .join("\n");
   if (urls) next = next.replace("</urlset>", `${urls}\n</urlset>`);
-  return next;
+  if (!liveSlugs) return next;
+  const live = new Set(liveSlugs);
+  return next.replace(/<url>\s*<loc>([^<]*)<\/loc>[\s\S]*?<\/url>/g, (block, loc) => {
+    const slug = restaurantSlugFromLoc(loc);
+    if (!slug) return block;
+    if (slug.includes("&") || !live.has(slug)) return "";
+    return block;
+  });
 }
 
 export function patchLlms(text, { hidden = [], placed = [] } = {}) {

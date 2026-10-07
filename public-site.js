@@ -51,8 +51,6 @@ export async function servePublic(request, response, env) {
     return response;
   }
   const { hidden, placed } = changedListings(merged);
-  if (!hidden.length && !placed.length) return response;
-
   const slug = listingSlugFromPath(url.pathname);
   if (slug) {
     const listing = merged.find((item) => item.slug === slug);
@@ -61,6 +59,11 @@ export async function servePublic(request, response, env) {
     if (request.method === "HEAD") return new Response(null, { status: 200, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
     return htmlResponse(renderProfile(listing, liveListings(merged)));
   }
+
+  // The sitemap is reconciled to live listings even when the overlay is idle,
+  // so a stale file cannot keep feeding deleted /restaurants/{slug} URLs.
+  const rewriteSitemap = url.pathname === "/sitemap.xml";
+  if (!hidden.length && !placed.length && !rewriteSitemap) return response;
 
   if (request.method === "HEAD") {
     return new Response(null, { status: response.status, headers: { "cache-control": "no-store" } });
@@ -73,8 +76,12 @@ export async function servePublic(request, response, env) {
   }
 
   const text = await response.text();
-  if (url.pathname === "/sitemap.xml") {
-    return new Response(patchSitemap(text, { hidden, placed }), {
+  if (rewriteSitemap) {
+    return new Response(patchSitemap(text, {
+      hidden,
+      placed,
+      liveSlugs: liveListings(merged).map((item) => item.slug),
+    }), {
       headers: { "content-type": "application/xml; charset=utf-8", "cache-control": "no-store" },
     });
   }

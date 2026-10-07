@@ -1,3 +1,4 @@
+import ampRedirects from "./data/amp-redirects.json" with { type: "json" };
 import listingOptions from "./data/listing-options.json" with { type: "json" };
 import { handleAccount } from "./account-api.js";
 import { handleAdmin } from "./admin-api.js";
@@ -38,7 +39,8 @@ import { subscribeZohoLists, ZOHO_SOURCE_SUBSCRIBE } from "./zoho.js";
  * Listing rows stay in that Worker's database. Photos stay in the shared
  * eating-listings bucket. This Worker does not bind its own database or bucket.
  * A draft or deleted row is removed from the public HTML, map JSON, sitemap,
- * and llms files. With no admin rows, the built files are returned unchanged.
+ * and llms files. The sitemap keeps live restaurant URLs only. With no admin
+ * rows, built HTML is returned unchanged.
  */
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -555,6 +557,51 @@ export function canonicalRedirect(url, method = "GET") {
   return { location: target.toString(), status };
 }
 
+function decodedRestaurantSlug(pathname) {
+  const match = String(pathname || "").match(/^\/restaurants\/([^/]+?)(?:\/index\.html)?\/?$/);
+  if (!match || match[1] === "index.html") return "";
+  let slug = match[1];
+  if (slug.includes("%")) {
+    try {
+      slug = decodeURIComponent(slug);
+    } catch {
+      return "";
+    }
+  }
+  return slug;
+}
+
+// Live listings whose old path still contains "&" 301 to the clean slug.
+// A deleted path is absent from the map and stays a 404.
+export function ampersandRedirect(url, method = "GET") {
+  const slug = decodedRestaurantSlug(url.pathname);
+  if (!slug || !slug.includes("&")) return null;
+  const target = ampRedirects[slug];
+  if (!target || String(target).includes("&")) return null;
+  const dest = new URL(`/restaurants/${target}/`, `https://${CANONICAL_HOST}`);
+  if (url.search) dest.search = url.search;
+  const status = method === "GET" || method === "HEAD" ? 301 : 308;
+  return { location: dest.toString(), status };
+}
+
+export function stripMissingCanonical(html) {
+  return String(html || "")
+    .replace(/[ \t]*<link rel="canonical" href="[^"]*\/404\.html">\n?/g, "")
+    .replace(/[ \t]*<meta property="og:url" content="[^"]*\/404\.html">\n?/g, "")
+    .replace(/"url": "https:\/\/www\.eatingindestin\.com\/404\.html", /g, "");
+}
+
+export async function cleanMissingResponse(response) {
+  if (!response || response.status !== 404) return response;
+  const headers = new Headers(response.headers);
+  headers.set("x-robots-tag", "noindex");
+  const type = headers.get("content-type") || "";
+  if (!type.includes("html")) {
+    return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+  }
+  return new Response(stripMissingCanonical(await response.text()), { status: 404, headers });
+}
+
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -782,6 +829,16 @@ export default {
         },
       });
     }
+    const moved = ampersandRedirect(url, request.method);
+    if (moved) {
+      return new Response(null, {
+        status: moved.status,
+        headers: {
+          location: moved.location,
+          "cache-control": "public, max-age=3600",
+        },
+      });
+    }
     if (url.pathname === "/api/subscribe") return handleSubscribe(request, env);
     if (url.pathname === "/api/listing") return handleListing(request, env);
     if (url.pathname === "/api/list-restaurant") return handleListRestaurant(request, env);
@@ -789,6 +846,6 @@ export default {
     if (url.pathname.startsWith("/api/admin/") || url.pathname.startsWith("/media/photos/")) {
       return handleAdmin(request, env);
     }
-    return withAdminRobots(url, await servePublic(request, await env.ASSETS.fetch(request), env));
+    return cleanMissingResponse(withAdminRobots(url, await servePublic(request, await env.ASSETS.fetch(request), env)));
   },
 };

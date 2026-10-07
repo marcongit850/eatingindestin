@@ -7,6 +7,7 @@ import json
 import re
 import sys
 from pathlib import Path
+from urllib.parse import unquote
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -934,6 +935,36 @@ admin_page = (ROOT / "admin" / "index.html").read_text(encoding="utf-8")
 check('id="admin-root"' in admin_page and 'src="/admin.js"' in admin_page, "admin page should mount the editor")
 check("noindex" in admin_page, "admin page should stay out of search results")
 check("/admin/" not in sitemap, "admin page should stay out of the sitemap")
+missing_page = (ROOT / "404.html").read_text(encoding="utf-8")
+check('name="robots" content="noindex"' in missing_page, "404 page should be noindex")
+check('rel="canonical"' not in missing_page, "404 page should not set a canonical URL")
+check("404.html" not in missing_page, "404 page should not point at /404.html")
+locs = re.findall(r"<loc>([^<]+)</loc>", sitemap)
+live_slugs = {item["slug"] for item in restaurants}
+for loc in locs:
+    check("&" not in loc, f"sitemap url should not contain an ampersand: {loc}")
+    if "/restaurants/" in loc and not loc.endswith("/restaurants/"):
+        slug = loc.rstrip("/").rsplit("/", 1)[-1]
+        check(slug in live_slugs, f"sitemap lists a restaurant that is not live: {slug}")
+for row in csv_rows:
+    if build.clean_text(row.get("Status")) == "PUBLISHED":
+        continue
+    slug = build.clean_text(row.get("slug"))
+    if slug:
+        check(f"/restaurants/{slug}/" not in sitemap, f"sitemap should omit deleted restaurant {slug}")
+    item = build.clean_text(row.get("Restaurants (Item)"))
+    tail = unquote(item.rstrip("/").split("/")[-1]) if item else ""
+    if tail:
+        check(f"/restaurants/{build.e(tail)}/" not in sitemap, f"sitemap should omit deleted path {tail}")
+redirects = json.loads((ROOT / "data" / "amp-redirects.json").read_text(encoding="utf-8"))
+check(redirects == build.AMP_REDIRECTS, "amp redirect file should match the live listings")
+check(
+    redirects.get("aj's-seafood-&-oyster-bar") == "aj-s-seafood-and-oyster-bar-destin-harbor",
+    "AJ's old ampersand path should redirect to the live slug",
+)
+check("east-pass-seafood-&-oyster-house" not in redirects, "a deleted ampersand path should stay a 404")
+check("i-heart-mac-&-cheese" not in redirects, "a deleted ampersand path should stay a 404")
+check(all("&" not in target and target in live_slugs for target in redirects.values()), "amp redirects should land on live slugs")
 check("run_worker_first" in wrangler and '"main": "worker.js"' in wrangler, "api subscribe should be served by the worker")
 check("honeypot" in worker_js and "cf-connecting-ip" in worker_js and "MAX_BODY = 16000" in worker_js, "forms should cap body size, rate limit by IP, and trap a honeypot")
 headers = (ROOT / "_headers").read_text(encoding="utf-8")
