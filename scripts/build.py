@@ -202,6 +202,34 @@ def slugify(value: str) -> str:
     return text or "restaurant"
 
 
+# Old Wix paths that still contain "&" (for example aj's-seafood-&-oyster-bar).
+# Only a live listing is recorded, so a deleted restaurant with the same shape 404s.
+AMP_REDIRECTS: dict[str, str] = {}
+AMP_REDIRECT_CONFLICTS: set[str] = set()
+
+
+def amp_aliases(row: dict) -> list[str]:
+    aliases = []
+    item = clean_text(row.get("Restaurants (Item)"))
+    tail = unquote(item.rstrip("/").split("/")[-1]) if item else ""
+    raw = clean_text(row.get("slug"))
+    for alias in (tail, raw):
+        if alias and "&" in alias and alias not in aliases:
+            aliases.append(alias)
+    return aliases
+
+
+def note_amp_redirect(alias: str, slug: str) -> None:
+    if alias == slug or alias in AMP_REDIRECT_CONFLICTS:
+        return
+    current = AMP_REDIRECTS.get(alias)
+    if current and current != slug:
+        AMP_REDIRECTS.pop(alias, None)
+        AMP_REDIRECT_CONFLICTS.add(alias)
+        return
+    AMP_REDIRECTS[alias] = slug
+
+
 def parse_list(raw: str) -> list[str]:
     raw = (raw or "").strip()
     if not raw:
@@ -468,6 +496,8 @@ def unique_slug(base: str, used: set[str]) -> str:
 def load_restaurants() -> list[dict]:
     used: set[str] = set()
     restaurants = []
+    AMP_REDIRECTS.clear()
+    AMP_REDIRECT_CONFLICTS.clear()
     for row in load_rows(DATA / "restaurants.csv"):
         if clean_text(row.get("Status")) != "PUBLISHED":
             continue
@@ -485,6 +515,10 @@ def load_restaurants() -> list[dict]:
             tail = unquote(item.rstrip("/").split("/")[-1]) if item else ""
             base = slugify(tail) if tail else slugify(f"{name}-{area_slug}")
         slug = unique_slug(base, used)
+        if "&" in slug:
+            raise SystemExit(f"Live restaurant slug still contains &: {slug}")
+        for alias in amp_aliases(row):
+            note_amp_redirect(alias, slug)
         address = parse_address(row.get("address") or "")
         cuisines = parse_list(row.get("Cuisine Type"))
         meals = parse_list(row.get("Meal Type"))
@@ -1318,16 +1352,17 @@ def image_facts(url: str | None) -> dict:
     return facts
 
 
-def social_tags(title: str, description: str, canonical: str, image: str | None, image_alt: str) -> str:
+def social_tags(title: str, description: str, canonical: str | None, image: str | None, image_alt: str) -> str:
     facts = image_facts(image)
     alt = image_alt or SHARE_ALT
     tags = [
         f'<meta property="og:title" content="{e(title)}">',
         f'<meta property="og:description" content="{e(description)}">',
-        f'<meta property="og:url" content="{e(canonical)}">',
-        f'<meta property="og:image" content="{e(facts["url"])}">',
-        f'<meta property="og:image:alt" content="{e(alt)}">',
     ]
+    if canonical:
+        tags.append(f'<meta property="og:url" content="{e(canonical)}">')
+    tags.append(f'<meta property="og:image" content="{e(facts["url"])}">')
+    tags.append(f'<meta property="og:image:alt" content="{e(alt)}">')
     if "width" in facts:
         tags.append(f'<meta property="og:image:width" content="{facts["width"]}">')
         tags.append(f'<meta property="og:image:height" content="{facts["height"]}">')
@@ -1439,8 +1474,9 @@ def layout(
     image_alt: str = "",
     noindex: bool = False,
     extra_scripts: str = "",
+    include_canonical: bool = True,
 ) -> str:
-    canonical = ORIGIN + path
+    canonical = ORIGIN + path if include_canonical else None
     title = claim_title(title)
     description = claim_description(description)
     scripts = '<script src="/header.js"></script>\n<script src="/footer.js"></script>\n'
@@ -1449,6 +1485,7 @@ def layout(
     body_attr = ' class="home"' if active == "home" else ""
     banner = "" if active == "home" else sample_banner()
     robots = '<meta name="robots" content="noindex">\n' if noindex else ""
+    canonical_tag = f'<link rel="canonical" href="{e(canonical)}">\n' if canonical else ""
     return (
         "<!DOCTYPE html>\n"
         '<html lang="en">\n<head>\n'
@@ -1457,7 +1494,7 @@ def layout(
         + ga_tag()
         + f"<title>{e(title)}</title>\n"
         f'<meta name="description" content="{e(description)}">\n'
-        f'<link rel="canonical" href="{e(canonical)}">\n'
+        + canonical_tag
         + robots
         + social_tags(title, description, canonical, image, image_alt)
         + '<meta name="theme-color" content="#102825">\n'
@@ -2735,12 +2772,12 @@ def build_404() -> None:
                     "@context": "https://schema.org",
                     "@type": "WebPage",
                     "name": "Page not found",
-                    "url": ORIGIN + "/404.html",
                     "isPartOf": {"@id": ORIGIN + "/#website"},
                 }
             ),
             include_js=False,
             noindex=True,
+            include_canonical=False,
         ),
     )
 
@@ -2750,8 +2787,18 @@ def newest_date(dates: list[str]) -> str:
     return max(found) if found else ""
 
 
+def live_sitemap_slug(slug: str) -> bool:
+    """Restaurant and area slugs that belong in the sitemap. Ampersands and blanks do not."""
+    text = slug or ""
+    return bool(text) and "&" not in text and "/" not in text
+
+
 def build_sitemap(restaurants: list[dict], areas: list[dict], guides: list[dict]) -> None:
-    site_date = newest_date([restaurant["updated"] for restaurant in restaurants])
+    # Unpublished and deleted rows never reach this list. A leftover "&" slug is
+    # dropped here as well so the file cannot advertise a URL that should 404.
+    live_restaurants = [restaurant for restaurant in restaurants if live_sitemap_slug(restaurant["slug"])]
+    live_areas = [area for area in areas if live_sitemap_slug(area["slug"])]
+    site_date = newest_date([restaurant["updated"] for restaurant in live_restaurants])
     urls = [
         ("/", site_date),
         ("/restaurants/", site_date),
@@ -2765,12 +2812,12 @@ def build_sitemap(restaurants: list[dict], areas: list[dict], guides: list[dict]
     for guide in guides:
         guide_date = newest_date(restaurant["updated"] for restaurant in guide["restaurants"])
         urls.append((guide["path"], guide_date or site_date))
-    for area in areas:
+    for area in live_areas:
         area_date = newest_date(
-            restaurant["updated"] for restaurant in restaurants if restaurant["areaSlug"] == area["slug"]
+            restaurant["updated"] for restaurant in live_restaurants if restaurant["areaSlug"] == area["slug"]
         )
         urls.append((f"/areas/{area['slug']}/", area_date or site_date))
-    for restaurant in restaurants:
+    for restaurant in live_restaurants:
         urls.append((f"/restaurants/{restaurant['slug']}/", restaurant["updated"]))
     lines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
@@ -2965,10 +3012,17 @@ def main() -> None:
     build_list_restaurant(areas, cuisines, foods)
     build_404()
     build_sitemap(restaurants, areas, guides)
+    write(
+        DATA / "amp-redirects.json",
+        json.dumps(AMP_REDIRECTS, indent=2, ensure_ascii=False, sort_keys=True) + "\n",
+    )
     build_robots()
     build_llms(restaurants, areas, guides)
     photos = sum(1 for restaurant in restaurants if restaurant["cardImage"])
-    print(f"Built {len(restaurants)} restaurants, {len(areas)} areas, {photos} photos")
+    print(
+        f"Built {len(restaurants)} restaurants, {len(areas)} areas, {photos} photos, "
+        f"{len(AMP_REDIRECTS)} ampersand redirects"
+    )
 
 
 if __name__ == "__main__":

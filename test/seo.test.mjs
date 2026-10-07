@@ -2,7 +2,8 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { CANONICAL_HOST, canonicalRedirect } from "../worker.js";
+import worker, { CANONICAL_HOST, ampersandRedirect, canonicalRedirect, stripMissingCanonical } from "../worker.js";
+import { patchSitemap } from "../public-html.js";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const config = JSON.parse(readFileSync(join(root, "site.config.json"), "utf8"));
@@ -63,13 +64,20 @@ for (const path of htmlPages) {
   assert.ok(title.length >= 20 && title.length <= 70, rel + " title length " + title.length + " " + title);
   assert.ok(description.length >= 110 && description.length <= 165, rel + " description length " + description.length);
   assert.match(description, /Destin/);
-  const canonical = attr(html, /<link rel="canonical" href="([^"]+)">/);
-  assert.ok(canonical.startsWith(ORIGIN), rel + " canonical " + canonical);
-  assert.equal(canonical.startsWith(`https://${CANONICAL_HOST}`), true, rel);
-  assert.equal(canonical.includes("workers.dev"), false, rel);
+  const isMissing = path.endsWith("404.html");
   assert.equal(attr(html, /<meta property="og:title" content="([^"]+)">/), title);
   assert.equal(attr(html, /<meta property="og:description" content="([^"]+)">/), description);
-  assert.equal(attr(html, /<meta property="og:url" content="([^"]+)">/), canonical);
+  if (isMissing) {
+    assert.equal(html.includes('rel="canonical"'), false, rel);
+    assert.equal(html.includes("404.html"), false, rel);
+    assert.match(html, /<meta name="robots" content="noindex">/);
+  } else {
+    const canonical = attr(html, /<link rel="canonical" href="([^"]+)">/);
+    assert.ok(canonical.startsWith(ORIGIN), rel + " canonical " + canonical);
+    assert.equal(canonical.startsWith(`https://${CANONICAL_HOST}`), true, rel);
+    assert.equal(canonical.includes("workers.dev"), false, rel);
+    assert.equal(attr(html, /<meta property="og:url" content="([^"]+)">/), canonical);
+  }
   assert.equal(attr(html, /<meta property="og:site_name" content="([^"]+)">/), "Eating in Destin");
   assert.equal(attr(html, /<meta property="og:locale" content="([^"]+)">/), "en_US");
   assert.equal(attr(html, /<meta property="og:type" content="([^"]+)">/), "website");
@@ -189,7 +197,10 @@ assert.equal(town["@graph"].some((node) => node["@type"] === "ItemList"), true);
 assert.equal(town["@graph"].some((node) => node["@type"] === "BreadcrumbList"), true);
 
 const missing = read("404.html");
-assert.match(missing, /noindex/);
+assert.match(missing, /<meta name="robots" content="noindex">/);
+assert.equal(missing.includes('rel="canonical"'), false);
+assert.equal(missing.includes("404.html"), false);
+assert.equal(missing.includes('property="og:url"'), false);
 assert.equal(read("index.html").includes("noindex"), false);
 
 const robots = read("robots.txt");
@@ -222,6 +233,24 @@ assert.equal(locs.includes(`${ORIGIN}/`), true);
 assert.equal(locs.includes(`${ORIGIN}/restaurants/`), true);
 assert.equal(locs.includes(`${ORIGIN}/restaurants/harbor-docks-destin-harbor/`), true);
 assert.equal(locs.includes(`${ORIGIN}/404.html`), false);
+const liveSlugs = JSON.parse(read("data/restaurants.json")).map((item) => item.slug);
+assert.equal(patchSitemap(sitemap, { liveSlugs }), sitemap);
+const withoutHarbor = patchSitemap(sitemap, { liveSlugs: liveSlugs.filter((slug) => slug !== "harbor-docks-destin-harbor") });
+assert.equal(withoutHarbor.includes("harbor-docks-destin-harbor"), false);
+assert.equal(withoutHarbor.includes(`${ORIGIN}/areas/destin-harbor/`), true);
+assert.equal(withoutHarbor.includes(`${ORIGIN}/restaurants/`), true);
+const withAmp = sitemap.replace(
+  "</urlset>",
+  `  <url>\n    <loc>${ORIGIN}/restaurants/aj's-seafood-&amp;-oyster-bar/</loc>\n  </url>\n</urlset>`,
+);
+assert.equal(patchSitemap(withAmp, { liveSlugs }).includes("aj's-seafood-"), false);
+assert.equal(patchSitemap(withAmp, { liveSlugs }).includes("aj-s-seafood-and-oyster-bar-destin-harbor"), true);
+for (const loc of locs) {
+  assert.equal(loc.includes("&"), false, loc);
+  if (loc.includes("/restaurants/") && !loc.endsWith("/restaurants/")) {
+    assert.equal(liveSlugs.includes(loc.slice(loc.indexOf("/restaurants/") + "/restaurants/".length).replace(/\/$/, "")), true, loc);
+  }
+}
 assert.equal(locs.includes(`${ORIGIN}/guides/`), true);
 assert.equal(locs.includes(`${ORIGIN}/guides/best-seafood-destin/`), true);
 assert.equal(locs.includes(`${ORIGIN}/list-your-restaurant/`), true);
@@ -246,8 +275,19 @@ const preview = canonicalRedirect(new URL("https://eatingindestin.352marc.worker
 assert.equal(preview.status, 301);
 assert.equal(preview.location, `${ORIGIN}/map/`);
 assert.equal(canonicalRedirect(new URL(`${ORIGIN}/`), "GET"), null);
+assert.equal(canonicalRedirect(new URL(`${ORIGIN}/restaurants/?meal=Lunch`), "GET"), null);
 assert.equal(canonicalRedirect(new URL("https://eatingindestin.com/api/listing"), "POST"), null);
 assert.equal(canonicalRedirect(new URL("https://eatingindestin.com/restaurants/"), "POST").status, 308);
+assert.equal(ampersandRedirect(new URL(`${ORIGIN}/restaurants/?meal=Lunch`), "GET"), null);
+assert.equal(ampersandRedirect(new URL(`${ORIGIN}/restaurants/aj-s-seafood-and-oyster-bar-destin-harbor/`), "GET"), null);
+const ajOld = ampersandRedirect(new URL(`${ORIGIN}/restaurants/aj%27s-seafood-%26-oyster-bar/`), "GET");
+assert.equal(ajOld.status, 301);
+assert.equal(ajOld.location, `${ORIGIN}/restaurants/aj-s-seafood-and-oyster-bar-destin-harbor/`);
+assert.equal(ampersandRedirect(new URL(`${ORIGIN}/restaurants/east-pass-seafood-%26-oyster-house/`), "GET"), null);
+const bad404 = `<link rel="canonical" href="${ORIGIN}/404.html">\n<meta property="og:url" content="${ORIGIN}/404.html">\n<script type="application/ld+json">{"name": "Page not found", "url": "${ORIGIN}/404.html", "isPartOf": {}}</script>`;
+const cleaned404 = stripMissingCanonical(bad404);
+assert.equal(cleaned404.includes("404.html"), false);
+assert.equal(cleaned404.includes('rel="canonical"'), false);
 assert.equal(config.origin.replace(/\/$/, ""), `https://${CANONICAL_HOST}`);
 
 for (const path of walk(root)) {

@@ -147,7 +147,18 @@ test("a draft overlay is removed from the public directory and profile", async (
   env.ASSETS = {
     async fetch(request) {
       const path = new URL(request.url).pathname;
-      if (path === "/404.html") return new Response("That page is not on the menu.", { headers: { "content-type": "text/html" } });
+      if (path === "/404.html") {
+        return new Response(
+          `<link rel="canonical" href="${ORIGIN}/404.html"><meta name="robots" content="noindex">That page is not on the menu.`,
+          { headers: { "content-type": "text/html" } },
+        );
+      }
+      if (path === "/sitemap.xml") {
+        return new Response(
+          `<urlset><url><loc>${ORIGIN}/restaurants/${slug}/</loc></url><url><loc>${ORIGIN}/areas/destin-harbor/</loc></url></urlset>`,
+          { headers: { "content-type": "application/xml" } },
+        );
+      }
       if (path === "/restaurants/" || path === "/restaurants/index.html") {
         return new Response(`<div id="cards" class="card-grid"><article id="r-${slug}" class="card card-place">${slug}</article></div>`, {
           headers: { "content-type": "text/html" },
@@ -160,6 +171,14 @@ test("a draft overlay is removed from the public directory and profile", async (
   assert.equal((await directory.text()).includes(slug), false);
   const profile = await worker.fetch(new Request(`${ORIGIN}/restaurants/${slug}/`), env);
   assert.equal(profile.status, 404);
+  const profileHtml = await profile.text();
+  assert.equal(profileHtml.includes("404.html"), false);
+  assert.equal(profileHtml.includes('rel="canonical"'), false);
+  assert.equal(profile.headers.get("x-robots-tag"), "noindex");
+  const sitemap = await worker.fetch(new Request(`${ORIGIN}/sitemap.xml`), env);
+  const xml = await sitemap.text();
+  assert.equal(xml.includes(`/restaurants/${slug}/`), false);
+  assert.equal(xml.includes("/areas/destin-harbor/"), true);
   const json = await worker.fetch(new Request(`${ORIGIN}/data/restaurants.json`), env);
   const records = await json.json();
   assert.equal(records.some((item) => item.slug === slug), false);
