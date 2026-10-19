@@ -78,6 +78,27 @@ LAURENS_FAVORITES = (
 # Set this to a list of slugs only when a design sample is needed again.
 SAMPLE_SLUGS = None
 
+# Per-page title and meta description. Open Graph and Twitter tags copy these.
+# The visible heading and the page body stay on the normal template.
+SEO_OVERRIDES = {
+    "/restaurants/bricktop-s-grand-boulevard/": {
+        "title": "Bricktop's Destin at Grand Boulevard | Menu, Hours, Reservations",
+        "description": (
+            "American steakhouse at Grand Boulevard in Sandestin. "
+            "Hours, address, and what to order. Eating in Destin."
+        ),
+    },
+    "/areas/grand-boulevard/": {
+        "title": "Grand Boulevard Restaurants in Sandestin | Eating in Destin",
+        "description": "Every restaurant at Grand Boulevard Destin, including Bricktop's. Hours and maps.",
+    },
+}
+EXACT_DESCRIPTIONS = {item["description"] for item in SEO_OVERRIDES.values()}
+
+
+def seo_override(path: str) -> dict:
+    return SEO_OVERRIDES.get(path, {})
+
 # The Wix export's detail photo for Stinky's is a multi-megabyte PNG.
 # The cover now comes from the supplied photo set. The logo stays a local file.
 LOCAL_WIX_FILES = {
@@ -228,6 +249,84 @@ def note_amp_redirect(alias: str, slug: str) -> None:
         AMP_REDIRECT_CONFLICTS.add(alias)
         return
     AMP_REDIRECTS[alias] = slug
+
+
+# Old Wix paths for restaurants that are still published. The value is the live slug.
+# A path that is not in this map and not a live page is listed in REMOVED_SLUGS.
+LEGACY_REDIRECTS: dict[str, str] = {}
+REMOVED_SLUGS: list[str] = []
+
+
+def item_tail(row: dict) -> str:
+    item = clean_text(row.get("Restaurants (Item)"))
+    return unquote(item.rstrip("/").split("/")[-1]) if item else ""
+
+
+def ascii_alias(value: str) -> str:
+    """Slug form of an old path, when it differs from the path itself."""
+    if not value:
+        return ""
+    alias = slugify(value)
+    if not alias or alias == "restaurant" or alias == value:
+        return ""
+    return alias
+
+
+def build_route_maps(live_slugs: set[str]) -> None:
+    """301 old paths of live restaurants. 410 paths whose listing is already gone.
+
+    Blank published rows stay in the CSV. They are not pages. Two live restaurants
+    that claim one old path are left alone so the worker can 404 that path.
+    """
+    LEGACY_REDIRECTS.clear()
+    conflicts: set[str] = set()
+    removed: set[str] = set()
+
+    def add_redirect(alias: str, slug: str) -> None:
+        if not alias or alias == slug or alias in live_slugs or alias in conflicts:
+            return
+        if "&" in alias:
+            return
+        if "/" in alias or len(alias) > 180:
+            return
+        current = LEGACY_REDIRECTS.get(alias)
+        if current and current != slug:
+            LEGACY_REDIRECTS.pop(alias, None)
+            conflicts.add(alias)
+            return
+        LEGACY_REDIRECTS[alias] = slug
+
+    def add_removed(alias: str) -> None:
+        if not alias or alias in live_slugs or "/" in alias or len(alias) > 180:
+            return
+        removed.add(alias)
+
+    for row in load_rows(DATA / "restaurants.csv"):
+        status = clean_text(row.get("Status"))
+        name = clean_text(row.get("Restaurant Name"))
+        tail = item_tail(row)
+        raw = clean_text(row.get("slug"))
+        folded = slugify(raw) if raw else ""
+        if status == "PUBLISHED" and name:
+            live = raw if raw in live_slugs else folded if folded in live_slugs else ""
+            if not live:
+                continue
+            add_redirect(tail, live)
+            add_redirect(ascii_alias(tail), live)
+            continue
+        for alias in (tail, raw, ascii_alias(tail), ascii_alias(raw)):
+            add_removed(alias)
+
+    # Search Console still has the shorter form of this removed Wix path.
+    if "mi-casita-mexican-grill" in removed:
+        add_removed("mi-casita")
+
+    for alias in list(removed):
+        if alias in LEGACY_REDIRECTS or alias in AMP_REDIRECTS or alias in conflicts or alias in live_slugs:
+            removed.discard(alias)
+    for alias in conflicts:
+        removed.discard(alias)
+    REMOVED_SLUGS[:] = sorted(removed)
 
 
 def parse_list(raw: str) -> list[str]:
@@ -435,6 +534,15 @@ def website_href(raw: str) -> str:
     return "https://" + raw
 
 
+def social_href(raw: str) -> str:
+    """Drop the Wix FBML placeholder. It is not a restaurant profile."""
+    url = website_href(raw)
+    lowered = url.lower()
+    if "facebook.com/2008/fbml" in lowered or lowered.rstrip("/").endswith("facebook.com/2008"):
+        return ""
+    return url
+
+
 def restaurant_website_anchor(url: str) -> str:
     """The restaurant's own site. External, so it opens in a new tab."""
     host = re.sub(r"^www\.", "", re.sub(r"^https?://", "", url).split("/")[0])
@@ -586,7 +694,7 @@ def load_restaurants() -> list[dict]:
                 "happyFood": is_yes(row.get("Happy Hour (food)")),
                 "reservations": is_yes(row.get("Reservations")),
                 "groups": is_yes(row.get("Groups of 12")),
-                "facebook": website_href(row.get("Facebook URL") or ""),
+                "facebook": social_href(row.get("Facebook URL") or ""),
                 "instagram": website_href(row.get("Instagram") or ""),
                 "cardImage": card_image,
                 "heroImage": hero_image,
@@ -599,6 +707,7 @@ def load_restaurants() -> list[dict]:
         )
     restaurants.sort(key=lambda item: item["name"].lower())
     assert_laurens_favorites(restaurants)
+    build_route_maps({item["slug"] for item in restaurants})
     return restaurants
 
 
@@ -1177,14 +1286,15 @@ DAY_CODES = {
 }
 
 
-def clock_24(token: str) -> str | None:
-    match = re.fullmatch(r"(\d{1,2}):(\d{2})\s*(AM|PM)", clean_text(token), re.I)
+def clock_24(token: str, fallback_meridiem: str | None = None) -> str | None:
+    """24-hour clock. A start time may omit AM/PM when the closing time has it."""
+    match = re.fullmatch(r"(\d{1,2}):(\d{2})(?:\s*(AM|PM))?", clean_text(token), re.I)
     if not match:
         return None
     hour = int(match.group(1))
     minute = int(match.group(2))
-    meridiem = match.group(3).upper()
-    if hour < 1 or hour > 12 or minute > 59:
+    meridiem = (match.group(3) or fallback_meridiem or "").upper()
+    if meridiem not in {"AM", "PM"} or hour < 1 or hour > 12 or minute > 59:
         return None
     if meridiem == "AM":
         hour = 0 if hour == 12 else hour
@@ -1212,13 +1322,14 @@ def opening_hours(raw: str) -> list[str]:
         day = DAY_CODES[match.group(1).lower()]
         for piece in body.split(","):
             times = re.fullmatch(
-                r"(\d{1,2}:\d{2}\s*[AP]M)\s*-\s*(\d{1,2}:\d{2}\s*[AP]M)",
+                r"(\d{1,2}:\d{2}(?:\s*[AP]M)?)\s*-\s*(\d{1,2}:\d{2}\s*[AP]M)",
                 piece.strip(),
                 re.I,
             )
             if not times:
                 return []
-            start = clock_24(times.group(1))
+            end_meridiem = re.search(r"(AM|PM)\s*$", times.group(2), re.I)
+            start = clock_24(times.group(1), end_meridiem.group(1) if end_meridiem else None)
             end = clock_24(times.group(2))
             if not start or not end:
                 return []
@@ -1297,7 +1408,10 @@ def claim_title(title: str) -> str:
 
 def claim_description(description: str) -> str:
     description = clean_text(description)
-    if not (110 <= len(description) <= 165) or "Destin" not in description:
+    exact = description in EXACT_DESCRIPTIONS
+    long_enough = 110 <= len(description) <= 165
+    exact_ok = exact and 50 <= len(description) <= 165
+    if (not long_enough and not exact_ok) or "Destin" not in description:
         raise SystemExit(f"description out of range ({len(description)}): {description}")
     if description in USED_DESCRIPTIONS:
         raise SystemExit(f"duplicate description: {description}")
@@ -2104,14 +2218,17 @@ def build_detail(restaurant: dict, restaurants: list[dict]) -> None:
         "</article>"
     )
     description = listing_description(restaurant)
+    path = f'/restaurants/{restaurant["slug"]}/'
+    override = seo_override(path)
+    page_description = override.get("description") or description
+    title = override.get("title") or restaurant_title(restaurant)
     extra = json_ld(graph(restaurant_schema(restaurant, description), breadcrumbs(profile_crumbs)))
-    title = restaurant_title(restaurant)
     write(
         ROOT / "restaurants" / restaurant["slug"] / "index.html",
         layout(
             title,
-            description,
-            f'/restaurants/{restaurant["slug"]}/',
+            page_description,
+            path,
             "restaurants",
             body,
             extra,
@@ -2256,12 +2373,16 @@ def build_areas(areas: list[dict], restaurants: list[dict]) -> None:
             "</div></article>"
         )
         description = area_description(area)
+        path = f'/areas/{area["slug"]}/'
+        override = seo_override(path)
+        page_description = override.get("description") or description
+        title = override.get("title") or f"Restaurants in {name}, FL | Eating in Destin"
         write(
             ROOT / "areas" / area["slug"] / "index.html",
             layout(
-                f"Restaurants in {name}, FL | Eating in Destin",
-                description,
-                f'/areas/{area["slug"]}/',
+                title,
+                page_description,
+                path,
                 "areas",
                 body,
                 json_ld(
@@ -2270,7 +2391,7 @@ def build_areas(areas: list[dict], restaurants: list[dict]) -> None:
                             "@type": "CollectionPage",
                             "name": f"Restaurants in {name}",
                             "url": f'{ORIGIN}/areas/{area["slug"]}/',
-                            "description": description,
+                            "description": page_description,
                             "isPartOf": {"@id": ORIGIN + "/#website"},
                         },
                         {
@@ -3015,6 +3136,14 @@ def main() -> None:
     write(
         DATA / "amp-redirects.json",
         json.dumps(AMP_REDIRECTS, indent=2, ensure_ascii=False, sort_keys=True) + "\n",
+    )
+    write(
+        DATA / "legacy-redirects.json",
+        json.dumps(LEGACY_REDIRECTS, indent=2, ensure_ascii=False, sort_keys=True) + "\n",
+    )
+    write(
+        DATA / "removed-slugs.json",
+        json.dumps(REMOVED_SLUGS, indent=2, ensure_ascii=False) + "\n",
     )
     build_robots()
     build_llms(restaurants, areas, guides)

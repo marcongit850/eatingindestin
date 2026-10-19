@@ -1,8 +1,10 @@
 import ampRedirects from "./data/amp-redirects.json" with { type: "json" };
+import legacyRedirects from "./data/legacy-redirects.json" with { type: "json" };
+import removedSlugs from "./data/removed-slugs.json" with { type: "json" };
 import listingOptions from "./data/listing-options.json" with { type: "json" };
 import { handleAccount } from "./account-api.js";
 import { handleAdmin } from "./admin-api.js";
-import { servePublic } from "./public-site.js";
+import { missingPage, servePublic } from "./public-site.js";
 import { subscribeZohoLists, ZOHO_SOURCE_SUBSCRIBE } from "./zoho.js";
 
 /**
@@ -584,22 +586,72 @@ export function ampersandRedirect(url, method = "GET") {
   return { location: dest.toString(), status };
 }
 
+const REMOVED_SLUGS = new Set(removedSlugs);
+
+function redirectToSlug(target, url, method) {
+  if (!target || typeof target !== "string" || !/^[a-z0-9-]+$/.test(target)) return null;
+  const dest = new URL(`/restaurants/${target}/`, `https://${CANONICAL_HOST}`);
+  if (url.search) dest.search = url.search;
+  const status = method === "GET" || method === "HEAD" ? 301 : 308;
+  return { location: dest.toString(), status };
+}
+
+// Old Wix paths for restaurants that are still on the site. Ampersand paths
+// stay in ampersandRedirect so a deleted "&" path is not redirected.
+export function legacyRedirect(url, method = "GET") {
+  const slug = decodedRestaurantSlug(url.pathname);
+  if (!slug || slug.includes("&")) return null;
+  return redirectToSlug(legacyRedirects[slug], url, method);
+}
+
+export function removedRestaurantStatus(pathname) {
+  const slug = decodedRestaurantSlug(pathname);
+  if (!slug || !REMOVED_SLUGS.has(slug)) return 0;
+  if (ampRedirects[slug] || legacyRedirects[slug]) return 0;
+  return 410;
+}
+
+export function notFoundPathStatus(pathname) {
+  const path = String(pathname || "");
+  if (path === "/404" || path === "/404/" || path === "/404.html" || path === "/404/index.html") return 404;
+  return 0;
+}
+
 export function stripMissingCanonical(html) {
   return String(html || "")
-    .replace(/[ \t]*<link rel="canonical" href="[^"]*\/404\.html">\n?/g, "")
-    .replace(/[ \t]*<meta property="og:url" content="[^"]*\/404\.html">\n?/g, "")
+    .replace(/[ \t]*<link rel="canonical" href="[^"]*">\n?/g, "")
+    .replace(/[ \t]*<meta property="og:url" content="[^"]*">\n?/g, "")
     .replace(/"url": "https:\/\/www\.eatingindestin\.com\/404\.html", /g, "");
 }
 
 export async function cleanMissingResponse(response) {
-  if (!response || response.status !== 404) return response;
+  if (!response || (response.status !== 404 && response.status !== 410)) return response;
   const headers = new Headers(response.headers);
   headers.set("x-robots-tag", "noindex");
   const type = headers.get("content-type") || "";
   if (!type.includes("html")) {
     return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
   }
-  return new Response(stripMissingCanonical(await response.text()), { status: 404, headers });
+  return new Response(stripMissingCanonical(await response.text()), { status: response.status, headers });
+}
+
+const NOT_FOUND_MARKERS = ["That page is not on the menu.", "<title>Page not found"];
+
+export async function rejectSoftNotFound(response) {
+  if (!response || response.status !== 200) return response;
+  const type = response.headers.get("content-type") || "";
+  if (!type.includes("html")) return response;
+  const html = await response.text();
+  if (!NOT_FOUND_MARKERS.some((marker) => html.includes(marker))) {
+    const headers = new Headers(response.headers);
+    headers.delete("content-length");
+    return new Response(html, { status: response.status, statusText: response.statusText, headers });
+  }
+  const headers = new Headers(response.headers);
+  headers.delete("content-length");
+  headers.set("x-robots-tag", "noindex");
+  headers.set("cache-control", "no-store");
+  return new Response(stripMissingCanonical(html), { status: 404, headers });
 }
 
 function json(body, status = 200) {
@@ -829,7 +881,7 @@ export default {
         },
       });
     }
-    const moved = ampersandRedirect(url, request.method);
+    const moved = ampersandRedirect(url, request.method) || legacyRedirect(url, request.method);
     if (moved) {
       return new Response(null, {
         status: moved.status,
@@ -839,6 +891,15 @@ export default {
         },
       });
     }
+    const missingStatus = notFoundPathStatus(url.pathname);
+    if (missingStatus) {
+      return cleanMissingResponse(await missingPage(request, env, missingStatus));
+    }
+    const slug = decodedRestaurantSlug(url.pathname);
+    if (slug && !/^[a-z0-9-]+$/.test(slug)) {
+      const gone = removedRestaurantStatus(url.pathname) || 404;
+      return cleanMissingResponse(await missingPage(request, env, gone));
+    }
     if (url.pathname === "/api/subscribe") return handleSubscribe(request, env);
     if (url.pathname === "/api/listing") return handleListing(request, env);
     if (url.pathname === "/api/list-restaurant") return handleListRestaurant(request, env);
@@ -846,6 +907,7 @@ export default {
     if (url.pathname.startsWith("/api/admin/") || url.pathname.startsWith("/media/photos/")) {
       return handleAdmin(request, env);
     }
-    return cleanMissingResponse(withAdminRobots(url, await servePublic(request, await env.ASSETS.fetch(request), env)));
+    const served = await servePublic(request, await env.ASSETS.fetch(request), env);
+    return cleanMissingResponse(await rejectSoftNotFound(withAdminRobots(url, served)));
   },
 };

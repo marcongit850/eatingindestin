@@ -444,7 +444,8 @@ export function renderProfile(listing, nearby = []) {
     : "";
   const socials = [];
   if (listing.instagram) socials.push(`<a href="${escapeHtml(listing.instagram)}" rel="noopener noreferrer">Instagram</a>`);
-  if (listing.facebook) socials.push(`<a href="${escapeHtml(listing.facebook)}" rel="noopener noreferrer">Facebook</a>`);
+  const facebook = /facebook\.com\/2008(?:\/fbml)?\/?$/i.test(String(listing.facebook || "")) ? "" : listing.facebook;
+  if (facebook) socials.push(`<a href="${escapeHtml(facebook)}" rel="noopener noreferrer">Facebook</a>`);
   const facts = [
     ["Hours", listing.hours ? escapeHtml(listing.hours).replace(/\n/g, "<br>") : "Hours not listed"],
     ["Phone", phone],

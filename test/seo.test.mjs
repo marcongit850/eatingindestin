@@ -1,8 +1,17 @@
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import worker, { CANONICAL_HOST, ampersandRedirect, canonicalRedirect, stripMissingCanonical } from "../worker.js";
+import worker, {
+  CANONICAL_HOST,
+  ampersandRedirect,
+  canonicalRedirect,
+  legacyRedirect,
+  notFoundPathStatus,
+  rejectSoftNotFound,
+  removedRestaurantStatus,
+  stripMissingCanonical,
+} from "../worker.js";
 import { patchSitemap } from "../public-html.js";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
@@ -51,6 +60,11 @@ function walk(dir, out = []) {
 const htmlPages = walk(root).filter((path) => path.endsWith(".html") && !path.includes(`${join(root, "includes")}`));
 const titles = new Set();
 const descriptions = new Set();
+const canonicals = new Set();
+const EXACT_DESCRIPTIONS = new Set([
+  "American steakhouse at Grand Boulevard in Sandestin. Hours, address, and what to order. Eating in Destin.",
+  "Every restaurant at Grand Boulevard Destin, including Bricktop's. Hours and maps.",
+]);
 
 for (const path of htmlPages) {
   const html = readFileSync(path, "utf8");
@@ -62,7 +76,13 @@ for (const path of htmlPages) {
   titles.add(title);
   descriptions.add(description);
   assert.ok(title.length >= 20 && title.length <= 70, rel + " title length " + title.length + " " + title);
-  assert.ok(description.length >= 110 && description.length <= 165, rel + " description length " + description.length);
+  if (EXACT_DESCRIPTIONS.has(description)) {
+    assert.ok(description.length <= 165, rel + " description length " + description.length);
+    assert.equal(description.includes("\u2013") || description.includes("\u2014"), false, rel);
+    assert.equal(title.includes("\u2013") || title.includes("\u2014"), false, rel);
+  } else {
+    assert.ok(description.length >= 110 && description.length <= 165, rel + " description length " + description.length);
+  }
   assert.match(description, /Destin/);
   const isMissing = path.endsWith("404.html");
   assert.equal(attr(html, /<meta property="og:title" content="([^"]+)">/), title);
@@ -76,6 +96,8 @@ for (const path of htmlPages) {
     assert.ok(canonical.startsWith(ORIGIN), rel + " canonical " + canonical);
     assert.equal(canonical.startsWith(`https://${CANONICAL_HOST}`), true, rel);
     assert.equal(canonical.includes("workers.dev"), false, rel);
+    assert.equal(canonicals.has(canonical), false, "duplicate canonical " + canonical);
+    canonicals.add(canonical);
     assert.equal(attr(html, /<meta property="og:url" content="([^"]+)">/), canonical);
   }
   assert.equal(attr(html, /<meta property="og:site_name" content="([^"]+)">/), "Eating in Destin");
@@ -163,10 +185,22 @@ const profilePages = walk(join(root, "restaurants")).filter(
   (path) => path.endsWith(`${join("index.html")}`) && !path.endsWith(`${join("restaurants", "index.html")}`),
 );
 assert.equal(profilePages.length, 236);
+const seenProfiles = new Set();
 for (const path of profilePages) {
-  const data = jsonLd(readFileSync(path, "utf8"));
+  const html = readFileSync(path, "utf8");
+  const data = jsonLd(html);
   const listing = data["@graph"].find((node) => typesOf(node).includes("Restaurant"));
   assert.ok(listing, path);
+  assert.match(html, /<h1>/, path);
+  assert.match(html, /<dt>Address<\/dt><dd>[^<]+/, path);
+  assert.match(html, /<dt>Hours<\/dt><dd>/, path);
+  const h1 = attr(html, /<h1>([^<]+)<\/h1>/);
+  const address = attr(html, /<dt>Address<\/dt><dd>([^<]+)/);
+  const story = (html.split('class="prose profile-story">')[1] || "").split("</div>")[0];
+  const identity = `${h1}\n${address}\n${story}`;
+  assert.equal(seenProfiles.has(identity), false, "near-identical restaurant page " + path);
+  seenProfiles.add(identity);
+  assert.equal(listing.url, attr(html, /<link rel="canonical" href="([^"]+)">/), path);
   assert.ok(typesOf(listing).includes("LocalBusiness"), path);
   assert.ok(listing.name, path);
   assert.ok(listing.url.startsWith(`${ORIGIN}/restaurants/`), path);
@@ -245,10 +279,22 @@ const withAmp = sitemap.replace(
 );
 assert.equal(patchSitemap(withAmp, { liveSlugs }).includes("aj's-seafood-"), false);
 assert.equal(patchSitemap(withAmp, { liveSlugs }).includes("aj-s-seafood-and-oyster-bar-destin-harbor"), true);
+const legacyRedirects = JSON.parse(read("data/legacy-redirects.json"));
+const removedSlugList = JSON.parse(read("data/removed-slugs.json"));
+const removedSlugSet = new Set(removedSlugList);
 for (const loc of locs) {
   assert.equal(loc.includes("&"), false, loc);
+  assert.equal(loc.startsWith(`${ORIGIN}/`), true, loc);
+  const path = loc.slice(ORIGIN.length);
+  const file = path === "/" ? join(root, "index.html") : join(root, path.replace(/^\//, ""), "index.html");
+  assert.equal(existsSync(file), true, "sitemap entry is not a live page " + loc);
+  const canonical = attr(readFileSync(file, "utf8"), /<link rel="canonical" href="([^"]+)">/);
+  assert.equal(canonical, loc, "sitemap canonical " + loc);
   if (loc.includes("/restaurants/") && !loc.endsWith("/restaurants/")) {
-    assert.equal(liveSlugs.includes(loc.slice(loc.indexOf("/restaurants/") + "/restaurants/".length).replace(/\/$/, "")), true, loc);
+    const slug = loc.slice(loc.indexOf("/restaurants/") + "/restaurants/".length).replace(/\/$/, "");
+    assert.equal(liveSlugs.includes(slug), true, loc);
+    assert.equal(Object.hasOwn(legacyRedirects, slug), false, "sitemap lists a redirected slug " + slug);
+    assert.equal(removedSlugSet.has(slug), false, "sitemap lists a removed slug " + slug);
   }
 }
 assert.equal(locs.includes(`${ORIGIN}/guides/`), true);
@@ -284,6 +330,84 @@ const ajOld = ampersandRedirect(new URL(`${ORIGIN}/restaurants/aj%27s-seafood-%2
 assert.equal(ajOld.status, 301);
 assert.equal(ajOld.location, `${ORIGIN}/restaurants/aj-s-seafood-and-oyster-bar-destin-harbor/`);
 assert.equal(ampersandRedirect(new URL(`${ORIGIN}/restaurants/east-pass-seafood-%26-oyster-house/`), "GET"), null);
+const camilleOld = legacyRedirect(new URL(`${ORIGIN}/restaurants/${encodeURIComponent("camille's-at-crystal-beach")}/`), "GET");
+assert.equal(camilleOld.status, 301);
+assert.equal(camilleOld.location, `${ORIGIN}/restaurants/camille-s-at-crystal-beach-crystal-beach/`);
+const lagniappeOld = legacyRedirect(new URL(`${ORIGIN}/restaurants/louisiana-lagniappe/`), "GET");
+assert.equal(lagniappeOld.status, 301);
+assert.equal(lagniappeOld.location, `${ORIGIN}/restaurants/louisiana-lagniappe-destin-harbor/`);
+const brickOld = legacyRedirect(new URL(`${ORIGIN}/restaurants/${encodeURIComponent("bricktop's")}/?q=1`), "GET");
+assert.equal(brickOld.status, 301);
+assert.equal(brickOld.location, `${ORIGIN}/restaurants/bricktop-s-grand-boulevard/?q=1`);
+assert.equal(legacyRedirect(new URL(`${ORIGIN}/restaurants/bricktop-s/`), "GET").location, `${ORIGIN}/restaurants/bricktop-s-grand-boulevard/`);
+assert.equal(legacyRedirect(new URL(`${ORIGIN}/restaurants/bricktop-s-grand-boulevard/`), "GET"), null);
+assert.equal(legacyRedirect(new URL(`${ORIGIN}/restaurants/o-ku/`), "GET"), null);
+assert.equal(removedRestaurantStatus("/restaurants/o-ku/"), 410);
+assert.equal(removedRestaurantStatus("/restaurants/cowgirl-kitchen/"), 410);
+assert.equal(removedRestaurantStatus("/restaurants/mi-casita/"), 410);
+assert.equal(removedRestaurantStatus("/restaurants/mi-casita-mexican-grill/"), 410);
+assert.equal(removedRestaurantStatus("/restaurants/louisiana-lagniappe/"), 0);
+assert.equal(removedRestaurantStatus("/restaurants/harbor-docks-destin-harbor/"), 0);
+assert.equal(notFoundPathStatus("/404"), 404);
+assert.equal(notFoundPathStatus("/404.html"), 404);
+assert.equal(notFoundPathStatus("/restaurants/o-ku/"), 0);
+const soft = await rejectSoftNotFound(new Response("<title>Page not found | Eating in Destin</title><h1>That page is not on the menu.</h1>", {
+  status: 200,
+  headers: { "content-type": "text/html; charset=utf-8" },
+}));
+assert.equal(soft.status, 404);
+assert.equal(soft.headers.get("x-robots-tag"), "noindex");
+assert.equal((await soft.text()).includes("canonical"), false);
+const routeEnv = {
+  ACCOUNT_SITE: "destin",
+  ASSETS: {
+    async fetch(request) {
+      const path = new URL(request.url).pathname;
+      const html = `<link rel="canonical" href="${ORIGIN}/404.html"><title>Page not found | Eating in Destin</title><h1>That page is not on the menu.</h1>`;
+      if (path === "/404.html") {
+        return new Response(html, { status: 200, headers: { "content-type": "text/html; charset=utf-8" } });
+      }
+      if (path === "/404" || path === "/404/") {
+        return new Response(html, { status: 200, headers: { "content-type": "text/html; charset=utf-8" } });
+      }
+      return new Response("missing", { status: 404, headers: { "content-type": "text/html; charset=utf-8" } });
+    },
+  },
+};
+const prettyMissing = await worker.fetch(new Request(`${ORIGIN}/404`), routeEnv);
+assert.equal(prettyMissing.status, 404);
+assert.equal((await prettyMissing.text()).includes("canonical"), false);
+const fileMissing = await worker.fetch(new Request(`${ORIGIN}/404.html`), routeEnv);
+assert.equal(fileMissing.status, 404);
+const gonePage = await worker.fetch(new Request(`${ORIGIN}/restaurants/o-ku/`), routeEnv);
+assert.equal(gonePage.status, 410);
+assert.equal(gonePage.headers.get("x-robots-tag"), "noindex");
+assert.equal((await gonePage.text()).includes("canonical"), false);
+const camilleMoved = await worker.fetch(new Request(`${ORIGIN}/restaurants/${encodeURIComponent("camille's-at-crystal-beach")}/`), routeEnv);
+assert.equal(camilleMoved.status, 301);
+assert.equal(camilleMoved.headers.get("location"), `${ORIGIN}/restaurants/camille-s-at-crystal-beach-crystal-beach/`);
+const brickHtml = read("restaurants/bricktop-s-grand-boulevard/index.html");
+assert.equal(attr(brickHtml, /<title>([^<]+)<\/title>/), "Bricktop's Destin at Grand Boulevard | Menu, Hours, Reservations");
+assert.equal(attr(brickHtml, /<meta name="description" content="([^"]+)">/), "American steakhouse at Grand Boulevard in Sandestin. Hours, address, and what to order. Eating in Destin.");
+assert.equal(attr(brickHtml, /<meta property="og:title" content="([^"]+)">/), attr(brickHtml, /<title>([^<]+)<\/title>/));
+assert.equal(attr(brickHtml, /<meta property="og:description" content="([^"]+)">/), attr(brickHtml, /<meta name="description" content="([^"]+)">/));
+assert.match(brickHtml, /<h1>BrickTop/);
+const grandHtml = read("areas/grand-boulevard/index.html");
+assert.equal(attr(grandHtml, /<title>([^<]+)<\/title>/), "Grand Boulevard Restaurants in Sandestin | Eating in Destin");
+assert.equal(attr(grandHtml, /<meta name="description" content="([^"]+)">/), "Every restaurant at Grand Boulevard Destin, including Bricktop's. Hours and maps.");
+assert.equal(attr(grandHtml, /<meta property="og:title" content="([^"]+)">/), attr(grandHtml, /<title>([^<]+)<\/title>/));
+assert.equal(attr(grandHtml, /<meta property="og:description" content="([^"]+)">/), attr(grandHtml, /<meta name="description" content="([^"]+)">/));
+assert.match(grandHtml, /<h1>Restaurants in Grand Boulevard<\/h1>/);
+const lagniappeHtml = read("restaurants/louisiana-lagniappe-destin-harbor/index.html");
+assert.equal(lagniappeHtml.includes("facebook.com/2008/fbml"), false);
+const lagniappeSchema = jsonLd(lagniappeHtml)["@graph"].find((node) => typesOf(node).includes("Restaurant"));
+assert.ok(lagniappeSchema.openingHours.includes("Mo 16:00-21:00"));
+assert.match(lagniappeHtml, /<h1>Louisiana Lagniappe<\/h1>/);
+assert.match(lagniappeHtml, /775 Gulf Shore/);
+const camilleHtml = read("restaurants/camille-s-at-crystal-beach-crystal-beach/index.html");
+assert.equal(attr(camilleHtml, /<link rel="canonical" href="([^"]+)">/), `${ORIGIN}/restaurants/camille-s-at-crystal-beach-crystal-beach/`);
+assert.match(camilleHtml, /<h1>Camille/);
+assert.match(camilleHtml, /2931 Scenic/);
 const bad404 = `<link rel="canonical" href="${ORIGIN}/404.html">\n<meta property="og:url" content="${ORIGIN}/404.html">\n<script type="application/ld+json">{"name": "Page not found", "url": "${ORIGIN}/404.html", "isPartOf": {}}</script>`;
 const cleaned404 = stripMissingCanonical(bad404);
 assert.equal(cleaned404.includes("404.html"), false);
