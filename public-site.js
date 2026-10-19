@@ -4,6 +4,7 @@
  * unchanged.
  */
 
+import removedSlugs from "./data/removed-slugs.json" with { type: "json" };
 import { liveListings, publicRecords } from "./catalog.js";
 import { currentCatalog } from "./catalog-store.js";
 import { siteId } from "./shared-accounts.js";
@@ -17,25 +18,27 @@ import {
   renderProfile,
 } from "./public-html.js";
 
+const REMOVED_SLUGS = new Set(removedSlugs);
+
 function htmlResponse(body, status = 200) {
-  return new Response(body, {
-    status,
-    headers: {
-      "content-type": "text/html; charset=utf-8",
-      "cache-control": "no-store",
-    },
-  });
+  const headers = {
+    "content-type": "text/html; charset=utf-8",
+    "cache-control": "no-store",
+  };
+  if (status !== 200) headers["x-robots-tag"] = "noindex";
+  return new Response(body, { status, headers });
 }
 
-async function notFound(request, env) {
+export async function missingPage(request, env, status = 404) {
   const url = new URL(request.url);
   if (env && env.ASSETS) {
     const page = await env.ASSETS.fetch(new Request(new URL("/404.html", url.origin)));
     const headers = new Headers(page.headers);
     headers.set("cache-control", "no-store");
-    return new Response(page.body, { status: 404, headers });
+    headers.set("x-robots-tag", "noindex");
+    return new Response(page.body, { status, headers });
   }
-  return htmlResponse("That page is not on the menu.", 404);
+  return htmlResponse("That page is not on the menu.", status);
 }
 
 export async function servePublic(request, response, env) {
@@ -54,7 +57,9 @@ export async function servePublic(request, response, env) {
   const slug = listingSlugFromPath(url.pathname);
   if (slug) {
     const listing = merged.find((item) => item.slug === slug);
-    if (!listing || listing.deleted || listing.status !== "live") return notFound(request, env);
+    if (!listing || listing.deleted || listing.status !== "live") {
+      return missingPage(request, env, REMOVED_SLUGS.has(slug) ? 410 : 404);
+    }
     if (listing.source === "baseline") return response;
     if (request.method === "HEAD") return new Response(null, { status: 200, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
     return htmlResponse(renderProfile(listing, liveListings(merged)));
