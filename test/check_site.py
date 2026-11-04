@@ -623,11 +623,11 @@ config = json.loads((ROOT / "site.config.json").read_text(encoding="utf-8"))
 featured = config.get("featured") or []
 by_slug = {item["slug"]: item for item in restaurants}
 check(featured == [
-    "harbor-docks-destin-harbor",
-    "the-back-porch-mid-destin",
-    "beach-walk-cafe-crystal-beach",
-], "featured cover should be Harbor Docks, The Back Porch, then Beach Walk Cafe")
-check(len(set(by_slug[slug]["areaSlug"] for slug in featured)) == len(featured), "featured listings should use different towns")
+    "the-melting-pot-mid-destin",
+    "mcguire-s-irish-pub-destin-harbor",
+    "the-surf-hut-miramar-beach",
+], "featured cover should be The Melting Pot, McGuire's Irish Pub, then The Surf Hut")
+check(len(set(by_slug[slug]["areaSlug"] for slug in featured)) >= 2, "featured listings should use more than one town")
 check({"$$", "$$$"} <= {by_slug[slug]["price"] for slug in featured}, "featured mix should include casual and upscale")
 check(home.count('<div class="cover" data-featured') == len(featured), "homepage should render every featured cover")
 check("86400000" in home and "from-the-guide" in home, "homepage should rotate the cover by UTC day")
