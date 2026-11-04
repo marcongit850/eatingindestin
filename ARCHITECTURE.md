@@ -1,6 +1,6 @@
 # Eating in Destin: architecture
 
-Last checked against the code and Cloudflare on Oct 8, 2026.
+Last checked against the code and Cloudflare on Nov 4, 2026.
 
 ## What it does
 
@@ -15,7 +15,11 @@ A static restaurant guide for Destin and Miramar Beach, FL (sister site of Eatin
 
 - Directory data: `data/restaurants.csv` and `data/locations.csv` in this repo are the source of truth. `scripts/build.py` generates the HTML, `data/catalog.json`, and the sitemap. Raw CSVs are not uploaded (`.assetsignore`).
 - Photos: `images/` in this repo, served as static assets.
-- Admin listing edits and admin uploaded photos: stored by the shared `eating-accounts` Worker (D1 `eating-accounts`, R2 `eating-listings`). They override the `data/catalog.json` baseline. Do not add a Destin database or photo bucket.
+- Admin listing edits and admin uploaded photos: stored by the shared `eating-accounts` Worker (D1 `eating-accounts`, R2 `eating-listings`). They override the `data/catalog.json` baseline. Do not add a Destin database or photo bucket. Listing fields live in the JSON `listings.payload` column. There is no separate column for amenities, so `waterfront` and `bar` do not need a D1 migration.
+- `waterfront` and `bar` are booleans on every listing (display labels Waterfront and Bar Scene). The baseline values are `Waterfront` and `Bar Scene` columns on `data/restaurants.csv` (`["Yes"]` or `["No"]`), written by `scripts/build.py` into `data/catalog.json` and `data/restaurants.json`. Approved tags: 38 waterfront and 32 bar. Every other published listing is false. Waterfront and Bar Scene controls stay hidden only while no live listing has that tag.
+- Directory and map filters read `area`, `meal`, `cuisine`, `q`, `outdoor`, `kids`, `music`, `laurens`, `reservations`, `groups`, `happyfood`, `happydrinks`, plus `price` (exactly `$`, `$$`, `$$$`, or `$$$$`), `waterfront=yes`, `bar=yes`, and `happyhour=yes` (happy hour food or happy hour drinks). The homepage hero search submits those same params. Meal, cuisine, and price are single-select.
+- An admin override whose payload omits `waterfront` or `bar` keeps the baseline value. Only an explicit `true` sets the flag (`=== true`, not a truthy string). An explicit `false` clears it. The Edge Seafood Restaurant & SkyBar (`the-edge-seafood-restaurant-and-skybar-destin-harbor`) already has an override row, so its waterfront and bar tags show from the baseline without a D1 write. Do not rewrite that row just to make the tags appear.
+- Saving a listing from the admin or the list-your-restaurant form stores `waterfront` and `bar` only after `eating-accounts` is redeployed from the eatingon30A repo. That Worker validates payloads with eatingon30A's `listing-model.js`, not this copy. It has no Builds trigger. Until that deploy, a save drops the new keys and the CSV baseline still shows. Deploy `eating-accounts` before relying on an admin save to persist the flags.
 - Accounts, sessions, and saves: D1 `eating-accounts` (id `f3ae29af-a929-4185-b5bd-b349cc015a3f`), owned by `eating-accounts`. This site keeps no user database.
 - External services: Resend (email), a Google Sheets Apps Script webhook (coupon rows), Zoho Campaigns (list subscribe).
 

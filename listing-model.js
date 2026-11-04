@@ -220,6 +220,8 @@ export function validateListing(input, { allowedPhotoIds } = {}) {
   if (category.error) return { error: "Keep the category under 80 characters." };
   const flags = [
     ["outdoor", "outdoor dining"],
+    ["waterfront", "waterfront"],
+    ["bar", "bar scene"],
     ["kids", "kid friendly"],
     ["music", "live music"],
     ["reservations", "reservations"],
@@ -301,6 +303,8 @@ export function publicRecord(listing) {
     label: listing.label || listing.area || "",
     placeArea: listing.label || listing.area || "",
     outdoor: Boolean(listing.outdoor),
+    waterfront: listing.waterfront === true,
+    bar: listing.bar === true,
     kids: Boolean(listing.kids),
     music: Boolean(listing.music),
     reservations: Boolean(listing.reservations),

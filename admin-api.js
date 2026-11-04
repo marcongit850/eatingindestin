@@ -114,6 +114,8 @@ function editorListing(listing, site) {
     vibes: listing.vibes,
     category: listing.category,
     outdoor: listing.outdoor,
+    waterfront: listing.waterfront === true,
+    bar: listing.bar === true,
     kids: listing.kids,
     music: listing.music,
     reservations: listing.reservations,

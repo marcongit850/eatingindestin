@@ -42,6 +42,9 @@ export function presentListing(raw) {
     vibes: raw.vibes || [],
     category: raw.category || "",
     outdoor: Boolean(raw.outdoor),
+    // Only an explicit true is tagged. Boolean("yes") and a missing key are not.
+    waterfront: raw.waterfront === true,
+    bar: raw.bar === true,
     kids: Boolean(raw.kids),
     music: Boolean(raw.music),
     reservations: Boolean(raw.reservations),
@@ -68,6 +71,9 @@ export function mergeCatalog(baseline, rows) {
   for (const row of rows || []) {
     const previous = map.get(row.slug);
     const payload = row.payload || {};
+    // The baseline listing is spread first. An override that omits waterfront
+    // or bar keeps that value. presentListing then keeps only === true, so a
+    // missing key is not rewritten to false.
     map.set(row.slug, presentListing({
       ...(previous || {}),
       ...payload,

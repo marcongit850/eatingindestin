@@ -83,6 +83,19 @@ check(
     "directory filter should include Lauren's Favorites",
 )
 map_page = (ROOT / "map" / "index.html").read_text(encoding="utf-8")
+check('id="price"' in directory and ">Any price</option>" in directory, "directory should offer a price filter")
+check('id="price"' in map_page and ">Any price</option>" in map_page, "map should offer a price filter")
+check('data-filter-flag="waterfront" hidden' not in directory, "Waterfront shows on the directory once listings are tagged")
+check('data-filter-flag="bar" hidden' not in directory, "Bar Scene shows on the directory once listings are tagged")
+check('data-filter-flag="waterfront" hidden' not in map_page, "Waterfront shows on the map once listings are tagged")
+check('data-filter-flag="bar" hidden' not in map_page, "Bar Scene shows on the map once listings are tagged")
+for name, label in (
+    ("happyhour", "Happy hour"),
+    ("waterfront", "Waterfront"),
+    ("bar", "Bar Scene"),
+):
+    check(f'name="{name}" value="yes"' in directory and f">{label}</span>" in directory, f"directory should offer {label}")
+    check(f'name="{name}" value="yes"' in map_page and f">{label}</span>" in map_page, f"map should offer {label}")
 check('class="video-tour"' not in map_page, "video tour stays off the map")
 check(">Lauren's Favorites</span>" in map_page, "map filter should include Lauren's Favorites")
 check('name="area"' in map_page and ">All areas</option>" in map_page, "map keeps the area dropdown")
@@ -138,8 +151,49 @@ check('"name": "eatingindestin"' in wrangler, "worker name must stay eatingindes
 check("eatingindestin.com" not in wrangler, "wrangler must not attach the vanity domain")
 check("routes" not in wrangler, "wrangler must not declare custom routes")
 
-for meal in ("Breakfast", "Lunch", "Dinner", "Desserts", "Drinks"):
-    check(f'href="/restaurants/?meal={meal}"' in home, f"homepage missing meal link {meal}")
+for href, label, kind, value in (
+    ("/restaurants/?meal=Breakfast", "Breakfast", "meal", "Breakfast"),
+    ("/restaurants/?meal=Lunch", "Lunch", "meal", "Lunch"),
+    ("/restaurants/?meal=Dinner", "Dinner", "meal", "Dinner"),
+    ("/restaurants/?meal=Desserts", "Desserts", "meal", "Desserts"),
+    ("/restaurants/?happyhour=yes", "Happy Hour", "happy", ""),
+    ("/restaurants/?cuisine=Seafood", "Seafood", "cuisine", "Seafood"),
+    ("/restaurants/?outdoor=yes", "Outdoor Dining", "outdoor", ""),
+    ("/restaurants/?music=yes", "Live Music", "music", ""),
+):
+    count = build.category_count(restaurants, kind, value)
+    block = home.split(f'href="{href}"', 1)[1].split("</a>", 1)[0]
+    check(f'href="{href}"' in home, f"homepage missing category link {label}")
+    check(f'class="meal-name">{label}</span>' in block, f"homepage missing category name {label}")
+    check(f'class="meal-count">{count}</span>' in block, f"homepage {label} count should be {count}")
+check('href="/restaurants/?meal=Drinks"' not in home, "homepage category row should drop Drinks")
+check(home.count('class="search-form"') == 1, "homepage should keep a single search form")
+check('data-hero-search' in home, "homepage filters should live in the hero search")
+check("What are you looking for?" in home, "homepage search should ask what visitors want")
+check(">All areas</option>" in home, "homepage area menu should start with all areas")
+check("More filters" in home and "Clear all" in home, "homepage search should offer more filters and clear all")
+check("data-hero-show" in home, "homepage search should include the show button")
+check('data-hero-flag="waterfront"' in home and 'data-hero-flag="waterfront" hidden' not in home, "Waterfront chip shows once listings are tagged")
+check('data-hero-flag="bar"' in home and 'data-hero-flag="bar" hidden' not in home, "Bar Scene chip shows once listings are tagged")
+check(sum(1 for item in restaurants if item.get("waterfront") is True) == 38, "public catalog should tag 38 waterfront restaurants")
+check(sum(1 for item in restaurants if item.get("bar") is True) == 32, "public catalog should tag 32 bar scene restaurants")
+check(
+    all(item.get("waterfront") in {True, False} and item.get("bar") in {True, False} for item in restaurants),
+    "every public restaurant should carry waterfront and bar",
+)
+check(directory.count('data-waterfront="yes"') == 38, "directory should mark 38 waterfront listings")
+check(directory.count('data-bar="yes"') == 32, "directory should mark 32 bar scene listings")
+edge = next(item for item in restaurants if item["slug"] == "the-edge-seafood-restaurant-and-skybar-destin-harbor")
+check(edge["waterfront"] is True and edge["bar"] is True, "The Edge should be waterfront and bar in the public catalog")
+edge_page = (ROOT / "restaurants" / edge["slug"] / "index.html").read_text(encoding="utf-8")
+check(">Waterfront</li>" in edge_page and ">Bar Scene</li>" in edge_page, "The Edge profile should show Waterfront and Bar Scene tags")
+published_rows = [
+    row for row in csv_rows
+    if build.clean_text(row.get("Status")) == "PUBLISHED" and build.clean_text(row.get("Restaurant Name"))
+]
+check(sum(1 for row in published_rows if build.is_yes(row.get("Waterfront"))) == 38, "CSV should mark 38 waterfront listings")
+check(sum(1 for row in published_rows if build.is_yes(row.get("Bar Scene"))) == 32, "CSV should mark 32 bar scene listings")
+check("Waterfront" in csv_rows[0] and "Bar Scene" in csv_rows[0], "CSV should include Waterfront and Bar Scene columns")
 
 areas = json.loads((ROOT / "data" / "locations.json").read_text(encoding="utf-8"))
 check(len(areas) == len({item["areaSlug"] for item in restaurants}), f"town pages should match listed areas, got {len(areas)}")
