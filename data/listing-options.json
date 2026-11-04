@@ -117,6 +117,16 @@
       "note": ""
     },
     {
+      "name": "waterfront",
+      "label": "Waterfront",
+      "note": ""
+    },
+    {
+      "name": "bar",
+      "label": "Bar Scene",
+      "note": ""
+    },
+    {
       "name": "happyDrinks",
       "label": "Happy hour (drinks)",
       "note": ""

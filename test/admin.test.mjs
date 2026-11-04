@@ -47,6 +47,61 @@ test("the Destin catalog is the baseline and stores no SEO fields", () => {
   }
 });
 
+test("The Edge keeps its baseline waterfront and bar tags when the override omits them", () => {
+  const baseline = baselineFor("destin");
+  const slug = "the-edge-seafood-restaurant-and-skybar-destin-harbor";
+  const edge = baseline.find((item) => item.slug === slug);
+  assert.equal(edge.waterfront, true);
+  assert.equal(edge.bar, true);
+  const payload = { ...edge, notes: "Override without the new flags." };
+  delete payload.waterfront;
+  delete payload.bar;
+  const merged = mergeCatalog(baseline, [{ slug, status: "live", deleted: false, payload }]);
+  const out = merged.find((item) => item.slug === slug);
+  assert.equal(out.waterfront, true);
+  assert.equal(out.bar, true);
+  assert.equal(out.notes, "Override without the new flags.");
+  assert.equal(publicRecords(merged).find((item) => item.slug === slug).waterfront, true);
+  assert.equal(publicRecords(merged).find((item) => item.slug === slug).bar, true);
+});
+
+test("an override without waterfront or bar keeps the baseline tags", () => {
+  const baseline = [{
+    slug: "pier-flag",
+    name: "Pier Flag",
+    area: "Destin Harbor",
+    waterfront: true,
+    bar: true,
+  }];
+  const omitted = mergeCatalog(baseline, [{
+    slug: "pier-flag",
+    status: "live",
+    deleted: false,
+    payload: { name: "Pier Flag", area: "Crystal Beach" },
+  }]);
+  assert.equal(omitted[0].waterfront, true);
+  assert.equal(omitted[0].bar, true);
+  assert.equal(omitted[0].area, "Crystal Beach");
+  assert.equal(publicRecords(omitted)[0].waterfront, true);
+  assert.equal(publicRecords(omitted)[0].bar, true);
+
+  const cleared = mergeCatalog(baseline, [{
+    slug: "pier-flag",
+    status: "live",
+    deleted: false,
+    payload: { name: "Pier Flag", area: "Destin Harbor", waterfront: false },
+  }]);
+  assert.equal(cleared[0].waterfront, false);
+  assert.equal(cleared[0].bar, true);
+
+  const truthy = mergeCatalog(
+    [{ slug: "pier-flag", name: "Pier Flag", area: "Destin Harbor", waterfront: "yes", bar: 1 }],
+    [],
+  );
+  assert.equal(truthy[0].waterfront, false);
+  assert.equal(truthy[0].bar, false);
+});
+
 test("a listing that includes an SEO field is rejected", () => {
   const rejected = validateListing({ name: "Harbor Docks", area: "Destin Harbor", seo: "custom title" });
   assert.equal(rejected.error, "SEO fields are not editable.");

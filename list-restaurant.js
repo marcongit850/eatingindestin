@@ -3,6 +3,8 @@
   var URL = /^https?:\/\/\S+$/i;
   var AMENITIES = [
     ["outdoor", "outdoor dining"],
+    ["waterfront", "waterfront"],
+    ["bar", "bar scene"],
     ["happyDrinks", "happy hour (drinks)"],
     ["happyFood", "happy hour (food)"],
     ["reservations", "reservations"],
