@@ -928,7 +928,7 @@ check(
     and "Be sure to also check out" in shared_footer
     and 'src="/images/eating-on-30a-logo.png"' in shared_footer
     and 'alt="Eating on 30A"' in shared_footer
-    and 'href="https://eatingon30a.352marc.workers.dev"' in shared_footer,
+    and 'href="https://eatingon30a.com/"' in shared_footer,
     "footer should point visitors to Eating on 30A",
 )
 check((ROOT / "images" / "eating-on-30a-logo.png").is_file(), "30A logo should live in images")
