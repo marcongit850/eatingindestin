@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { handleAdmin } from "../admin-api.js";
-import { mergeCatalog, publicRecords } from "../catalog.js";
+import { isPublicListing, mergeCatalog, publicRecords } from "../catalog.js";
 import { baselineFor, invalidateCatalog } from "../catalog-store.js";
 import { validateListing } from "../listing-model.js";
 import { guideSlugsFor, patchHtml, patchLlms, patchSitemap, renderCard } from "../public-html.js";
@@ -25,7 +25,9 @@ function accountsEnv({ admin = false, signedIn = false, rows = [] } = {}) {
           return Response.json({ ok: true, user: { email: "marc@whpinc.com", isAdmin: true } });
         }
         if (url.pathname === "/v1/catalog") {
-          return Response.json({ ok: true, listings: rows });
+          const site = url.searchParams.get("site");
+          const listings = rows.filter((row) => !row.site || row.site === site);
+          return Response.json({ ok: true, listings });
         }
         return Response.json({ ok: false, error: "Not found." }, { status: 404 });
       },
@@ -237,4 +239,184 @@ test("a draft overlay is removed from the public directory and profile", async (
   const json = await worker.fetch(new Request(`${ORIGIN}/data/restaurants.json`), env);
   const records = await json.json();
   assert.equal(records.some((item) => item.slug === slug), false);
+});
+
+function jsonCatalog(rows, status = 200) {
+  return new Response(JSON.stringify(rows), {
+    status,
+    headers: { "content-type": "application/json" },
+  });
+}
+
+test("an override with no name does not crash the merge and stays off the public guide", () => {
+  const merged = mergeCatalog([], [
+    { slug: "seagrove-village-market-cafe-seagrove-beach", status: "inactive", deleted: false, payload: {} },
+    { slug: "village-market-cafe-bar-watersound-origins", status: "inactive", deleted: false, payload: {} },
+    { slug: "the-daytrader-tiki-bar-and-restaurant-seaside", status: "live", deleted: false, payload: { name: "The Daytrader Tiki Bar & Restaurant", area: "Seaside" } },
+  ]);
+  assert.equal(merged.length, 3);
+  const cafe = merged.find((item) => item.slug === "seagrove-village-market-cafe-seagrove-beach");
+  const origins = merged.find((item) => item.slug === "village-market-cafe-bar-watersound-origins");
+  assert.equal(cafe.name, "");
+  assert.equal(cafe.status, "inactive");
+  assert.equal(origins.name, "");
+  assert.equal(origins.status, "inactive");
+  assert.equal(isPublicListing(cafe), false);
+  assert.equal(publicRecords(merged).some((item) => item.slug === cafe.slug || item.slug === origins.slug), false);
+  assert.equal(publicRecords(merged).some((item) => item.slug === "the-daytrader-tiki-bar-and-restaurant-seaside"), true);
+});
+
+test("the Destin admin loads the 30A baseline and the other host can load Destin", async () => {
+  invalidateCatalog();
+  const daytrader = {
+    slug: "the-daytrader-tiki-bar-and-restaurant-seaside",
+    name: "The Daytrader Tiki Bar & Restaurant",
+    area: "Seaside",
+    waterfront: true,
+    bar: false,
+  };
+  const seagrove = {
+    slug: "seagrove-village-market-cafe-seagrove-beach",
+    name: "Seagrove Village Market Café",
+    area: "Seagrove Beach",
+  };
+  const originsCafe = {
+    slug: "village-market-cafe-bar-watersound-origins",
+    name: "Village Market Café + Bar",
+    area: "Watersound Origins",
+  };
+  const harbor = { slug: "harbor-baseline", name: "Harbor Baseline", area: "Destin Harbor" };
+  const localSlug = baselineFor("destin")[0].slug;
+  const fetched = [];
+  const fromDestin = accountsEnv({
+    admin: true,
+    rows: [
+      { site: "30a", slug: seagrove.slug, status: "inactive", deleted: false, payload: {} },
+      { site: "30a", slug: originsCafe.slug, status: "inactive", deleted: false, payload: {} },
+      { site: "30a", slug: "orphan-empty-row", status: "inactive", deleted: false, payload: {} },
+      { site: "destin", slug: localSlug, status: "live", deleted: false, payload: { name: "Overlay Name", area: "Destin Harbor" } },
+    ],
+  });
+  fromDestin.CATALOG_FETCH = async (url, init) => {
+    fetched.push({ url: String(url), init });
+    assert.equal(url, "https://www.eatingon30a.com/data/catalog.json");
+    assert.equal(init.redirect, "error");
+    assert.equal(init.credentials, undefined);
+    assert.equal(init.headers.authorization, undefined);
+    assert.equal(init.headers.cookie, undefined);
+    assert.equal(init.headers.accept, "application/json");
+    return jsonCatalog([
+      daytrader,
+      seagrove,
+      originsCafe,
+      { slug: "", name: "Dropped" },
+      { slug: "nameless", name: "" },
+      null,
+    ]);
+  };
+  const marc = { headers: { cookie: "ea_session=marc" } };
+  const anonymous = await handleAdmin(new Request(`${ORIGIN}/api/admin/listings?site=30a`), fromDestin);
+  assert.equal(anonymous.status, 401);
+  assert.equal((await anonymous.json()).ok, false);
+  assert.equal(fetched.length, 0);
+
+  const switched = await handleAdmin(new Request(`${ORIGIN}/api/admin/listings?site=30a`, marc), fromDestin);
+  const switchedBody = await switched.json();
+  assert.equal(switched.status, 200, JSON.stringify(switchedBody));
+  assert.equal(switched.headers.get("content-type").includes("json"), true);
+  const found = switchedBody.listings.find((item) => item.slug === daytrader.slug);
+  assert.equal(found.name, daytrader.name);
+  assert.equal(found.area, "Seaside");
+  assert.equal(found.status, "live");
+  const cafe = switchedBody.listings.find((item) => item.slug === seagrove.slug);
+  assert.equal(cafe.name, seagrove.name);
+  assert.equal(cafe.area, "Seagrove Beach");
+  assert.equal(cafe.status, "inactive");
+  const otherCafe = switchedBody.listings.find((item) => item.slug === originsCafe.slug);
+  assert.equal(otherCafe.status, "inactive");
+  assert.equal(otherCafe.name, originsCafe.name);
+  const orphan = switchedBody.listings.find((item) => item.slug === "orphan-empty-row");
+  assert.equal(orphan.name, "");
+  assert.equal(orphan.status, "inactive");
+  assert.equal(switchedBody.listings.some((item) => item.slug === "nameless" || item.slug === ""), false);
+  assert.equal(fetched.length, 1);
+  assert.equal(fetched[0].url, "https://www.eatingon30a.com/data/catalog.json");
+
+  const again = await handleAdmin(new Request(`${ORIGIN}/api/admin/listings?site=30a`, marc), fromDestin);
+  assert.equal(again.status, 200);
+  assert.equal(fetched.length, 1);
+
+  const local = await handleAdmin(new Request(`${ORIGIN}/api/admin/listings?site=destin`, marc), fromDestin);
+  const localBody = await local.json();
+  assert.equal(local.status, 200);
+  assert.ok(localBody.listings.length > 100);
+  const overlaid = localBody.listings.find((item) => item.slug === localSlug);
+  assert.equal(overlaid.name, "Overlay Name");
+  assert.equal(overlaid.status, "live");
+  assert.equal(localBody.listings.some((item) => item.slug === daytrader.slug), false);
+  assert.equal(fetched.length, 1);
+
+  const outsider = await handleAdmin(new Request(`${ORIGIN}/api/admin/listings?site=https://evil.example`, marc), fromDestin);
+  assert.equal(outsider.status, 400);
+  assert.equal(fetched.length, 1);
+
+  invalidateCatalog();
+  fromDestin.CATALOG_FETCH = async () => {
+    throw new Error("network down");
+  };
+  const offline = await handleAdmin(new Request(`${ORIGIN}/api/admin/listings?site=30a`, marc), fromDestin);
+  const offlineBody = await offline.json();
+  assert.equal(offline.status, 503);
+  assert.equal(offline.headers.get("content-type").includes("json"), true);
+  assert.match(offlineBody.error, /Eating on 30A listings could not be loaded/);
+
+  fromDestin.CATALOG_FETCH = async () => new Response("<html>challenge</html>", {
+    status: 403,
+    headers: { "content-type": "text/html" },
+  });
+  const blocked = await handleAdmin(new Request(`${ORIGIN}/api/admin/listings?site=30a`, marc), fromDestin);
+  const blockedBody = await blocked.json();
+  assert.equal(blocked.status, 503);
+  assert.match(blockedBody.error, /Eating on 30A listings could not be loaded/);
+
+  fromDestin.CATALOG_FETCH = async () => jsonCatalog({ ok: true }, 200);
+  const notAList = await handleAdmin(new Request(`${ORIGIN}/api/admin/listings?site=30a`, marc), fromDestin);
+  assert.equal(notAList.status, 503);
+  assert.equal((await notAList.json()).ok, false);
+
+  const guest = await handleAdmin(
+    new Request(`${ORIGIN}/api/admin/listings?site=30a`, marc),
+    accountsEnv({ signedIn: true }),
+  );
+  assert.equal(guest.status, 403);
+
+  invalidateCatalog();
+  const from30a = accountsEnv({
+    admin: true,
+    rows: [{ site: "destin", slug: harbor.slug, status: "draft", deleted: false, payload: { notes: "Keep the baseline name." } }],
+  });
+  from30a.ACCOUNT_SITE = "30a";
+  let destinFetches = 0;
+  from30a.CATALOG_FETCH = async (url, init) => {
+    destinFetches += 1;
+    assert.equal(url, "https://www.eatingindestin.com/data/catalog.json");
+    assert.equal(init.redirect, "error");
+    assert.equal(init.headers.authorization, undefined);
+    return jsonCatalog([harbor, { slug: "skip-me" }]);
+  };
+  const otherWay = await handleAdmin(new Request(`${ORIGIN}/api/admin/listings?site=destin`, marc), from30a);
+  const otherBody = await otherWay.json();
+  assert.equal(otherWay.status, 200, JSON.stringify(otherBody));
+  const harborRow = otherBody.listings.find((item) => item.slug === harbor.slug);
+  assert.equal(harborRow.name, harbor.name);
+  assert.equal(harborRow.area, "Destin Harbor");
+  assert.equal(harborRow.status, "draft");
+  assert.equal(otherBody.listings.some((item) => item.slug === "skip-me"), false);
+  assert.equal(destinFetches, 1);
+  const ownGuide = await handleAdmin(new Request(`${ORIGIN}/api/admin/listings?site=30a`, marc), from30a);
+  assert.equal(ownGuide.status, 200);
+  assert.equal(destinFetches, 1);
+  const ownBody = await ownGuide.json();
+  assert.ok(ownBody.listings.length > 100);
+  assert.equal(ownBody.listings.some((item) => item.slug === localSlug), true);
 });

@@ -7,7 +7,7 @@
 
 import listingOptions from "./data/listing-options.json" with { type: "json" };
 import { liveListings } from "./catalog.js";
-import { baselineFor, invalidateCatalog, loadOverrides, mergedCatalog } from "./catalog-store.js";
+import { baselineFor, guideBaseline, invalidateCatalog, loadOverrides, mergedCatalog } from "./catalog-store.js";
 import { isSlug, sniffImage, MAX_PHOTO_BYTES } from "./listing-model.js";
 import { accountsFetch, accountsJson, readCookie, siteId } from "./shared-accounts.js";
 
@@ -61,7 +61,7 @@ function areaName(area) {
   return area && area.name ? String(area.name).trim() : "";
 }
 
-function areasFor(site) {
+function areasFor(site, env) {
   if (site !== "destin") return [];
   const names = [];
   const seen = new Set();
@@ -72,7 +72,7 @@ function areasFor(site) {
     names.push(name);
   };
   for (const area of listingOptions.areas || []) add(areaName(area));
-  for (const listing of baselineFor("destin")) add(listing.area);
+  for (const listing of baselineFor("destin", env)) add(listing.area);
   return names;
 }
 
@@ -144,7 +144,7 @@ async function callAccounts(env, request, path, options) {
 async function ensureRow(env, request, site, slug, status) {
   const rows = await loadOverrides(env, site, { fresh: true });
   if (rows.some((row) => row.slug === slug && !row.deleted)) return true;
-  const baseline = baselineFor(site).find((item) => item.slug === slug);
+  const baseline = (await guideBaseline(env, site)).find((item) => item.slug === slug);
   if (!baseline) return false;
   const saved = await callAccounts(env, request, `/v1/admin/listings/${slug}`, {
     method: "PUT",
@@ -155,6 +155,19 @@ async function ensureRow(env, request, site, slug, status) {
 }
 
 export async function handleAdmin(request, env) {
+  try {
+    return await routeAdmin(request, env);
+  } catch (error) {
+    const sister = error && error.name === "SisterCatalogError";
+    console.log(JSON.stringify({ event: "admin_catalog", message: error && error.message }));
+    return json({
+      ok: false,
+      error: sister ? error.message : "Those listings could not be loaded. Try again in a moment.",
+    }, 503);
+  }
+}
+
+async function routeAdmin(request, env) {
   const url = new URL(request.url);
   const path = url.pathname;
   if (path.startsWith("/media/photos/")) return servePhoto(request, env);
@@ -163,10 +176,10 @@ export async function handleAdmin(request, env) {
   if (denied) return denied;
 
   if (path === "/api/admin/options" && request.method === "GET") {
-    const baseline = baselineFor("destin");
+    const baseline = baselineFor("destin", env);
     return json({
       ok: true,
-      sites: SITES.map((site) => ({ ...site, areas: areasFor(site.id) })),
+      sites: SITES.map((site) => ({ ...site, areas: areasFor(site.id, env) })),
       cuisines: choices(baseline, "cuisines", listingOptions.cuisines),
       foods: choices(baseline, "foods", listingOptions.foods),
       meals: choices(baseline, "meals", listingOptions.meals),

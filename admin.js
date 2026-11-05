@@ -175,11 +175,15 @@
       return (listing.name + " " + listing.area + " " + listing.slug).toLowerCase().indexOf(q) !== -1;
     }).slice().sort(compareListings);
     var body = rows.map(function (listing) {
-      var badge = listing.status === "draft" ? "badge badge-draft" : "badge";
-      var label = listing.status === "draft" ? "Draft" : "Live";
+      var badge = listing.status === "draft" ? "badge badge-draft" : listing.status === "inactive" ? "badge badge-inactive" : "badge";
+      var label = listing.status === "draft" ? "Draft" : listing.status === "inactive" ? "Inactive" : "Live";
       return "<tr><td><a href=\"#\" data-edit=\"" + escapeHtml(listing.slug) + "\">" + escapeHtml(listing.name) + "</a></td><td>" + escapeHtml(listing.area) + "</td><td><span class=\"" + badge + "\">" + label + "</span></td><td>" + listing.photoCount + "</td></tr>";
     }).join("");
-    if (!body) body = '<tr><td colspan="4">No listings match.</td></tr>';
+    if (!body) {
+      body = state.error
+        ? '<tr><td colspan="4">Listings could not be loaded.</td></tr>'
+        : '<tr><td colspan="4">No listings match.</td></tr>';
+    }
     var sites = (state.options ? state.options.sites : []).map(function (site) {
       var pressed = site.id === state.site ? "true" : "false";
       return '<button type="button" class="button secondary" data-site="' + site.id + '" aria-pressed="' + pressed + '">' + escapeHtml(site.label) + "</button>";
@@ -221,7 +225,7 @@
       '<form class="listing-form admin-editor" data-editor>' +
       '<div class="admin-grid">' +
       field("name", "Restaurant name", listing.name, { wide: true }) +
-      select("status", "Status", listing.status || "live", [{ value: "live", label: "Live" }, { value: "draft", label: "Draft" }]) +
+      select("status", "Status", listing.status || "live", [{ value: "live", label: "Live" }, { value: "draft", label: "Draft" }].concat(listing.status === "inactive" ? [{ value: "inactive", label: "Inactive" }] : [])) +
       select("price", "Price", listing.price || "", [{ value: "", label: "Not set" }, { value: "$", label: "$" }, { value: "$$", label: "$$" }, { value: "$$$", label: "$$$" }, { value: "$$$$", label: "$$$$" }]) +
       areaField +
       field("subarea", "Subarea", listing.subarea) +
@@ -254,7 +258,7 @@
       flag("laurensFavorite", "Lauren's Favorites", listing.laurensFavorite) +
       "</div></fieldset>" +
       '<div class="admin-actions"><button class="button" type="submit">Save</button>' +
-      (listing.slug && listing.status !== "draft" && state.site === "destin" ? '<a class="button secondary" href="/restaurants/' + escapeHtml(listing.slug) + '/">View</a>' : "") +
+      (listing.slug && listing.status === "live" && state.site === "destin" ? '<a class="button secondary" href="/restaurants/' + escapeHtml(listing.slug) + '/">View</a>' : "") +
       (listing.slug ? '<button type="button" class="button secondary" data-delete>Delete</button>' : "") +
       "</div>" +
       '<p class="admin-message" data-error="' + (state.error ? "true" : "false") + '">' + escapeHtml(state.message) + "</p>" +
@@ -342,6 +346,7 @@
   function loadList() {
     return api("/api/admin/listings?site=" + encodeURIComponent(state.site)).then(function (result) {
       if (!result.ok) {
+        state.listings = [];
         showMessage(result.body.error || "The listings could not be loaded.", true);
         return;
       }
@@ -395,7 +400,7 @@
       state.listing.slug = saved.slug;
       state.listing.status = saved.status;
       state.listing.site = state.site;
-      showMessage(saved.status === "draft" ? "Saved as draft. It is hidden from the guide." : "Saved live.", false);
+      showMessage(saved.status === "draft" ? "Saved as draft. It is hidden from the guide." : saved.status === "inactive" ? "Saved. It stays off the public guide." : "Saved live.", false);
     });
   }
 
