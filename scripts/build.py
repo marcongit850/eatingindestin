@@ -432,6 +432,8 @@ def destin_listing_for(alias: str, live_slugs: set[str]) -> str | None:
 SISTER_REDIRECTS: dict[str, str] = {}
 LOCATION_REDIRECTS: dict[str, str] = {}
 SISTER_UNMAPPED: list[str] = []
+# Eating on 30A has no page for these names. A directory redirect would be a soft 404.
+DIRECTORY_FALLBACK_BLOCK = {"vue-on-30a"}
 
 
 def assign_cross_site_redirects(removed: set[str], live_slugs: set[str]) -> None:
@@ -459,6 +461,9 @@ def assign_cross_site_redirects(removed: set[str], live_slugs: set[str]) -> None
         if chosen and chosen in known:
             target = f"{origin}/restaurants/{chosen}/"
         elif scored or looks_like_30a(alias):
+            if straight_slug(alias) in DIRECTORY_FALLBACK_BLOCK:
+                SISTER_UNMAPPED.append(alias)
+                continue
             target = directory
         else:
             destin = destin_listing_for(alias, live_slugs)
@@ -1573,9 +1578,9 @@ def restaurant_schema(restaurant: dict, description: str) -> dict:
             "latitude": restaurant["lat"],
             "longitude": restaurant["lng"],
         }
-    if restaurant["heroImage"]:
-        image = restaurant["heroImage"]
-        schema["image"] = image if image.startswith(("http://", "https://")) else ORIGIN + image
+    image = restaurant["heroImage"] or restaurant.get("logo") or ""
+    if image:
+        schema["image"] = image if str(image).startswith(("http://", "https://")) else ORIGIN + image
     hours = opening_hours(restaurant["hours"])
     if hours:
         schema["openingHours"] = hours
@@ -1671,6 +1676,21 @@ def local_image_info(path: Path) -> tuple[int, int, str] | None:
             break
         index += 2 + length
     return None
+
+
+def write_image_sizes() -> None:
+    """Local image dimensions for the listing overlay. The Worker cannot measure files at request time."""
+    sizes = {}
+    images = ROOT / "images"
+    if images.is_dir():
+        for path in sorted(images.rglob("*")):
+            if not path.is_file():
+                continue
+            info = local_image_info(path)
+            if not info:
+                continue
+            sizes["/" + path.relative_to(ROOT).as_posix()] = {"width": info[0], "height": info[1]}
+    write(DATA / "image-sizes.json", json.dumps(sizes, indent=2, sort_keys=True) + "\n")
 
 
 def img_size(src: str) -> str:
@@ -3740,6 +3760,7 @@ def main() -> None:
     )
     if SISTER_UNMAPPED:
         print(f"Unmapped removed slugs ({len(SISTER_UNMAPPED)}): {', '.join(SISTER_UNMAPPED)}")
+    write_image_sizes()
     build_robots()
     build_llms(restaurants, areas, guides)
     photos = sum(1 for restaurant in restaurants if restaurant["cardImage"])

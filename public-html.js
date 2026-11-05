@@ -6,6 +6,7 @@
  */
 
 import siteConfig from "./site.config.json" with { type: "json" };
+import imageSizes from "./data/image-sizes.json" with { type: "json" };
 
 const ORIGIN = String(siteConfig.origin || "https://www.eatingindestin.com").replace(/\/$/, "");
 const WATER_AREAS = new Set(["destin-harbor", "sandestin", "crystal-beach"]);
@@ -121,10 +122,16 @@ function cardSearch(listing) {
   ].filter(Boolean).join(" ").toLowerCase();
 }
 
+export function imageSizeAttrs(src) {
+  const info = imageSizes[src];
+  if (!info || !Number(info.width) || !Number(info.height)) return "";
+  return ` width="${info.width}" height="${info.height}"`;
+}
+
 function mediaBlock(image, alt, tone, label, name, eager = false) {
   if (!image) return placeholder(tone, label, name);
   const loading = eager ? "eager" : "lazy";
-  return `<img src="${escapeHtml(image)}" alt="${escapeHtml(alt)}" loading="${loading}" onerror="var p=this.parentElement;this.remove();var f=p&&p.querySelector('.ph');if(f)f.hidden=false">${placeholder(tone, label, name, true)}`;
+  return `<img src="${escapeHtml(image)}" alt="${escapeHtml(alt)}" loading="${loading}"${imageSizeAttrs(image)} onerror="var p=this.parentElement;this.remove();var f=p&&p.querySelector('.ph');if(f)f.hidden=false">${placeholder(tone, label, name, true)}`;
 }
 
 export function renderCard(listing, heading = "h2") {
@@ -418,7 +425,7 @@ function gallery(listing) {
   const cells = photos.map((photo, index) => {
     const hidden = index >= GALLERY_WINDOW ? " hidden" : "";
     const loading = index < GALLERY_WINDOW ? "eager" : "lazy";
-    return `<div class="profile-gallery-cell"${hidden}><img src="${escapeHtml(photo.src)}" alt="${escapeHtml(alt)}" loading="${loading}"></div>`;
+    return `<div class="profile-gallery-cell"${hidden}><img src="${escapeHtml(photo.src)}" alt="${escapeHtml(alt)}" loading="${loading}"${imageSizeAttrs(photo.src)}></div>`;
   }).join("");
   const prev = total > GALLERY_WINDOW ? galleryArrow(-1) : "";
   const next = total > GALLERY_WINDOW ? galleryArrow(1) : "";
@@ -440,13 +447,45 @@ function listUpdateHref(listing) {
   return `/list-your-restaurant/?${params.toString()}`;
 }
 
-const DAY_CODES = { mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday" };
+const DAYS = [
+  { name: "Sunday", short: "Su", keys: ["sunday", "sun"] },
+  { name: "Monday", short: "Mo", keys: ["monday", "mon"] },
+  { name: "Tuesday", short: "Tu", keys: ["tuesday", "tue"] },
+  { name: "Wednesday", short: "We", keys: ["wednesday", "wed"] },
+  { name: "Thursday", short: "Th", keys: ["thursday", "thu"] },
+  { name: "Friday", short: "Fr", keys: ["friday", "fri"] },
+  { name: "Saturday", short: "Sa", keys: ["saturday", "sat"] },
+];
+
+function dayByToken(token) {
+  const key = String(token || "").trim().toLowerCase();
+  return DAYS.find((day) => day.keys.includes(key)) || null;
+}
+
+function expandDayLabel(label) {
+  const parts = String(label || "").split("-").map((part) => part.trim()).filter(Boolean);
+  if (parts.length === 1) {
+    const day = dayByToken(parts[0]);
+    return day ? [day] : [];
+  }
+  if (parts.length !== 2) return [];
+  const start = DAYS.indexOf(dayByToken(parts[0]));
+  const end = DAYS.indexOf(dayByToken(parts[1]));
+  if (start < 0 || end < 0) return [];
+  const days = [];
+  for (let step = 0; step < 7; step += 1) {
+    const index = (start + step) % 7;
+    days.push(DAYS[index]);
+    if (index === end) break;
+  }
+  return days;
+}
 
 function clock24(token, fallback) {
-  const match = String(token || "").trim().match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
+  const match = String(token || "").trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?$/i);
   if (!match) return "";
   let hour = Number(match[1]);
-  const minute = Number(match[2]);
+  const minute = match[2] == null ? 0 : Number(match[2]);
   const meridiem = (match[3] || fallback || "").toUpperCase();
   if (!["AM", "PM"].includes(meridiem) || hour < 1 || hour > 12 || minute > 59) return "";
   if (meridiem === "AM") hour = hour === 12 ? 0 : hour;
@@ -454,18 +493,26 @@ function clock24(token, fallback) {
   return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
 
-function openingHoursSpecification(raw) {
-  const text = String(raw || "").replace(/[–—]/g, "-").replace(/\s+/g, " ").trim();
-  if (!text) return [];
+function pushHours(specs, day, opens, closes) {
+  specs.push({
+    "@type": "OpeningHoursSpecification",
+    dayOfWeek: `https://schema.org/${day.name}`,
+    opens,
+    closes,
+  });
+}
+
+function standardHours(text) {
   const specs = [];
   for (const part of text.split(";")) {
     const match = part.trim().match(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun):\s*(.+)$/i);
     if (!match) return [];
-    const day = DAY_CODES[match[1].toLowerCase()];
+    const day = dayByToken(match[1]);
+    if (!day) return [];
     const body = match[2].trim();
     if (body.toLowerCase() === "closed") continue;
     if (body.toLowerCase() === "open 24 hours") {
-      specs.push({ "@type": "OpeningHoursSpecification", dayOfWeek: `https://schema.org/${day}`, opens: "00:00", closes: "23:59" });
+      pushHours(specs, day, "00:00", "23:59");
       continue;
     }
     for (const piece of body.split(",")) {
@@ -475,10 +522,75 @@ function openingHoursSpecification(raw) {
       const opens = clock24(times[1], endMeridiem);
       const closes = clock24(times[2]);
       if (!opens || !closes) return [];
-      specs.push({ "@type": "OpeningHoursSpecification", dayOfWeek: `https://schema.org/${day}`, opens, closes });
+      pushHours(specs, day, opens, closes);
     }
   }
   return specs;
+}
+
+function rangeHours(text) {
+  const specs = [];
+  const parts = text.split(/\s*(?:;|\n+)\s*/).map((part) => part.trim()).filter(Boolean);
+  if (!parts.length) return [];
+  for (const part of parts) {
+    const match = part.match(/^([A-Za-z]+(?:\s*-\s*[A-Za-z]+)?):\s*(.+)$/);
+    if (!match) return [];
+    const days = expandDayLabel(match[1]);
+    if (!days.length) return [];
+    const body = match[2].trim();
+    if (body.toLowerCase() === "closed") continue;
+    const times = body.match(/^(\d{1,2}(?::\d{2})?\s*[AP]M)\s*-\s*(\d{1,2}(?::\d{2})?\s*[AP]M)$/i);
+    if (!times) return [];
+    const opens = clock24(times[1]);
+    const closes = clock24(times[2]);
+    if (!opens || !closes) return [];
+    for (const day of days) pushHours(specs, day, opens, closes);
+  }
+  return specs;
+}
+
+export function openingHoursSpecification(raw) {
+  const text = String(raw || "").replace(/[–—]/g, "-").replace(/[ \t]+/g, " ").trim();
+  if (!text) return [];
+  const standard = standardHours(text.replace(/\n+/g, ";"));
+  if (standard.length) return standard;
+  return rangeHours(text);
+}
+
+function openingHoursText(specs) {
+  return specs.map((slot) => {
+    const name = String(slot.dayOfWeek || "").split("/").pop();
+    const day = DAYS.find((item) => item.name === name);
+    return `${day ? day.short : name} ${slot.opens}-${slot.closes}`;
+  });
+}
+
+function organizationNode() {
+  return {
+    "@type": "Organization",
+    "@id": `${ORIGIN}/#organization`,
+    name: "Eating in Destin",
+    url: `${ORIGIN}/`,
+    logo: `${ORIGIN}/images/eating-in-destin-logo.png`,
+    description: "Eating in Destin is a restaurant guide for Destin and Miramar Beach. Find breakfast, lunch, and dinner, with the address, the hours, and a feel for the place.",
+  };
+}
+
+function websiteNode() {
+  return {
+    "@type": "WebSite",
+    "@id": `${ORIGIN}/#website`,
+    name: "Eating in Destin",
+    url: `${ORIGIN}/`,
+    description: "Find restaurants and food in Destin and Miramar Beach, Florida, by meal, area, or cuisine, with a directory and a map of the coast.",
+    inLanguage: "en",
+    publisher: { "@id": `${ORIGIN}/#organization` },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${ORIGIN}/restaurants/?q={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
 }
 
 function restaurantJsonLd(listing, description, image) {
@@ -496,6 +608,7 @@ function restaurantJsonLd(listing, description, image) {
       addressRegion: "FL",
       addressCountry: "US",
     },
+    isPartOf: { "@id": `${ORIGIN}/#website` },
   };
   if (listing.cuisines && listing.cuisines.length) restaurant.servesCuisine = listing.cuisines;
   if (listing.price) restaurant.priceRange = listing.price;
@@ -506,10 +619,15 @@ function restaurantJsonLd(listing, description, image) {
   }
   if (listing.reservations) restaurant.acceptsReservations = true;
   const hours = openingHoursSpecification(listing.hours);
-  if (hours.length) restaurant.openingHoursSpecification = hours;
+  if (hours.length) {
+    restaurant.openingHours = openingHoursText(hours);
+    restaurant.openingHoursSpecification = hours;
+  }
   const graph = {
     "@context": "https://schema.org",
     "@graph": [
+      organizationNode(),
+      websiteNode(),
       restaurant,
       {
         "@type": "BreadcrumbList",
@@ -573,7 +691,7 @@ export function renderProfile(listing, nearby = []) {
   const areaLine = listing.label || listing.area;
   const priceBit = listing.price ? ` · ${escapeHtml(listing.price)}` : "";
   const categoryBit = listing.category ? ` · ${escapeHtml(listing.category)}` : "";
-  const logo = listing.logo ? `<img class="logo" src="${escapeHtml(listing.logo)}" alt="${escapeHtml(listing.name)} logo">` : "";
+  const logo = listing.logo ? `<img class="logo" src="${escapeHtml(listing.logo)}" alt="${escapeHtml(listing.name)} logo"${imageSizeAttrs(listing.logo)}>` : "";
   const map = listing.lat != null && listing.lng != null
     ? `<div class="wrap profile-map"><div id="detail-map" data-lat="${listing.lat}" data-lng="${listing.lng}" data-name="${escapeHtml(listing.name)}" data-slug="${escapeHtml(listing.slug)}" data-area="${escapeHtml(listing.area)}" data-address="${escapeHtml(listing.address)}" data-image="${escapeHtml(image)}" role="region" aria-label="Map"></div><link rel="stylesheet" href="/vendor/leaflet/leaflet.css"><script src="/vendor/leaflet/leaflet.js"></script></div>`
     : "";
@@ -613,7 +731,7 @@ gtag('config', '${GA_ID}');
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="stylesheet" href="/styles.css">
-${restaurantJsonLd(listing, description, image)}
+${restaurantJsonLd(listing, description, image || listing.logo || "")}
 </head>
 <body>
 <div id="site-header"></div>

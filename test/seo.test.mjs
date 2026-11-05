@@ -11,10 +11,11 @@ import worker, {
   notFoundPathStatus,
   rejectSoftNotFound,
   removedRestaurantStatus,
+  promoteSlashRedirect,
   sisterRedirect,
   stripMissingCanonical,
 } from "../worker.js";
-import { patchSitemap } from "../public-html.js";
+import { patchSitemap, renderProfile } from "../public-html.js";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const config = JSON.parse(readFileSync(join(root, "site.config.json"), "utf8"));
@@ -374,7 +375,9 @@ assert.equal(removedRestaurantStatus("/restaurants/mi-casita/"), 0);
 assert.equal(removedRestaurantStatus("/restaurants/hooters-destin/"), 410);
 assert.equal(sisterRedirect(new URL(`${ORIGIN}/restaurants/o-ku/`), "GET").location, "https://www.eatingon30a.com/restaurants/o-ku-alys-beach/");
 assert.equal(sisterRedirect(new URL(`${ORIGIN}/restaurants/cuvee-30a/`), "GET").location, "https://www.eatingon30a.com/restaurants/cuvee-30a-inlet-beach/");
-assert.equal(sisterRedirect(new URL(`${ORIGIN}/restaurants/vue-on-30a/`), "GET").location, "https://www.eatingon30a.com/restaurants/");
+assert.equal(sisterRedirect(new URL(`${ORIGIN}/restaurants/vue-on-30a/`), "GET"), null);
+assert.equal(removedRestaurantStatus("/restaurants/vue-on-30a"), 410);
+assert.equal(removedRestaurantStatus("/restaurants/vue-on-30a/"), 410);
 assert.equal(sisterRedirect(new URL(`${ORIGIN}/restaurants/the-donut-hole/`), "GET").location, "https://www.eatingon30a.com/restaurants/the-donut-hole-inlet-beach/");
 assert.equal(sisterRedirect(new URL(`${ORIGIN}/restaurants/goatfeathers-seafood-market/`), "GET").location, "https://www.eatingon30a.com/restaurants/goatfeathers-seafood-market-inlet-beach/");
 assert.equal(locationRedirect(new URL(`${ORIGIN}/location/dune-allen-beach/`), "GET").location, "https://www.eatingon30a.com/areas/dune-allen-beach/");
@@ -483,3 +486,76 @@ for (const path of walk(root)) {
     }
   }
 }
+
+const everbowl = jsonLd(read("restaurants/everbowl-miramar-beach/index.html"))["@graph"].find((node) => typesOf(node).includes("Restaurant"));
+assert.match(everbowl.image, /\/images\/restaurants\/everbowl-miramar-beach\/logo\.svg$/);
+const commelfo = jsonLd(read("restaurants/commelfo-restaurant-miramar-beach/index.html"))["@graph"].find((node) => typesOf(node).includes("Restaurant"));
+assert.equal(commelfo.openingHoursSpecification, undefined);
+assert.equal(commelfo.telephone, "(850) 353-2991");
+const oceanClub = jsonLd(read("restaurants/the-ocean-club-restaurant-miramar-beach/index.html"))["@graph"].find((node) => typesOf(node).includes("Restaurant"));
+assert.equal(oceanClub.openingHoursSpecification, undefined);
+
+const edgeOverlay = renderProfile({
+  slug: "the-edge-seafood-restaurant-and-skybar-destin-harbor",
+  name: "The Edge Seafood Restaurant & SkyBar",
+  area: "Destin Harbor",
+  areaSlug: "destin-harbor",
+  price: "$$$",
+  phone: "(850) 659-3549",
+  hours: "Sunday\u2013Thursday: 11am\u201310pm\nFriday\u2013Saturday: 11am\u201311pm",
+  notes: "The Edge Seafood Restaurant & SkyBar is an upscale restaurant and bar in Destin Harbor.",
+  cuisines: ["Seafood"],
+  meals: ["Dinner"],
+  photos: [{ src: "/images/restaurants/the-edge-seafood-restaurant-and-skybar-destin-harbor/01.jpg" }, { src: "/images/restaurants/the-edge-seafood-restaurant-and-skybar-destin-harbor/02.jpg" }, { src: "/images/restaurants/the-edge-seafood-restaurant-and-skybar-destin-harbor/03.jpg" }],
+  address: "302 Harbor Blvd, Destin, FL 32541",
+}, []);
+const edgeOverlayLd = jsonLd(edgeOverlay);
+assert.equal(edgeOverlayLd["@graph"].some((node) => node["@type"] === "WebSite"), true);
+assert.equal(edgeOverlayLd["@graph"].some((node) => node["@type"] === "Organization"), true);
+const edgeOverlayRestaurant = edgeOverlayLd["@graph"].find((node) => typesOf(node).includes("Restaurant"));
+assert.equal(edgeOverlayRestaurant.priceRange, "$$$");
+assert.equal(edgeOverlayRestaurant.telephone, "(850) 659-3549");
+assert.match(edgeOverlayRestaurant.image, /\/01\.jpg$/);
+assert.ok(edgeOverlayRestaurant.openingHoursSpecification.some((slot) => slot.dayOfWeek.endsWith("/Sunday") && slot.opens === "11:00" && slot.closes === "22:00"));
+assert.ok(edgeOverlayRestaurant.openingHoursSpecification.some((slot) => slot.dayOfWeek.endsWith("/Friday") && slot.opens === "11:00" && slot.closes === "23:00"));
+assert.equal(edgeOverlayRestaurant.openingHoursSpecification.length, 7);
+assert.match(edgeOverlay, /src="\/images\/restaurants\/the-edge-seafood-restaurant-and-skybar-destin-harbor\/01\.jpg"[^>]*width="639" height="417"/);
+assert.equal(edgeOverlay.includes("hasMenu"), false);
+
+const slashEnv = {
+  ACCOUNT_SITE: "destin",
+  ASSETS: {
+    async fetch(request) {
+      const path = new URL(request.url).pathname;
+      if (path === "/restaurants" || path === "/map" || path === "/guides/best-seafood-destin" || path === "/about") {
+        return new Response("redirect", { status: 307, headers: { location: `${path}/` } });
+      }
+      if (path === "/about/index.html") {
+        return new Response("redirect", { status: 307, headers: { location: "/about/" } });
+      }
+      if (path === "/restaurants/not-a-redirect") {
+        return new Response("redirect", { status: 307, headers: { location: "/somewhere-else/" } });
+      }
+      return new Response("<h1>Page</h1>", { status: 200, headers: { "content-type": "text/html; charset=utf-8" } });
+    },
+  },
+};
+for (const path of ["/restaurants", "/map", "/guides/best-seafood-destin", "/about"]) {
+  const moved = await worker.fetch(new Request(`${ORIGIN}${path}`), slashEnv);
+  assert.equal(moved.status, 301, path);
+  assert.equal(moved.headers.get("location"), `${ORIGIN}${path}/`);
+}
+const indexMoved = await worker.fetch(new Request(`${ORIGIN}/about/index.html`), slashEnv);
+assert.equal(indexMoved.status, 301);
+assert.equal(indexMoved.headers.get("location"), `${ORIGIN}/about/`);
+const postMoved = await worker.fetch(new Request(`${ORIGIN}/about`, { method: "POST" }), slashEnv);
+assert.equal(postMoved.status, 308);
+assert.equal(postMoved.headers.get("location"), `${ORIGIN}/about/`);
+const unrelated = await worker.fetch(new Request(`${ORIGIN}/restaurants/not-a-redirect`), slashEnv);
+assert.equal(unrelated.status, 307);
+assert.equal(unrelated.headers.get("location"), "/somewhere-else/");
+const direct = promoteSlashRedirect(new Response(null, { status: 307, headers: { location: "/map/" } }), new Request(`${ORIGIN}/map`));
+assert.equal(direct.status, 301);
+assert.equal(direct.headers.get("location"), `${ORIGIN}/map/`);
+const vueGone = await worker.fetch(new Request(`${ORIGIN}/restaurants/vue-on-30a`), routeEnv);
+assert.equal(vueGone.status, 410);

@@ -654,6 +654,40 @@ export function removedRestaurantStatus(pathname) {
   return 410;
 }
 
+function slashKey(pathname) {
+  let path = String(pathname || "/");
+  if (path.endsWith("/index.html")) path = path.slice(0, -"index.html".length);
+  if (path.length > 1 && path.endsWith("/")) path = path.slice(0, -1);
+  return path || "/";
+}
+
+// Static assets html_handling answers a missing trailing slash with 307.
+// That redirect is permanent. Rewrite it here so every HTML directory on this
+// site, not only /restaurants and /map, is a 301 with a Location header.
+export function promoteSlashRedirect(response, request) {
+  if (!response || (response.status !== 307 && response.status !== 302)) return response;
+  const location = response.headers.get("location");
+  if (!location) return response;
+  let target;
+  try {
+    target = new URL(location, request.url);
+  } catch {
+    return response;
+  }
+  const current = new URL(request.url);
+  const targetHost = target.hostname.toLowerCase();
+  const requestHost = current.hostname.toLowerCase();
+  if (targetHost !== requestHost && targetHost !== CANONICAL_HOST) return response;
+  if (slashKey(current.pathname) !== slashKey(target.pathname)) return response;
+  if (current.pathname === target.pathname && current.search === target.search) return response;
+  const dest = new URL(`${target.pathname}${target.search}`, `https://${CANONICAL_HOST}`);
+  const headers = new Headers(response.headers);
+  headers.set("location", dest.toString());
+  headers.set("cache-control", "public, max-age=3600");
+  const status = request.method === "GET" || request.method === "HEAD" ? 301 : 308;
+  return new Response(null, { status, headers });
+}
+
 export function notFoundPathStatus(pathname) {
   const path = String(pathname || "");
   if (path === "/404" || path === "/404/" || path === "/404.html" || path === "/404/index.html") return 404;
@@ -968,7 +1002,11 @@ export default {
     if (url.pathname.startsWith("/api/admin/") || url.pathname.startsWith("/media/photos/")) {
       return handleAdmin(request, env);
     }
-    const served = await servePublic(request, await env.ASSETS.fetch(request), env);
+    const gone = removedRestaurantStatus(url.pathname);
+    if (gone) {
+      return cleanMissingResponse(await missingPage(request, env, gone));
+    }
+    const served = await servePublic(request, promoteSlashRedirect(await env.ASSETS.fetch(request), request), env);
     const checked = await rejectSoftNotFound(withAdminRobots(url, served));
     return cleanMissingResponse(await rejectEmptyRestaurant(url.pathname, checked, request, env));
   },

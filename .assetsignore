@@ -11,4 +11,5 @@ worker.js
 account-api.js
 site.config.json
 data/*.csv
+data/image-sizes.json
 **/.DS_Store

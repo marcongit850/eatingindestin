@@ -1037,6 +1037,8 @@ check(legacy == build.LEGACY_REDIRECTS, "legacy redirect file should match the l
 sister = json.loads((ROOT / "data" / "sister-redirects.json").read_text(encoding="utf-8"))
 locations = json.loads((ROOT / "data" / "location-redirects.json").read_text(encoding="utf-8"))
 check(sister == build.SISTER_REDIRECTS, "sister redirect file should match the 30A catalog")
+check("vue-on-30a" not in sister, "vue-on-30a has no 30A page and should not redirect to the directory")
+check("vue-on-30a" in removed_slugs, "vue-on-30a should 410 with the other closed slugs")
 check(locations == build.LOCATION_REDIRECTS, "location redirect file should match the 30A areas")
 check(sister.get("cuvee-30a") == "https://www.eatingon30a.com/restaurants/cuvee-30a-inlet-beach/", "Cuvee should redirect to the 30A listing")
 check(sister.get("the-donut-hole") == "https://www.eatingon30a.com/restaurants/the-donut-hole-inlet-beach/", "The Donut Hole short path should redirect to 30A")
