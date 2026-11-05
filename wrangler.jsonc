@@ -19,6 +19,14 @@
     "ACCOUNT_SITE": "destin",
     "ACCOUNTS_ORIGIN": "https://eating-accounts.352marc.workers.dev"
   },
+  // npx wrangler preview does not inherit production vars. Repeat only these
+  // non-secret settings. Do not add secrets or a database binding here.
+  "previews": {
+    "vars": {
+      "ACCOUNT_SITE": "destin",
+      "ACCOUNTS_ORIGIN": "https://eating-accounts.352marc.workers.dev"
+    }
+  },
   "assets": {
     "directory": ".",
     "binding": "ASSETS",

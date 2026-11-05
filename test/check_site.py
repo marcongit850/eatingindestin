@@ -992,6 +992,12 @@ check('url.pathname.startsWith("/media/photos/")' in worker_js, "listing photos 
 check("servePublic" in worker_js, "public pages should hide draft listings through the overlay")
 check("d1_databases" not in wrangler and "r2_buckets" not in wrangler, "Destin should not bind a second accounts database or photo bucket")
 check('"ACCOUNT_SITE": "destin"' in wrangler, "account site should stay destin")
+check('"previews"' in wrangler and "<REPLACE_ME>" not in wrangler, "wrangler preview needs real preview vars, not placeholders")
+check(wrangler.count('"ACCOUNT_SITE": "destin"') == 2, "preview vars should repeat the destin site")
+check(
+    wrangler.count('"ACCOUNTS_ORIGIN": "https://eating-accounts.352marc.workers.dev"') == 2,
+    "preview vars should repeat the accounts origin",
+)
 catalog = json.loads((ROOT / "data" / "catalog.json").read_text(encoding="utf-8"))
 check(len(catalog) == len(restaurants), "catalog.json should list every published restaurant")
 seo_keys = {"seo", "metaTitle", "metaDescription", "ogTitle", "ogDescription", "ogImage", "canonical", "jsonLd", "schema"}

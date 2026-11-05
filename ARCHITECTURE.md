@@ -24,7 +24,7 @@ A static restaurant guide for Destin and Miramar Beach, FL (sister site of Eatin
 - Accounts, sessions, and saves: D1 `eating-accounts` (id `f3ae29af-a929-4185-b5bd-b349cc015a3f`), owned by `eating-accounts`. This site keeps no user database.
 - External services: Resend (email), a Google Sheets Apps Script webhook (coupon rows), Zoho Campaigns (list subscribe).
 
-Bindings on `eatingindestin`: `ASSETS` (static assets, directory `.`), vars `ACCOUNT_SITE` (`destin`) and `ACCOUNTS_ORIGIN` (`https://eating-accounts.352marc.workers.dev`). No D1, R2, or KV is bound to this Worker. The code also accepts an optional `ACCOUNTS` service binding, but none is set, so it calls `ACCOUNTS_ORIGIN` over HTTPS.
+Bindings on `eatingindestin`: `ASSETS` (static assets, directory `.`), vars `ACCOUNT_SITE` (`destin`) and `ACCOUNTS_ORIGIN` (`https://eating-accounts.352marc.workers.dev`). No D1, R2, or KV is bound to this Worker. The code also accepts an optional `ACCOUNTS` service binding, but none is set, so it calls `ACCOUNTS_ORIGIN` over HTTPS. `previews.vars` repeats those two non-secret values because `npx wrangler preview` does not inherit production vars. Secrets stay out of that block and are not copied from production by this file.
 
 ## Secrets and env vars (names only)
 
