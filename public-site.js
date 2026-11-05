@@ -43,6 +43,9 @@ export async function missingPage(request, env, status = 404) {
 
 export async function servePublic(request, response, env) {
   const url = new URL(request.url);
+  // A trailing-slash redirect must keep its Location header. Rewriting the
+  // body of a 307 drops Location and leaves /restaurants and /map as dead ends.
+  if (response && response.status >= 300 && response.status < 400) return response;
   if (!isCatalogPath(url.pathname)) return response;
   if (request.method !== "GET" && request.method !== "HEAD") return response;
   if (!siteId(env)) return response;
