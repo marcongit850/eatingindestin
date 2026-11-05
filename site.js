@@ -291,13 +291,120 @@ function formFilters(form) {
   return filtersFromParams(params);
 }
 
+function setPressed(chip, pressed) {
+  chip.setAttribute("aria-pressed", pressed ? "true" : "false");
+}
+
+function syncFieldsFromChips(form) {
+  form.querySelectorAll("[data-hero-field]").forEach((input) => {
+    input.disabled = true;
+    input.value = "";
+  });
+  form.querySelectorAll("[data-hero-chip]").forEach((chip) => {
+    if (chip.hidden || chip.getAttribute("aria-pressed") !== "true") return;
+    const input = form.querySelector(`[data-hero-field="${chip.dataset.param}"]`);
+    if (!input) return;
+    input.disabled = false;
+    input.value = chip.dataset.value || "yes";
+  });
+}
+
+function syncChipsFromFields(form) {
+  const chips = form.querySelectorAll("[data-hero-chip]");
+  if (!chips.length) return;
+  const selected = new Map();
+  form.querySelectorAll("[data-hero-field]").forEach((input) => {
+    const value = (input.value || "").trim();
+    selected.set(input.getAttribute("data-hero-field") || input.name, value);
+    input.disabled = value === "";
+  });
+  chips.forEach((chip) => {
+    const value = selected.get(chip.dataset.param) || "";
+    setPressed(chip, value !== "" && value === (chip.dataset.value || "yes"));
+  });
+}
+
+function revealActiveChipPanel(form) {
+  const panel = form.querySelector("[data-hero-panel]");
+  const toggle = form.querySelector("[data-hero-more]");
+  if (!panel || !toggle) return;
+  if (!panel.querySelector('[data-hero-chip][aria-pressed="true"]')) return;
+  panel.hidden = false;
+  toggle.setAttribute("aria-expanded", "true");
+}
+
+// Homepage hero and the restaurant directory share this chip control.
+function bindFilterChips(form, { onChange, onSubmit } = {}) {
+  if (!form || form.dataset.chipsBound === "true") return;
+  if (!form.querySelector("[data-hero-chip]")) return;
+  form.dataset.chipsBound = "true";
+  const toggle = form.querySelector("[data-hero-more]");
+  const panel = form.querySelector("[data-hero-panel]");
+  const clear = form.querySelector("[data-hero-clear]");
+
+  const notify = () => {
+    syncFieldsFromChips(form);
+    if (onChange) onChange();
+  };
+
+  form.querySelectorAll("[data-hero-chip]").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const next = chip.getAttribute("aria-pressed") !== "true";
+      const group = chip.dataset.group;
+      if (group && next) {
+        form.querySelectorAll(`[data-group="${group}"]`).forEach((other) => setPressed(other, false));
+      }
+      setPressed(chip, next);
+      notify();
+    });
+  });
+
+  if (toggle && panel) {
+    toggle.addEventListener("click", () => {
+      const open = toggle.getAttribute("aria-expanded") === "true";
+      toggle.setAttribute("aria-expanded", open ? "false" : "true");
+      panel.hidden = open;
+    });
+  }
+  if (clear) {
+    clear.addEventListener("click", () => {
+      const query = form.querySelector('input[name="q"]');
+      const area = form.querySelector('select[name="area"]');
+      if (query) query.value = "";
+      if (area) area.value = "";
+      form.querySelectorAll("[data-hero-chip]").forEach((chip) => setPressed(chip, false));
+      notify();
+    });
+  }
+  form.addEventListener("input", notify);
+  form.addEventListener("change", notify);
+  form.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape" || !toggle || !panel) return;
+    if (toggle.getAttribute("aria-expanded") !== "true") return;
+    event.preventDefault();
+    toggle.setAttribute("aria-expanded", "false");
+    panel.hidden = true;
+    toggle.focus();
+  });
+  form.addEventListener("submit", (event) => {
+    syncFieldsFromChips(form);
+    if (onSubmit) {
+      onSubmit(event);
+      return;
+    }
+    event.preventDefault();
+    if (onChange) onChange();
+  });
+}
+
 function writeForm(form, filters) {
   for (const key of FILTER_KEYS) {
     const field = form.elements.namedItem(key);
-    if (!field) continue;
+    if (!field || typeof field.type !== "string") continue;
     if (field.type === "checkbox") field.checked = filters[key] === "yes";
     else field.value = filters[key] || "";
   }
+  syncChipsFromFields(form);
 }
 
 function paramsFromFilters(filters) {
@@ -330,10 +437,14 @@ function syncUrl(filters) {
 function revealFlagFilters(records) {
   const params = new URLSearchParams(location.search);
   for (const name of ["waterfront", "bar"]) {
-    const label = document.querySelector(`[data-filter-flag="${name}"]`);
-    if (!label) continue;
     const any = (records || []).some((record) => record && record[name]);
-    label.hidden = !(any || params.get(name) === "yes");
+    const show = any || params.get(name) === "yes";
+    const label = document.querySelector(`[data-filter-flag="${name}"]`);
+    if (label) label.hidden = !show;
+    document.querySelectorAll(`[data-hero-flag="${name}"]`).forEach((chip) => {
+      chip.hidden = !show;
+      if (!show) setPressed(chip, false);
+    });
   }
 }
 
@@ -341,35 +452,14 @@ function bootHeroSearch() {
   const form = document.querySelector("[data-hero-search]");
   if (!form || form.dataset.bound === "true") return;
   form.dataset.bound = "true";
-  const toggle = form.querySelector("[data-hero-more]");
-  const panel = form.querySelector("#hero-more-panel");
-  const clear = form.querySelector("[data-hero-clear]");
   const show = form.querySelector("[data-hero-show]");
   const status = form.querySelector("[data-hero-status]");
   const empty = form.querySelector("[data-hero-empty]");
   const searchButton = form.querySelector(".hero-search-row button");
   let catalog = null;
 
-  const setPressed = (chip, pressed) => {
-    chip.setAttribute("aria-pressed", pressed ? "true" : "false");
-  };
-
-  const syncFields = () => {
-    form.querySelectorAll("[data-hero-field]").forEach((input) => {
-      input.disabled = true;
-      input.value = "";
-    });
-    form.querySelectorAll("[data-hero-chip]").forEach((chip) => {
-      if (chip.hidden || chip.getAttribute("aria-pressed") !== "true") return;
-      const input = form.querySelector(`[data-hero-field="${chip.dataset.param}"]`);
-      if (!input) return;
-      input.disabled = false;
-      input.value = chip.dataset.value || "yes";
-    });
-  };
-
   const currentFilters = () => {
-    syncFields();
+    syncFieldsFromChips(form);
     return formFilters(form);
   };
 
@@ -405,55 +495,19 @@ function bootHeroSearch() {
     return count;
   };
 
-  form.querySelectorAll("[data-hero-chip]").forEach((chip) => {
-    chip.addEventListener("click", () => {
-      const next = chip.getAttribute("aria-pressed") !== "true";
-      const group = chip.dataset.group;
-      if (group && next) {
-        form.querySelectorAll(`[data-group="${group}"]`).forEach((other) => setPressed(other, false));
+  bindFilterChips(form, {
+    onChange: () => updateCount(),
+    onSubmit: (event) => {
+      const count = updateCount();
+      if (catalog && count === 0) {
+        event.preventDefault();
+        return;
       }
-      setPressed(chip, next);
-      updateCount();
-    });
-  });
-
-  if (toggle && panel) {
-    toggle.addEventListener("click", () => {
-      const open = toggle.getAttribute("aria-expanded") === "true";
-      toggle.setAttribute("aria-expanded", open ? "false" : "true");
-      panel.hidden = open;
-      if (!open) updateCount();
-    });
-  }
-  if (clear) {
-    clear.addEventListener("click", () => {
-      const query = form.querySelector('input[name="q"]');
-      const area = form.querySelector('select[name="area"]');
-      if (query) query.value = "";
-      if (area) area.value = "";
-      form.querySelectorAll("[data-hero-chip]").forEach((chip) => setPressed(chip, false));
-      updateCount();
-    });
-  }
-  form.addEventListener("input", () => updateCount());
-  form.addEventListener("change", () => updateCount());
-  form.addEventListener("keydown", (event) => {
-    if (event.key !== "Escape" || !toggle || !panel) return;
-    if (toggle.getAttribute("aria-expanded") !== "true") return;
-    toggle.setAttribute("aria-expanded", "false");
-    panel.hidden = true;
-    toggle.focus();
-  });
-  form.addEventListener("submit", (event) => {
-    const count = updateCount();
-    if (catalog && count === 0) {
       event.preventDefault();
-      return;
-    }
-    event.preventDefault();
-    const params = paramsFromFilters(currentFilters());
-    const query = params.toString();
-    location.assign(query ? `/restaurants/?${query}` : "/restaurants/");
+      const params = paramsFromFilters(currentFilters());
+      const query = params.toString();
+      location.assign(query ? `/restaurants/?${query}` : "/restaurants/");
+    },
   });
 
   fetch("/data/restaurants.json")
@@ -503,17 +557,25 @@ function bootDirectory() {
   const current = filtersFromParams(new URLSearchParams(location.search));
   writeForm(form, current);
   revealFlagFilters(cards.map(recordFromCard));
+  revealActiveChipPanel(form);
   apply(current, false);
 
-  form.addEventListener("submit", (event) => {
-    event.preventDefault();
-    apply(formFilters(form), true);
-  });
-  form.addEventListener("input", () => apply(formFilters(form), true));
-  form.addEventListener("change", () => apply(formFilters(form), true));
+  if (form.querySelector("[data-hero-chip]")) {
+    bindFilterChips(form, {
+      onChange: () => apply(formFilters(form), true),
+    });
+  } else {
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      apply(formFilters(form), true);
+    });
+    form.addEventListener("input", () => apply(formFilters(form), true));
+    form.addEventListener("change", () => apply(formFilters(form), true));
+  }
   window.addEventListener("popstate", () => {
     const filters = filtersFromParams(new URLSearchParams(location.search));
     writeForm(form, filters);
+    revealActiveChipPanel(form);
     apply(filters, false);
   });
 }

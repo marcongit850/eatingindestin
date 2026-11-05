@@ -1963,7 +1963,9 @@ def flag_check(name: str, label: str, *, hidden: bool = False) -> str:
     )
 
 
-def filter_form(areas: list[dict], cuisines: list[str], restaurants: list[dict]) -> str:
+def filter_form(areas: list[dict], cuisines: list[str], restaurants: list[dict], chips: bool = False) -> str:
+    if chips:
+        return chip_directory_form(areas, cuisines, restaurants)
     area_options = ['<option value="">All areas</option>']
     for area in areas:
         area_options.append(f'<option value="{e(area["slug"])}">{e(area["fullName"])}</option>')
@@ -2224,7 +2226,7 @@ def hero_chip(label: str, param: str, value: str, *, group: str = "", count: int
     if hidden:
         attrs.append("hidden")
     count_html = f'<span class="hero-chip-count">{count}</span>' if count is not None else ""
-    return f'<button {" ".join(attrs)}><span>{e(label)}</span>{count_html}</button>'
+    return f'<button {" ".join(attrs)}><span>{html.escape(label, quote=False)}</span>{count_html}</button>'
 
 
 def hero_group(label: str, chips: list[str]) -> str:
@@ -2232,6 +2234,110 @@ def hero_group(label: str, chips: list[str]) -> str:
     return (
         f'<div class="hero-group"><p class="hero-group-label" id="{group_id}">{e(label)}</p>'
         f'<div class="hero-chips" role="group" aria-labelledby="{group_id}">{"".join(chips)}</div></div>'
+    )
+
+
+DIRECTORY_CHIP_FIELDS = (
+    "meal", "cuisine", "outdoor", "kids", "music", "laurens", "reservations",
+    "groups", "happyfood", "happydrinks", "price", "waterfront", "bar", "happyhour",
+)
+
+DIRECTORY_CHIP_BOOT = (
+    "<script>!function(){var form=document.getElementById('filters');if(!form)return;"
+    "var params=new URLSearchParams(location.search);"
+    "form.querySelectorAll('[data-hero-field]').forEach(function(input){input.disabled=true;input.value='';});"
+    "form.querySelectorAll('[data-hero-chip]').forEach(function(chip){"
+    "var key=chip.getAttribute('data-param');"
+    "var value=chip.getAttribute('data-value')||'yes';"
+    "var on=params.get(key)===value;"
+    "chip.setAttribute('aria-pressed',on?'true':'false');"
+    "if(!on)return;"
+    "var input=form.querySelector('[data-hero-field=\"'+key+'\"]');"
+    "if(!input)return;input.disabled=false;input.value=value;"
+    "});"
+    "var panel=form.querySelector('[data-hero-panel]');"
+    "var toggle=form.querySelector('[data-hero-more]');"
+    "if(panel&&toggle&&panel.querySelector('[aria-pressed=\"true\"]')){"
+    "panel.hidden=false;toggle.setAttribute('aria-expanded','true');}"
+    "}();</script>"
+)
+
+
+def chip_directory_form(areas: list[dict], cuisines: list[str], restaurants: list[dict]) -> str:
+    """Restaurant directory filters, using the homepage chip control."""
+    area_options = ['<option value="">All areas</option>']
+    for area in areas:
+        area_options.append(f'<option value="{e(area["slug"])}">{e(area["fullName"])}</option>')
+    quick = (
+        ("bar", "Bar Scene", "bar"),
+        ("waterfront", "Waterfront", "waterfront"),
+        ("outdoor", "Outdoor dining", "outdoor"),
+        ("music", "Live music", "music"),
+        ("happyhour", "Happy hour", "happy"),
+        ("kids", "Kid friendly", "kids"),
+    )
+    quick_html = []
+    for param, label, kind in quick:
+        count = category_count(restaurants, kind)
+        hide = param in {"bar", "waterfront"} and count == 0
+        quick_html.append(hero_chip(label, param, "yes", hidden=hide, flag=param in {"bar", "waterfront"}))
+    meals = []
+    for meal in HOME_MEAL_ORDER:
+        count = category_count(restaurants, "meal", meal)
+        if meal not in MEAL_ORDER and count == 0:
+            continue
+        meals.append(hero_chip(meal, "meal", meal, group="meal", count=count or None))
+    cuisine_counts: dict[str, int] = {}
+    for restaurant in restaurants:
+        for cuisine in restaurant["cuisines"]:
+            cuisine_counts[cuisine] = cuisine_counts.get(cuisine, 0) + 1
+    for cuisine in cuisines:
+        cuisine_counts.setdefault(cuisine, 0)
+    cuisine_chips = [
+        hero_chip(cuisine, "cuisine", cuisine, group="cuisine")
+        for cuisine in sorted(cuisine_counts, key=lambda name: (-cuisine_counts[name], name.lower()))
+    ]
+    used_prices = {restaurant["price"] for restaurant in restaurants if restaurant["price"] in HOME_PRICE_ORDER}
+    prices = [
+        hero_chip(price, "price", price, group="price")
+        for price in HOME_PRICE_ORDER
+        if price in used_prices
+    ]
+    good_for = [
+        hero_chip("Takes reservations", "reservations", "yes"),
+        hero_chip("Good for groups 12+", "groups", "yes"),
+        hero_chip("Happy hour food", "happyfood", "yes"),
+        hero_chip("Happy hour drinks", "happydrinks", "yes"),
+        hero_chip("Lauren's Favorites", "laurens", "yes"),
+    ]
+    fields = "".join(
+        f'<input type="hidden" name="{e(name)}" data-hero-field="{e(name)}" value="" disabled>'
+        for name in DIRECTORY_CHIP_FIELDS
+    )
+    groups = [
+        hero_group("Meal", meals),
+        hero_group("Cuisine", cuisine_chips),
+        hero_group("Price", prices) if prices else "",
+        hero_group("Good for", good_for),
+    ]
+    return (
+        '<form id="filters" class="filters filters-chips" action="/restaurants/" method="get">'
+        '<div class="directory-search">'
+        '<label class="field"><span>Search</span><input id="q" name="q" type="search" placeholder="Oysters, coffee, pizza"></label>'
+        f'<label class="field"><span>Area</span><select id="area" name="area">{"".join(area_options)}</select></label>'
+        "</div>"
+        '<p class="hero-looking" id="directory-looking">What are you looking for?</p>'
+        f'<div class="hero-chips" role="group" aria-labelledby="directory-looking">{"".join(quick_html)}</div>'
+        '<div class="hero-search-tools">'
+        '<button type="button" class="hero-more" data-hero-more aria-expanded="false" aria-controls="directory-more-panel">'
+        f"More filters {HERO_CHEVRON}</button>"
+        '<button type="button" class="hero-clear" data-hero-clear>Clear all</button></div>'
+        '<div id="directory-more-panel" class="hero-more-panel" data-hero-panel hidden>'
+        f'{"".join(groups)}'
+        "</div>"
+        f"{fields}</form>"
+        f"{DIRECTORY_CHIP_BOOT}"
+        f'<script type="application/json" id="area-names">{area_names(areas)}</script>'
     )
 
 
@@ -2293,7 +2399,7 @@ def hero_search(areas: list[dict], restaurants: list[dict]) -> str:
         '<button type="button" class="hero-more" data-hero-more aria-expanded="false" aria-controls="hero-more-panel">'
         f'More filters {HERO_CHEVRON}</button>'
         '<button type="button" class="hero-clear" data-hero-clear>Clear all</button></div>'
-        '<div id="hero-more-panel" class="hero-more-panel" hidden>'
+        '<div id="hero-more-panel" class="hero-more-panel" data-hero-panel hidden>'
         f"{hero_group('Meal', meals)}"
         f"{hero_group('Cuisine', cuisines)}"
         f"{hero_group('Price', prices)}"
@@ -2514,7 +2620,7 @@ def build_directory(restaurants: list[dict], areas: list[dict], cuisines: list[s
         '<p class="lede">Food in Destin and Miramar Beach, Florida. Filter by area, meal, or a few words.</p>'
         "</div>"
         f'{view_switch("listing")}'
-        f"{filter_form(areas, cuisines, restaurants)}"
+        f"{filter_form(areas, cuisines, restaurants, chips=True)}"
         f'<p id="result-count" class="count" aria-live="polite">{len(restaurants)} restaurants</p>'
         f'<p id="empty" class="empty" hidden>No restaurants match. <a href="/restaurants/">Clear the filters</a>.</p>'
         f'<div id="cards" class="card-grid">{cards}</div>'

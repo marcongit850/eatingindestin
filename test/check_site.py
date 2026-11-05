@@ -79,14 +79,15 @@ check(
     "directory should switch between list and map beside the filters",
 )
 check(
-    'name="laurens" value="yes"' in directory and ">Lauren's Favorites</span>" in directory,
+    'data-param="laurens"' in directory and ">Lauren's Favorites</span>" in directory,
     "directory filter should include Lauren's Favorites",
 )
 map_page = (ROOT / "map" / "index.html").read_text(encoding="utf-8")
-check('id="price"' in directory and ">Any price</option>" in directory, "directory should offer a price filter")
+directory_filters = directory.split('id="filters"', 1)[1].split('id="result-count"', 1)[0]
+check('data-group="price"' in directory_filters and 'data-param="price"' in directory_filters, "directory should offer a price filter")
 check('id="price"' in map_page and ">Any price</option>" in map_page, "map should offer a price filter")
-check('data-filter-flag="waterfront" hidden' not in directory, "Waterfront shows on the directory once listings are tagged")
-check('data-filter-flag="bar" hidden' not in directory, "Bar Scene shows on the directory once listings are tagged")
+check('data-hero-flag="waterfront" hidden' not in directory, "Waterfront shows on the directory once listings are tagged")
+check('data-hero-flag="bar" hidden' not in directory, "Bar Scene shows on the directory once listings are tagged")
 check('data-filter-flag="waterfront" hidden' not in map_page, "Waterfront shows on the map once listings are tagged")
 check('data-filter-flag="bar" hidden' not in map_page, "Bar Scene shows on the map once listings are tagged")
 for name, label in (
@@ -94,8 +95,17 @@ for name, label in (
     ("waterfront", "Waterfront"),
     ("bar", "Bar Scene"),
 ):
-    check(f'name="{name}" value="yes"' in directory and f">{label}</span>" in directory, f"directory should offer {label}")
+    check(f'data-param="{name}"' in directory_filters and f">{label}</span>" in directory_filters, f"directory should offer {label}")
     check(f'name="{name}" value="yes"' in map_page and f">{label}</span>" in map_page, f"map should offer {label}")
+check("More filters" in directory_filters and "Clear all" in directory_filters, "directory should reuse the homepage More filters and Clear controls")
+check('data-hero-chip' in directory_filters and 'aria-pressed="false"' in directory_filters, "directory chips should expose aria-pressed")
+check("type=\"checkbox\"" not in directory_filters and "<select id=\"meal\"" not in directory_filters, "directory filters should be chips instead of dropdowns and checkboxes")
+check('name="q"' in directory_filters and 'name="area"' in directory_filters and ">All areas</option>" in directory_filters, "directory should keep search and the area menu")
+for key in (
+    "meal", "cuisine", "outdoor", "kids", "music", "laurens", "reservations", "groups",
+    "happyfood", "happydrinks", "price", "waterfront", "bar", "happyhour",
+):
+    check(f'name="{key}"' in directory_filters, f"directory chip form should keep the {key} query param")
 check('class="video-tour"' not in map_page, "video tour stays off the map")
 check(">Lauren's Favorites</span>" in map_page, "map filter should include Lauren's Favorites")
 check('name="area"' in map_page and ">All areas</option>" in map_page, "map keeps the area dropdown")
@@ -206,7 +216,7 @@ music_count = sum(1 for item in restaurants if item.get("music") is True)
 check(music_count == 22, f"live music should stay a verified yes on 22 listings, got {music_count}")
 check(directory.count('data-music="yes"') == music_count, "directory should keep every live music listing filterable")
 check(
-    'name="music" value="yes"' in directory and ">Live music</span>" in directory and "Live music*" not in directory,
+    'data-param="music"' in directory and ">Live music</span>" in directory and "Live music*" not in directory,
     "directory filter should keep Live music as a verified yes without the seasonal asterisk",
 )
 check(music_note not in directory, "the seasonal note belongs on listing pages, not the directory filter")
