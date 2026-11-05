@@ -7,7 +7,7 @@
 
 import listingOptions from "./data/listing-options.json" with { type: "json" };
 import { liveListings } from "./catalog.js";
-import { baselineFor, guideBaseline, invalidateCatalog, loadOverrides, mergedCatalog } from "./catalog-store.js";
+import { baselineFor, guideBaseline, invalidateCatalog, loadOverrides, mergedCatalog, usesLocalBaseline } from "./catalog-store.js";
 import { isSlug, sniffImage, MAX_PHOTO_BYTES } from "./listing-model.js";
 import { accountsFetch, accountsJson, readCookie, siteId } from "./shared-accounts.js";
 
@@ -59,6 +59,26 @@ function choices(baseline, key, fallback) {
 function areaName(area) {
   if (typeof area === "string") return area.trim();
   return area && area.name ? String(area.name).trim() : "";
+}
+
+// Checkbox lists follow the guide being edited. The bundled form belongs to
+// this Worker. The other guide uses its public catalog only. A failed sister
+// fetch leaves that guide's lists empty and still returns the local lists.
+async function guideChoices(env, site) {
+  let baseline = [];
+  try {
+    baseline = await guideBaseline(env, site);
+  } catch (error) {
+    if (!error || error.name !== "SisterCatalogError") throw error;
+    baseline = [];
+  }
+  const form = usesLocalBaseline(env, site) ? listingOptions : {};
+  return {
+    areas: areasFor(site, env),
+    cuisines: choices(baseline, "cuisines", form.cuisines),
+    foods: choices(baseline, "foods", form.foods),
+    meals: choices(baseline, "meals", form.meals),
+  };
 }
 
 function areasFor(site, env) {
@@ -176,14 +196,17 @@ async function routeAdmin(request, env) {
   if (denied) return denied;
 
   if (path === "/api/admin/options" && request.method === "GET") {
-    const baseline = baselineFor("destin", env);
+    const guides = {};
+    for (const site of SITES) guides[site.id] = await guideChoices(env, site.id);
+    const local = guides[siteId(env) || "destin"] || guides.destin;
     return json({
       ok: true,
-      sites: SITES.map((site) => ({ ...site, areas: areasFor(site.id, env) })),
-      cuisines: choices(baseline, "cuisines", listingOptions.cuisines),
-      foods: choices(baseline, "foods", listingOptions.foods),
-      meals: choices(baseline, "meals", listingOptions.meals),
+      sites: SITES.map((site) => ({ ...site, areas: guides[site.id].areas })),
+      cuisines: local.cuisines,
+      foods: local.foods,
+      meals: local.meals,
       prices: listingOptions.prices || ["$", "$$", "$$$", "$$$$"],
+      guides,
     });
   }
 
