@@ -7,9 +7,11 @@ import worker, {
   ampersandRedirect,
   canonicalRedirect,
   legacyRedirect,
+  locationRedirect,
   notFoundPathStatus,
   rejectSoftNotFound,
   removedRestaurantStatus,
+  sisterRedirect,
   stripMissingCanonical,
 } from "../worker.js";
 import { patchSitemap } from "../public-html.js";
@@ -62,9 +64,11 @@ const titles = new Set();
 const descriptions = new Set();
 const canonicals = new Set();
 const EXACT_DESCRIPTIONS = new Set([
-  "American steakhouse at Grand Boulevard in Sandestin. Hours, address, and what to order. Eating in Destin.",
+  "Planning dinner at Bricktop's in Grand Boulevard, Miramar Beach? See hours, menu highlights, reservations and what to order before you go.",
+  "Every restaurant at Baytowne Wharf in Sandestin, from casual bites to date night spots, with hours, menus and local picks.",
   "Every restaurant at Grand Boulevard Destin, including Bricktop's. Hours and maps.",
 ]);
+const ROBOTS_INDEX = "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1";
 
 for (const path of htmlPages) {
   const html = readFileSync(path, "utf8");
@@ -76,14 +80,18 @@ for (const path of htmlPages) {
   titles.add(title);
   descriptions.add(description);
   assert.ok(title.length >= 20 && title.length <= 70, rel + " title length " + title.length + " " + title);
+  if (title.includes(" | Eating in Destin")) {
+    assert.ok(title.length <= 60, rel + " brand suffix pushes the title over 60: " + title);
+  }
   if (EXACT_DESCRIPTIONS.has(description)) {
     assert.ok(description.length <= 165, rel + " description length " + description.length);
     assert.equal(description.includes("\u2013") || description.includes("\u2014"), false, rel);
     assert.equal(title.includes("\u2013") || title.includes("\u2014"), false, rel);
   } else {
-    assert.ok(description.length >= 110 && description.length <= 165, rel + " description length " + description.length);
+    assert.ok(description.length >= 110 && description.length <= 160, rel + " description length " + description.length);
+    assert.match(description, /Destin/);
   }
-  assert.match(description, /Destin/);
+  assert.equal(description.includes("\u2026"), false, rel + " description ellipsis");
   const isMissing = path.endsWith("404.html");
   assert.equal(attr(html, /<meta property="og:title" content="([^"]+)">/), title);
   assert.equal(attr(html, /<meta property="og:description" content="([^"]+)">/), description);
@@ -102,7 +110,13 @@ for (const path of htmlPages) {
   }
   assert.equal(attr(html, /<meta property="og:site_name" content="([^"]+)">/), "Eating in Destin");
   assert.equal(attr(html, /<meta property="og:locale" content="([^"]+)">/), "en_US");
-  assert.equal(attr(html, /<meta property="og:type" content="([^"]+)">/), "website");
+  const listingPage = rel.includes(`${join("restaurants", "")}`) && !rel.endsWith(`${join("restaurants", "index.html")}`);
+  assert.equal(attr(html, /<meta property="og:type" content="([^"]+)">/), listingPage ? "restaurant.restaurant" : "website");
+  if (html.includes('content="noindex"')) {
+    assert.equal(html.includes("max-image-preview"), false, rel);
+  } else {
+    assert.match(html, new RegExp(`<meta name="robots" content="${ROBOTS_INDEX}">`), rel);
+  }
   const image = attr(html, /<meta property="og:image" content="([^"]+)">/);
   assert.ok(image.startsWith("https://"), rel);
   assert.equal(attr(html, /<meta name="twitter:card" content="([^"]+)">/), "summary_large_image");
@@ -139,6 +153,10 @@ assert.equal(restaurant.containedInPlace.name, "Destin Harbor");
 assert.equal(restaurant.containedInPlace.url, `${ORIGIN}/areas/destin-harbor/`);
 assert.ok(restaurant.servesCuisine.includes("Seafood"));
 assert.ok(restaurant.openingHours.includes("Mo 11:00-22:30"));
+assert.ok(Array.isArray(restaurant.openingHoursSpecification));
+assert.ok(restaurant.openingHoursSpecification.some((slot) => slot.opens && slot.closes && slot.dayOfWeek));
+assert.equal(restaurant.menu, undefined);
+assert.equal(restaurant.hasMenu, undefined);
 assert.equal(typeof restaurant.geo.latitude, "number");
 assert.equal(typeof restaurant.geo.longitude, "number");
 assert.ok(restaurant.telephone);
@@ -210,6 +228,14 @@ for (const path of profilePages) {
   assert.ok(listing.servesCuisine.length, path);
   assert.ok(listing.containedInPlace.name, path);
   assert.ok(listing.containedInPlace.url.includes("/areas/"), path);
+  assert.equal(listing.menu, undefined, path);
+  assert.equal(listing.hasMenu, undefined, path);
+  if (listing.openingHours) assert.ok(listing.openingHoursSpecification.length, path);
+  const org = data["@graph"].find((node) => node["@type"] === "Organization");
+  const site = data["@graph"].find((node) => node["@type"] === "WebSite");
+  assert.ok(org && org.logo && org.url, path);
+  assert.equal(org.sameAs, undefined, path);
+  assert.equal(site.potentialAction["@type"], "SearchAction", path);
 }
 
 for (const path of walk(join(root, "areas")).filter((entry) => entry.endsWith(".html"))) {
@@ -342,10 +368,21 @@ assert.equal(brickOld.location, `${ORIGIN}/restaurants/bricktop-s-grand-boulevar
 assert.equal(legacyRedirect(new URL(`${ORIGIN}/restaurants/bricktop-s/`), "GET").location, `${ORIGIN}/restaurants/bricktop-s-grand-boulevard/`);
 assert.equal(legacyRedirect(new URL(`${ORIGIN}/restaurants/bricktop-s-grand-boulevard/`), "GET"), null);
 assert.equal(legacyRedirect(new URL(`${ORIGIN}/restaurants/o-ku/`), "GET"), null);
-assert.equal(removedRestaurantStatus("/restaurants/o-ku/"), 410);
-assert.equal(removedRestaurantStatus("/restaurants/cowgirl-kitchen/"), 410);
-assert.equal(removedRestaurantStatus("/restaurants/mi-casita/"), 410);
-assert.equal(removedRestaurantStatus("/restaurants/mi-casita-mexican-grill/"), 410);
+assert.equal(removedRestaurantStatus("/restaurants/o-ku/"), 0);
+assert.equal(removedRestaurantStatus("/restaurants/cowgirl-kitchen/"), 0);
+assert.equal(removedRestaurantStatus("/restaurants/mi-casita/"), 0);
+assert.equal(removedRestaurantStatus("/restaurants/hooters-destin/"), 410);
+assert.equal(sisterRedirect(new URL(`${ORIGIN}/restaurants/o-ku/`), "GET").location, "https://www.eatingon30a.com/restaurants/o-ku-alys-beach/");
+assert.equal(sisterRedirect(new URL(`${ORIGIN}/restaurants/cuvee-30a/`), "GET").location, "https://www.eatingon30a.com/restaurants/cuvee-30a-inlet-beach/");
+assert.equal(sisterRedirect(new URL(`${ORIGIN}/restaurants/vue-on-30a/`), "GET").location, "https://www.eatingon30a.com/restaurants/");
+assert.equal(sisterRedirect(new URL(`${ORIGIN}/restaurants/the-donut-hole/`), "GET").location, "https://www.eatingon30a.com/restaurants/the-donut-hole-inlet-beach/");
+assert.equal(sisterRedirect(new URL(`${ORIGIN}/restaurants/goatfeathers-seafood-market/`), "GET").location, "https://www.eatingon30a.com/restaurants/goatfeathers-seafood-market-inlet-beach/");
+assert.equal(locationRedirect(new URL(`${ORIGIN}/location/dune-allen-beach/`), "GET").location, "https://www.eatingon30a.com/areas/dune-allen-beach/");
+assert.equal(locationRedirect(new URL(`${ORIGIN}/location/seagrove-beach`), "GET").location, "https://www.eatingon30a.com/areas/seagrove-beach/");
+assert.equal(locationRedirect(new URL(`${ORIGIN}/location/all-of-30a/`), "GET").location, "https://www.eatingon30a.com/areas/");
+const curlyAj = ampersandRedirect(new URL(`${ORIGIN}/restaurants/${encodeURIComponent("aj\u2019s-seafood-&-oyster-bar")}/`), "GET");
+assert.equal(curlyAj.status, 301);
+assert.equal(curlyAj.location, `${ORIGIN}/restaurants/aj-s-seafood-and-oyster-bar-destin-harbor/`);
 assert.equal(removedRestaurantStatus("/restaurants/louisiana-lagniappe/"), 0);
 assert.equal(removedRestaurantStatus("/restaurants/harbor-docks-destin-harbor/"), 0);
 assert.equal(notFoundPathStatus("/404"), 404);
@@ -379,7 +416,7 @@ assert.equal(prettyMissing.status, 404);
 assert.equal((await prettyMissing.text()).includes("canonical"), false);
 const fileMissing = await worker.fetch(new Request(`${ORIGIN}/404.html`), routeEnv);
 assert.equal(fileMissing.status, 404);
-const gonePage = await worker.fetch(new Request(`${ORIGIN}/restaurants/o-ku/`), routeEnv);
+const gonePage = await worker.fetch(new Request(`${ORIGIN}/restaurants/hooters-destin/`), routeEnv);
 assert.equal(gonePage.status, 410);
 assert.equal(gonePage.headers.get("x-robots-tag"), "noindex");
 assert.equal((await gonePage.text()).includes("canonical"), false);
@@ -387,11 +424,29 @@ const camilleMoved = await worker.fetch(new Request(`${ORIGIN}/restaurants/${enc
 assert.equal(camilleMoved.status, 301);
 assert.equal(camilleMoved.headers.get("location"), `${ORIGIN}/restaurants/camille-s-at-crystal-beach-crystal-beach/`);
 const brickHtml = read("restaurants/bricktop-s-grand-boulevard/index.html");
-assert.equal(attr(brickHtml, /<title>([^<]+)<\/title>/), "Bricktop's Destin at Grand Boulevard | Menu, Hours, Reservations");
-assert.equal(attr(brickHtml, /<meta name="description" content="([^"]+)">/), "American steakhouse at Grand Boulevard in Sandestin. Hours, address, and what to order. Eating in Destin.");
+assert.equal(attr(brickHtml, /<title>([^<]+)<\/title>/), "Bricktop's Destin at Grand Boulevard: Menu, Hours and Reservations");
+assert.equal(attr(brickHtml, /<meta name="description" content="([^"]+)">/), "Planning dinner at Bricktop's in Grand Boulevard, Miramar Beach? See hours, menu highlights, reservations and what to order before you go.");
 assert.equal(attr(brickHtml, /<meta property="og:title" content="([^"]+)">/), attr(brickHtml, /<title>([^<]+)<\/title>/));
 assert.equal(attr(brickHtml, /<meta property="og:description" content="([^"]+)">/), attr(brickHtml, /<meta name="description" content="([^"]+)">/));
-assert.match(brickHtml, /<h1>BrickTop/);
+assert.match(brickHtml, /<h1>Bricktop&#x27;s Destin at Grand Boulevard<\/h1>/);
+const baytowneHtml = read("guides/baytowne-wharf-restaurants/index.html");
+assert.equal(attr(baytowneHtml, /<title>([^<]+)<\/title>/), "Baytowne Wharf Restaurants: Where to Eat in Sandestin (2026 Guide)");
+assert.equal(attr(baytowneHtml, /<meta name="description" content="([^"]+)">/), "Every restaurant at Baytowne Wharf in Sandestin, from casual bites to date night spots, with hours, menus and local picks.");
+const baytowneLd = jsonLd(baytowneHtml);
+assert.equal(baytowneLd["@graph"].some((node) => node["@type"] === "ItemList"), true);
+assert.equal(baytowneLd["@graph"].some((node) => node["@type"] === "FAQPage"), true);
+assert.equal(baytowneLd["@graph"].some((node) => node["@type"] === "WebSite"), true);
+const edgeLd = jsonLd(read("restaurants/the-edge-seafood-restaurant-and-skybar-destin-harbor/index.html"));
+const edgeRestaurant = edgeLd["@graph"].find((node) => typesOf(node).includes("Restaurant"));
+assert.ok(edgeRestaurant);
+assert.ok(edgeRestaurant.openingHoursSpecification.length);
+assert.equal(edgeRestaurant.menu, undefined);
+assert.equal(edgeRestaurant.hasMenu, undefined);
+const unknownRestaurant = await worker.fetch(new Request(`${ORIGIN}/restaurants/not-a-real-restaurant/`), routeEnv);
+assert.equal(unknownRestaurant.status, 404);
+const moved30a = await worker.fetch(new Request(`${ORIGIN}/restaurants/cuvee-30a/`), routeEnv);
+assert.equal(moved30a.status, 301);
+assert.equal(moved30a.headers.get("location"), "https://www.eatingon30a.com/restaurants/cuvee-30a-inlet-beach/");
 const grandHtml = read("areas/grand-boulevard/index.html");
 assert.equal(attr(grandHtml, /<title>([^<]+)<\/title>/), "Grand Boulevard Restaurants in Sandestin | Eating in Destin");
 assert.equal(attr(grandHtml, /<meta name="description" content="([^"]+)">/), "Every restaurant at Grand Boulevard Destin, including Bricktop's. Hours and maps.");
@@ -422,5 +477,9 @@ for (const path of walk(root)) {
     const alt = tag.match(/\salt="([^"]*)"/);
     assert.ok(alt, "missing alt " + path);
     assert.ok(alt[1].trim().length > 0, "empty alt " + path);
+    if (/src="\/images\//.test(tag) || /src="\/favicon/.test(tag)) {
+      assert.match(tag, /\swidth="/, "missing width " + path);
+      assert.match(tag, /\sheight="/, "missing height " + path);
+    }
   }
 }

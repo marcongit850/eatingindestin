@@ -51,6 +51,21 @@ function snippet(text, limit = 150) {
   return `${cut.replace(/[.,;:]$/, "")}…`;
 }
 
+const BRAND_SUFFIX = " | Eating in Destin";
+const ROBOTS_INDEX = "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1";
+
+function listingTitle(listing) {
+  const titled = `${listing.name} in ${listing.area}${BRAND_SUFFIX}`;
+  return titled.length > 60 ? `${listing.name} in ${listing.area}` : titled;
+}
+
+function listingDescription(listing) {
+  const text = `${listing.name} in ${listing.area}, Destin and Miramar Beach, Florida. ${listing.notes || "Hours, the address, and a map are on this page."}`.replace(/\s+/g, " ").trim();
+  if (text.length <= 160) return text;
+  const cut = text.slice(0, 155).replace(/\s+\S*$/, "").replace(/[.,;:]$/, "");
+  return cut.length >= 150 ? cut : text.slice(0, 155).replace(/[.,;: ]+$/, "");
+}
+
 function monogram(name) {
   const cleaned = String(name || "").replace(/[’']/g, "").replace(/&/g, " ");
   let words = (cleaned.match(/[A-Za-z0-9]+/g) || []).filter((word) => !MONOGRAM_SKIP.has(word.toLowerCase()));
@@ -425,6 +440,91 @@ function listUpdateHref(listing) {
   return `/list-your-restaurant/?${params.toString()}`;
 }
 
+const DAY_CODES = { mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday" };
+
+function clock24(token, fallback) {
+  const match = String(token || "").trim().match(/^(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
+  if (!match) return "";
+  let hour = Number(match[1]);
+  const minute = Number(match[2]);
+  const meridiem = (match[3] || fallback || "").toUpperCase();
+  if (!["AM", "PM"].includes(meridiem) || hour < 1 || hour > 12 || minute > 59) return "";
+  if (meridiem === "AM") hour = hour === 12 ? 0 : hour;
+  else if (hour !== 12) hour += 12;
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+function openingHoursSpecification(raw) {
+  const text = String(raw || "").replace(/[–—]/g, "-").replace(/\s+/g, " ").trim();
+  if (!text) return [];
+  const specs = [];
+  for (const part of text.split(";")) {
+    const match = part.trim().match(/^(Mon|Tue|Wed|Thu|Fri|Sat|Sun):\s*(.+)$/i);
+    if (!match) return [];
+    const day = DAY_CODES[match[1].toLowerCase()];
+    const body = match[2].trim();
+    if (body.toLowerCase() === "closed") continue;
+    if (body.toLowerCase() === "open 24 hours") {
+      specs.push({ "@type": "OpeningHoursSpecification", dayOfWeek: `https://schema.org/${day}`, opens: "00:00", closes: "23:59" });
+      continue;
+    }
+    for (const piece of body.split(",")) {
+      const times = piece.trim().match(/^(\d{1,2}:\d{2}(?:\s*[AP]M)?)\s*-\s*(\d{1,2}:\d{2}\s*[AP]M)$/i);
+      if (!times) return [];
+      const endMeridiem = (times[2].match(/(AM|PM)\s*$/i) || [])[1];
+      const opens = clock24(times[1], endMeridiem);
+      const closes = clock24(times[2]);
+      if (!opens || !closes) return [];
+      specs.push({ "@type": "OpeningHoursSpecification", dayOfWeek: `https://schema.org/${day}`, opens, closes });
+    }
+  }
+  return specs;
+}
+
+function restaurantJsonLd(listing, description, image) {
+  const page = `${ORIGIN}/restaurants/${listing.slug}/`;
+  const restaurant = {
+    "@type": ["Restaurant", "LocalBusiness"],
+    "@id": `${page}#restaurant`,
+    name: listing.name,
+    url: page,
+    description,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: listing.address || listing.area,
+      addressLocality: listing.area,
+      addressRegion: "FL",
+      addressCountry: "US",
+    },
+  };
+  if (listing.cuisines && listing.cuisines.length) restaurant.servesCuisine = listing.cuisines;
+  if (listing.price) restaurant.priceRange = listing.price;
+  if (listing.phone) restaurant.telephone = listing.phone;
+  if (image) restaurant.image = image.startsWith("http") ? image : ORIGIN + image;
+  if (listing.lat != null && listing.lng != null) {
+    restaurant.geo = { "@type": "GeoCoordinates", latitude: listing.lat, longitude: listing.lng };
+  }
+  if (listing.reservations) restaurant.acceptsReservations = true;
+  const hours = openingHoursSpecification(listing.hours);
+  if (hours.length) restaurant.openingHoursSpecification = hours;
+  const graph = {
+    "@context": "https://schema.org",
+    "@graph": [
+      restaurant,
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: `${ORIGIN}/` },
+          { "@type": "ListItem", position: 2, name: "Restaurants", item: `${ORIGIN}/restaurants/` },
+          { "@type": "ListItem", position: 3, name: listing.area, item: `${ORIGIN}/areas/${listing.areaSlug}/` },
+          { "@type": "ListItem", position: 4, name: listing.name, item: page },
+        ],
+      },
+    ],
+  };
+  return `<script type="application/ld+json">${JSON.stringify(graph).replace(/</g, "\\u003c")}</script>`;
+}
+
 export function renderProfile(listing, nearby = []) {
   const chips = [];
   for (const meal of listing.meals || []) chips.push(`<li><a href="/restaurants/?meal=${escapeHtml(meal)}">${escapeHtml(meal)}</a></li>`);
@@ -465,8 +565,8 @@ export function renderProfile(listing, nearby = []) {
   const also = nearby.filter((item) => item.slug !== listing.slug && item.areaSlug === listing.areaSlug).slice(0, 4);
   const alsoHtml = also.map((item) => `<a class="map-hit" href="/restaurants/${escapeHtml(item.slug)}/"><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml(item.price || "")}</span></a>`).join("");
   const image = listing.photos && listing.photos[0] ? listing.photos[0].src : "";
-  const title = `${listing.name} in ${listing.area} | Eating in Destin`;
-  const description = snippet(`${listing.name} in ${listing.area}, Destin and Miramar Beach, Florida. ${listing.notes || "Hours, the address, and a map are on this page."}`.trim(), 160);
+  const title = listingTitle(listing);
+  const description = listingDescription(listing);
   const path = `/restaurants/${listing.slug}/`;
   const areaPage = `/areas/${listing.areaSlug}/`;
   const areaHref = `/restaurants/?area=${encodeURIComponent(listing.areaSlug || "")}`;
@@ -496,17 +596,24 @@ gtag('config', '${GA_ID}');
 <title>${escapeHtml(title)}</title>
 <meta name="description" content="${escapeHtml(description)}">
 <link rel="canonical" href="${escapeHtml(ORIGIN + path)}">
-<meta name="robots" content="index,follow">
+<meta name="robots" content="${ROBOTS_INDEX}">
 <meta property="og:title" content="${escapeHtml(title)}">
 <meta property="og:description" content="${escapeHtml(description)}">
 <meta property="og:url" content="${escapeHtml(ORIGIN + path)}">
-<meta property="og:image" content="${escapeHtml(SHARE_IMAGE)}">
-<meta property="og:image:alt" content="${escapeHtml(SHARE_ALT)}">
-<meta property="og:type" content="website">
+<meta property="og:image" content="${escapeHtml(image ? ORIGIN + image : SHARE_IMAGE)}">
+<meta property="og:image:alt" content="${escapeHtml(image ? `${listing.name} in ${listing.area}, Destin` : SHARE_ALT)}">
+<meta property="og:type" content="restaurant.restaurant">
+<meta property="og:locale" content="en_US">
 <meta property="og:site_name" content="Eating in Destin">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${escapeHtml(title)}">
+<meta name="twitter:description" content="${escapeHtml(description)}">
+<meta name="twitter:image" content="${escapeHtml(image ? ORIGIN + image : SHARE_IMAGE)}">
 <meta name="theme-color" content="#102825">
 <link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="stylesheet" href="/styles.css">
+${restaurantJsonLd(listing, description, image)}
 </head>
 <body>
 <div id="site-header"></div>

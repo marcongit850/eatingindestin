@@ -1,6 +1,6 @@
 # Eating in Destin: architecture
 
-Last checked against the code and Cloudflare on Nov 4, 2026.
+Last checked against the code and Cloudflare on Nov 5, 2026.
 
 ## What it does
 
@@ -48,6 +48,8 @@ None. There is no scheduled handler in the code, and `eatingindestin` has no cro
 - The Workers Builds build command is empty, so `scripts/build.py` does NOT run on deploy. Run `python3 scripts/build.py` and commit the regenerated HTML, JSON, and sitemap with every CSV edit.
 - Do not add a custom domain or route to `wrangler.jsonc`. The domains are attached in the dashboard.
 - `run_worker_first` is `true` so redirects run before static HTML.
+- Old restaurant paths are handled in the Worker, not by a second router. `data/legacy-redirects.json` and `data/amp-redirects.json` 301 a previous Destin slug to the live Destin listing. `data/sister-redirects.json` 301s a removed path that belongs on Eating on 30A to `https://www.eatingon30a.com` (a specific listing when the slug matches one page in `data/sister-catalog.json`, otherwise the 30A restaurant directory). `data/location-redirects.json` 301s old `/location/{town}` paths to the matching 30A area page. `all-of-30a` goes to `https://www.eatingon30a.com/areas/`. A removed Destin path with no live listing and no 30A page stays 410. Any other `/restaurants/{slug}` that is not a live page returns 404, including an empty 200 body.
+- Listing titles drop ` | Eating in Destin` when that suffix would make the title longer than 60 characters. Descriptions longer than 160 characters are cut on a word boundary to about 150-155 characters, with no ellipsis. Restaurant JSON-LD adds `openingHoursSpecification` from the hours already on the page, and includes `priceRange`, `image`, and `telephone` only when the listing has them. There is no menu URL or `hasMenu` field.
 - Shared accounts: `eatingindestin`, `eatingon30a`, and `eating-accounts` must all hold the same `ACCOUNTS_SHARED_SECRET`. Change it on all three together.
 - Sheets token names are mirrored across the two guides: here `GOOGLE_SHEETS_WEBHOOK_TOKEN` is the Destin tab and `GOOGLE_SHEETS_WEBHOOK_TOKEN_30A` is the 30A tab.
 - `SUBSCRIBE_FROM` must be a sender on a domain verified in Resend, or mail is not delivered.
