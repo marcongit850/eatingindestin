@@ -1,0 +1,641 @@
+{
+  "origin": "https://www.eatingon30a.com",
+  "areas": [
+    "dune-allen-beach",
+    "gulf-place",
+    "blue-mountain-beach",
+    "grayton-beach",
+    "watercolor",
+    "seaside",
+    "seagrove-beach",
+    "seacrest",
+    "watersound",
+    "alys-beach",
+    "rosemary-beach",
+    "inlet-beach",
+    "watersound-origins",
+    "nearby"
+  ],
+  "restaurants": [
+    {
+      "slug": "3-sons-bar-b-q-dune-allen-beach",
+      "name": "3 Sons Bar-B-Q"
+    },
+    {
+      "slug": "3rd-cup-rosemary-beach",
+      "name": "3rd Cup"
+    },
+    {
+      "slug": "87-central-square-seaside",
+      "name": "87 Central Square"
+    },
+    {
+      "slug": "98-bar-b-que",
+      "name": "98 Bar-B-Que"
+    },
+    {
+      "slug": "aja-30a-inlet-beach",
+      "name": "AJA"
+    },
+    {
+      "slug": "ajs-grayton-beach-grayton-beach",
+      "name": "AJ’s Grayton Beach"
+    },
+    {
+      "slug": "amavida-coffee-roasters-seaside",
+      "name": "Amavida Coffee Roasters"
+    },
+    {
+      "slug": "amavida-coffee-roasters-rosemary-beach",
+      "name": "Amavida Coffee Roasters"
+    },
+    {
+      "slug": "ambrosia-watersound-origins",
+      "name": "Ambrosia"
+    },
+    {
+      "slug": "amici-30a-italian-kitchen-inlet-beach",
+      "name": "Amici 30A Italian Kitchen"
+    },
+    {
+      "slug": "amigos-30a-mexican-kitchen-inlet-beach",
+      "name": "Amigos 30A Mexican Kitchen"
+    },
+    {
+      "slug": "angelinas-pizzeria-and-pasta-seagrove-beach",
+      "name": "Angelina’s Pizzeria & Pasta"
+    },
+    {
+      "slug": "barefoot-bbq-seaside",
+      "name": "Barefoot BBQ"
+    },
+    {
+      "slug": "basmatis-asian-cuisine-blue-mountain-beach",
+      "name": "Basmati’s Asian Cuisine"
+    },
+    {
+      "slug": "beach-and-brew-on-30a-seacrest",
+      "name": "Beach & Brew on 30A"
+    },
+    {
+      "slug": "beach-happy-cafe-watercolor",
+      "name": "Beach Happy Cafe"
+    },
+    {
+      "slug": "beach-happy-cafe-seagrove-beach",
+      "name": "Beach Happy Cafe + Cocktails"
+    },
+    {
+      "slug": "big-bad-breakfast-inlet-beach",
+      "name": "Big Bad Breakfast"
+    },
+    {
+      "slug": "black-bear-bread-co-seaside",
+      "name": "Black Bear Bread Co."
+    },
+    {
+      "slug": "black-bear-bread-co-grayton-beach",
+      "name": "Black Bear Bread Co."
+    },
+    {
+      "slug": "blue-mountain-bakery-blue-mountain-beach",
+      "name": "Blue Mountain Bakery"
+    },
+    {
+      "slug": "blue-mountain-beach-creamery-blue-mountain-beach",
+      "name": "Blue Mountain Beach Creamery"
+    },
+    {
+      "slug": "boggy-boys-pizza-seagrove-beach",
+      "name": "Boggy Boys Pizza"
+    },
+    {
+      "slug": "borago-grayton-beach",
+      "name": "Borago"
+    },
+    {
+      "slug": "boxcar-annie-blue-mountain-beach",
+      "name": "Boxcar Annie"
+    },
+    {
+      "slug": "brunos-pizza-watersound",
+      "name": "Bruno’s Pizza"
+    },
+    {
+      "slug": "bud-and-alleys-seaside",
+      "name": "Bud & Alley’s"
+    },
+    {
+      "slug": "bud-and-alleys-pizza-bar-seaside",
+      "name": "Bud & Alley’s Pizza Bar + Trattoria"
+    },
+    {
+      "slug": "bud-and-alleys-taco-bar-seaside",
+      "name": "Bud & Alley’s Taco Bar"
+    },
+    {
+      "slug": "buddys-seafood-market",
+      "name": "Buddys Seafood Market"
+    },
+    {
+      "slug": "cafe-tango-blue-mountain-beach",
+      "name": "Cafe Tango"
+    },
+    {
+      "slug": "cafe-aroma-inlet-beach",
+      "name": "Café Aroma"
+    },
+    {
+      "slug": "cafe-thirty-a-seagrove-beach",
+      "name": "Café Thirty-A"
+    },
+    {
+      "slug": "cajun-corner-sports-bar-and-grill",
+      "name": "Cajun Corner Sports Bar and Grill"
+    },
+    {
+      "slug": "caliza-restaurant-alys-beach",
+      "name": "Caliza Restaurant"
+    },
+    {
+      "slug": "canopy-road-cafe-inlet-beach",
+      "name": "Canopy Road Café"
+    },
+    {
+      "slug": "canopy-road-cafe-seagrove-beach",
+      "name": "Canopy Road Café"
+    },
+    {
+      "slug": "caribe-and-crumb-gulf-place",
+      "name": "Caribe & Crumb"
+    },
+    {
+      "slug": "chanticleer-eatery-grayton-beach",
+      "name": "Chanticleer Eatery"
+    },
+    {
+      "slug": "charlies-cafe-rosemary-beach",
+      "name": "Charlie’s Café"
+    },
+    {
+      "slug": "charlies-delights",
+      "name": "Charlie’s Delights"
+    },
+    {
+      "slug": "chiringo-grayton-beach",
+      "name": "Chiringo"
+    },
+    {
+      "slug": "cowgirl-kitchen-rosemary-beach",
+      "name": "Cowgirl Kitchen"
+    },
+    {
+      "slug": "cowgirl-kitchen-blue-mountain-beach",
+      "name": "Cowgirl Kitchen (Blue Mountain)"
+    },
+    {
+      "slug": "crabby-steves-rosemary-beach",
+      "name": "Crabby Steve’s"
+    },
+    {
+      "slug": "crackings-grayton-beach",
+      "name": "Crackings"
+    },
+    {
+      "slug": "crepes-du-soleil-seaside",
+      "name": "Crepes du Soleil"
+    },
+    {
+      "slug": "crust-artisan-bakery",
+      "name": "Crust Artisan Bakery"
+    },
+    {
+      "slug": "cuvee-30a-inlet-beach",
+      "name": "Cuvee 30A"
+    },
+    {
+      "slug": "dawsons-yogurt-and-fudge-seaside",
+      "name": "Dawson’s Yogurt & Fudge"
+    },
+    {
+      "slug": "decadent-dessert-bar-and-bistro",
+      "name": "Decadent Dessert Bar & Bistro"
+    },
+    {
+      "slug": "don-pedros-mexican-restaurant",
+      "name": "Don Pedro’s Mexican Restaurant"
+    },
+    {
+      "slug": "dough-sea-dough-seagrove-beach",
+      "name": "Dough Sea Dough"
+    },
+    {
+      "slug": "down-island-gulf-seafood",
+      "name": "Down Island Gulf Seafood"
+    },
+    {
+      "slug": "edwards-fine-food-and-wine-rosemary-beach",
+      "name": "Edward’s Fine Food & Wine"
+    },
+    {
+      "slug": "farm-and-fire",
+      "name": "Farm & Fire"
+    },
+    {
+      "slug": "fat-daddys-pizza",
+      "name": "Fat Daddy’s Pizza"
+    },
+    {
+      "slug": "fish-out-of-water-watercolor",
+      "name": "Fish Out of Water"
+    },
+    {
+      "slug": "fonville-press-market-and-cafe-alys-beach",
+      "name": "Fonville Press Market & Café"
+    },
+    {
+      "slug": "friends-30a-burger-bar-watersound-origins",
+      "name": "Friends 30A Burger Bar"
+    },
+    {
+      "slug": "frost-bites-seaside",
+      "name": "Frost Bites"
+    },
+    {
+      "slug": "gallions-rosemary-beach",
+      "name": "Gallion’s"
+    },
+    {
+      "slug": "georges-at-alys-beach-alys-beach",
+      "name": "George’s at Alys Beach"
+    },
+    {
+      "slug": "goatfeathers-seafood-market-inlet-beach",
+      "name": "Goatfeathers Seafood Market"
+    },
+    {
+      "slug": "goatfeathers-seafood-market-east-location-seagrove-beach",
+      "name": "Goatfeathers Seafood Market (East)"
+    },
+    {
+      "slug": "goatfeathers-seafood-restaurant-dune-allen-beach",
+      "name": "Goatfeathers Seafood Restaurant"
+    },
+    {
+      "slug": "grace-pizza-and-shakes-grayton-beach",
+      "name": "Grace Pizza and Shakes"
+    },
+    {
+      "slug": "grayton-corner-cafe-grayton-beach",
+      "name": "Grayton Corner Cafe"
+    },
+    {
+      "slug": "grayton-seafood-co-grayton-beach",
+      "name": "Grayton Seafood Co."
+    },
+    {
+      "slug": "great-american-cookies-inlet-beach",
+      "name": "Great American Cookies"
+    },
+    {
+      "slug": "great-southern-cafe-seaside",
+      "name": "Great Southern Cafe"
+    },
+    {
+      "slug": "growler-garage-30a-dune-allen-beach",
+      "name": "Growler Garage 30A"
+    },
+    {
+      "slug": "havana-beach-bar-and-grill-rosemary-beach",
+      "name": "Havana Beach Bar & Grill"
+    },
+    {
+      "slug": "heavenlys-shortcakes-and-ice-cream-seaside",
+      "name": "Heavenly’s Shortcakes & Ice Cream"
+    },
+    {
+      "slug": "hibiscus-cafe-grayton-beach",
+      "name": "Hibiscus Café"
+    },
+    {
+      "slug": "hurricane-oyster-bar-grayton-beach",
+      "name": "Hurricane Oyster Bar"
+    },
+    {
+      "slug": "johnny-mctighes-irish-pub-dune-allen-beach",
+      "name": "Johnny McTighe’s Irish Pub"
+    },
+    {
+      "slug": "kilwins-rosemary-beach",
+      "name": "Kilwins"
+    },
+    {
+      "slug": "la-crema-tapas-and-chocolate-rosemary-beach",
+      "name": "La Crema Tapas & Chocolate"
+    },
+    {
+      "slug": "la-cocina-seacrest",
+      "name": "LaCo"
+    },
+    {
+      "slug": "local-cantina",
+      "name": "Local Cantina"
+    },
+    {
+      "slug": "local-catch-bar-and-grill-dune-allen-beach",
+      "name": "Local Catch Bar & Grill"
+    },
+    {
+      "slug": "lola-coastal-italian-seacrest",
+      "name": "Lola Coastal Italian"
+    },
+    {
+      "slug": "los-rancheros",
+      "name": "Los Rancheros"
+    },
+    {
+      "slug": "louis-louis",
+      "name": "Louis Louis"
+    },
+    {
+      "slug": "marble-slab-creamery-inlet-beach",
+      "name": "Marble Slab Creamery"
+    },
+    {
+      "slug": "meltdown-on-30a-seaside",
+      "name": "Meltdown on 30A"
+    },
+    {
+      "slug": "mi-casita-mexican-grill-seagrove-beach",
+      "name": "Mi Casita Mexican Grill"
+    },
+    {
+      "slug": "mimmos-30a-blue-mountain-beach",
+      "name": "Mimmo’s 30A"
+    },
+    {
+      "slug": "modica-market-seaside",
+      "name": "Modica Market"
+    },
+    {
+      "slug": "mr-gyro-hero-seaside",
+      "name": "Mr. Gyro Hero"
+    },
+    {
+      "slug": "neat-bottle-shop-and-tasting-room-alys-beach",
+      "name": "Neat Bottle Shop & Tasting Room"
+    },
+    {
+      "slug": "nigels-bananas-seaside",
+      "name": "Nigel’s Bananas"
+    },
+    {
+      "slug": "north-beach-social",
+      "name": "North Beach Social"
+    },
+    {
+      "slug": "o-ku-alys-beach",
+      "name": "O-Ku"
+    },
+    {
+      "slug": "obscure-wine-company-inlet-beach",
+      "name": "Obscure Wine Company"
+    },
+    {
+      "slug": "old-florida-fish-house-seagrove-beach",
+      "name": "Old Florida Fish House"
+    },
+    {
+      "slug": "outcast-bar-and-grill",
+      "name": "Outcast Bar & Grill"
+    },
+    {
+      "slug": "papa-surf-burger-bar-gulf-place",
+      "name": "Papa Surf Burger Bar"
+    },
+    {
+      "slug": "pazzo-italiano-santa-rosa-beach",
+      "name": "Pazzo Italiano"
+    },
+    {
+      "slug": "pecan-jacks-seagrove-beach",
+      "name": "Pecan Jacks"
+    },
+    {
+      "slug": "pecan-jacks-grayton-beach",
+      "name": "Pecan Jacks"
+    },
+    {
+      "slug": "pescado-seafood-grill-and-rooftop-bar-rosemary-beach",
+      "name": "Pescado Seafood Grill & Rooftop Bar"
+    },
+    {
+      "slug": "pickles-burger-and-shake-seaside",
+      "name": "Pickle’s Burger and Shake"
+    },
+    {
+      "slug": "pizza-by-the-sea-watercolor",
+      "name": "Pizza by the Sea"
+    },
+    {
+      "slug": "pizza-by-the-sea-gulf-place",
+      "name": "Pizza by the Sea"
+    },
+    {
+      "slug": "pizza-by-the-sea-seacrest",
+      "name": "Pizza by the Sea"
+    },
+    {
+      "slug": "playa-bowls-rosemary-beach",
+      "name": "Playa Bowls"
+    },
+    {
+      "slug": "prema-organic-cafe-seagrove-beach",
+      "name": "Prema Organic Café"
+    },
+    {
+      "slug": "proper-restaurant-and-bar-inlet-beach",
+      "name": "Proper Restaurant & Bar"
+    },
+    {
+      "slug": "raw-and-juicy-alys-beach",
+      "name": "Raw & Juicy"
+    },
+    {
+      "slug": "red-fish-taco-blue-mountain-beach",
+      "name": "Red Fish Taco"
+    },
+    {
+      "slug": "redds-pub",
+      "name": "Redd’s Pub"
+    },
+    {
+      "slug": "renaissance-french-restaurant-gulf-place",
+      "name": "Renaissance French Restaurant"
+    },
+    {
+      "slug": "restaurant-paradis-rosemary-beach",
+      "name": "Restaurant Paradis"
+    },
+    {
+      "slug": "roux-30a-grayton-beach",
+      "name": "Roux 30A"
+    },
+    {
+      "slug": "salty-butcher",
+      "name": "Salty Butcher"
+    },
+    {
+      "slug": "scout-sports-tavern-watersound-origins",
+      "name": "Scout Sports Tavern"
+    },
+    {
+      "slug": "scratch-biscuit-kitchen-watercolor",
+      "name": "Scratch Biscuit Kitchen"
+    },
+    {
+      "slug": "seacrest-sundries-seacrest",
+      "name": "Seacrest Sundries"
+    },
+    {
+      "slug": "seagrove-coffee-and-donuts-seagrove-beach",
+      "name": "Seagrove Coffee & Donuts"
+    },
+    {
+      "slug": "seagrove-village-market-cafe-seagrove-beach",
+      "name": "Seagrove Village Market Café"
+    },
+    {
+      "slug": "shades-bar-and-grill-inlet-beach",
+      "name": "Shades Bar & Grill"
+    },
+    {
+      "slug": "shaka-sushi-and-noodle-bar-inlet-beach",
+      "name": "Shaka Sushi"
+    },
+    {
+      "slug": "shelbys-beach-bar-and-grill",
+      "name": "Shelby’s Beach Bar and Grill"
+    },
+    {
+      "slug": "shunk-gulley-oyster-bar-gulf-place",
+      "name": "Shunk Gulley Oyster Bar"
+    },
+    {
+      "slug": "south-of-philly-gulf-place",
+      "name": "South of Philly"
+    },
+    {
+      "slug": "steamboat-grill-30a-seagrove-beach",
+      "name": "Steamboat Grill 30A"
+    },
+    {
+      "slug": "stinkys-bait-shack-dune-allen-beach",
+      "name": "Stinky’s Bait Shack"
+    },
+    {
+      "slug": "stinkys-fish-camp-dune-allen-beach",
+      "name": "Stinky’s Fish Camp"
+    },
+    {
+      "slug": "stock-and-brew-cafe",
+      "name": "Stock & Brew Cafe"
+    },
+    {
+      "slug": "sugar-shak-rosemary-beach",
+      "name": "Sugar Shak"
+    },
+    {
+      "slug": "surfing-deer-seagrove-beach",
+      "name": "Surfing Deer"
+    },
+    {
+      "slug": "tahona-tacos-and-tequileria-rosemary-beach",
+      "name": "Tahona Tacos & Tequileria"
+    },
+    {
+      "slug": "thai-chiang-rai",
+      "name": "Thai Chiang Rai"
+    },
+    {
+      "slug": "thai-elephant",
+      "name": "Thai Elephant"
+    },
+    {
+      "slug": "the-big-chill-watersound",
+      "name": "The Big Chill"
+    },
+    {
+      "slug": "the-citizen-alys-beach",
+      "name": "The Citizen"
+    },
+    {
+      "slug": "the-daytrader-tiki-bar-and-restaurant-seaside",
+      "name": "The Daytrader Tiki Bar & Restaurant"
+    },
+    {
+      "slug": "the-donut-hole-inlet-beach",
+      "name": "The Donut Hole"
+    },
+    {
+      "slug": "the-donut-hole-us-98",
+      "name": "The Donut Hole (US 98)"
+    },
+    {
+      "slug": "the-perfect-pig-seagrove-beach",
+      "name": "The Perfect Pig"
+    },
+    {
+      "slug": "the-perfect-pig-gulf-place",
+      "name": "The Perfect Pig"
+    },
+    {
+      "slug": "the-perfect-pig-watercolor",
+      "name": "The Perfect Pig"
+    },
+    {
+      "slug": "the-red-bar-grayton-beach",
+      "name": "The Red Bar"
+    },
+    {
+      "slug": "the-shrimp-shack-seaside",
+      "name": "The Shrimp Shack"
+    },
+    {
+      "slug": "the-summer-kitchen-cafe-rosemary-beach",
+      "name": "The Summer Kitchen Café"
+    },
+    {
+      "slug": "the-wine-bar-watercolor",
+      "name": "The Wine Bar"
+    },
+    {
+      "slug": "tichelis-pizza-seacrest",
+      "name": "Ticheli’s Pizza"
+    },
+    {
+      "slug": "turbo-coffee",
+      "name": "Turbo Coffee"
+    },
+    {
+      "slug": "village-market-cafe-bar-watersound-origins",
+      "name": "Village Market Café + Bar"
+    },
+    {
+      "slug": "vki-japanese-steak-house-and-sushi",
+      "name": "VKI Japanese Steak House & Sushi"
+    },
+    {
+      "slug": "wild-bills-beach-dogs-seaside",
+      "name": "Wild Bill’s Beach Dogs"
+    },
+    {
+      "slug": "wild-nectar-seaside",
+      "name": "Wild Nectar"
+    },
+    {
+      "slug": "drome-seaside",
+      "name": "‘drome"
+    }
+  ]
+}

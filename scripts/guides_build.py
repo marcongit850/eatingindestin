@@ -37,9 +37,14 @@ BANNED_PROSE = (
 
 
 def check_meta(title: str, description: str) -> None:
+    import build
+
     if not 20 <= len(title) <= 70:
         raise SystemExit(f"title length {len(title)}: {title}")
-    if not 110 <= len(description) <= 165 or "Destin" not in description:
+    exact = description in build.EXACT_DESCRIPTIONS
+    long_enough = 110 <= len(description) <= 160
+    exact_ok = exact and 50 <= len(description) <= 165
+    if (not long_enough and not exact_ok) or (not exact and "Destin" not in description):
         raise SystemExit(f"description length {len(description)}: {description}")
 
 
@@ -916,10 +921,10 @@ def guide_picks(restaurants: list[dict], areas: list[dict]) -> list[dict]:
         guide_spec(
             "baytowne-wharf-restaurants",
             "Baytowne Wharf restaurants",
-            "Baytowne Wharf restaurants | Eating in Destin",
+            "Baytowne Wharf Restaurants: Where to Eat in Sandestin (2026 Guide)",
             (
-                "Baytowne Wharf restaurants in Sandestin, near Destin, Florida, "
-                "at the Village of Baytowne Wharf, with the directory and a map."
+                "Every restaurant at Baytowne Wharf in Sandestin, from casual bites to date night spots, "
+                "with hours, menus and local picks."
             ),
             "Baytowne Wharf",
             [
@@ -1327,7 +1332,7 @@ def guide_teaser(spec: dict) -> str:
     meta = f"{count} {build.restaurant_count_word(count)}"
     return (
         f'<a class="card" href="{build.e(spec["path"])}">'
-        f'<div class="card-media"><img src="{build.e(spec["teaser_image"])}" alt="{build.e(spec["teaser_alt"])}" loading="lazy"></div>'
+        f'<div class="card-media"><img src="{build.e(spec["teaser_image"])}" alt="{build.e(spec["teaser_alt"])}" loading="lazy"{build.img_size(spec["teaser_image"])}></div>'
         f'<div class="card-body"><p class="card-area">{build.e(spec["teaser_area"])}</p>'
         f"<h2>{build.e(spec['h1'])}</h2>"
         f'<p class="meta">{build.e(meta)}</p>'
@@ -1349,7 +1354,7 @@ def write_guide_page(spec: dict) -> None:
     body = (
         '<article class="profile">'
         '<div class="profile-hero">'
-        f'<img src="{build.e(spec["teaser_image"])}" alt="{build.e(spec["teaser_alt"])}" loading="eager">'
+        f'<img src="{build.e(spec["teaser_image"])}" alt="{build.e(spec["teaser_alt"])}" loading="eager"{build.img_size(spec["teaser_image"])}>'
         "</div>"
         '<div class="wrap page-intro">'
         + build.crumb_nav([("Home", "/"), ("Guides", "/guides/"), (spec["h1"], spec["path"])])

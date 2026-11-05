@@ -83,10 +83,18 @@ SAMPLE_SLUGS = None
 # The visible heading and the page body stay on the normal template.
 SEO_OVERRIDES = {
     "/restaurants/bricktop-s-grand-boulevard/": {
-        "title": "Bricktop's Destin at Grand Boulevard | Menu, Hours, Reservations",
+        "title": "Bricktop's Destin at Grand Boulevard: Menu, Hours and Reservations",
         "description": (
-            "American steakhouse at Grand Boulevard in Sandestin. "
-            "Hours, address, and what to order. Eating in Destin."
+            "Planning dinner at Bricktop's in Grand Boulevard, Miramar Beach? "
+            "See hours, menu highlights, reservations and what to order before you go."
+        ),
+        "h1": "Bricktop's Destin at Grand Boulevard",
+    },
+    "/guides/baytowne-wharf-restaurants/": {
+        "title": "Baytowne Wharf Restaurants: Where to Eat in Sandestin (2026 Guide)",
+        "description": (
+            "Every restaurant at Baytowne Wharf in Sandestin, from casual bites to date night spots, "
+            "with hours, menus and local picks."
         ),
     },
     "/areas/grand-boulevard/": {
@@ -94,6 +102,9 @@ SEO_OVERRIDES = {
         "description": "Every restaurant at Grand Boulevard Destin, including Bricktop's. Hours and maps.",
     },
 }
+BRAND_SUFFIX = " | Eating in Destin"
+ROBOTS_INDEX = "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
+SISTER_ORIGIN = "https://www.eatingon30a.com"
 EXACT_DESCRIPTIONS = {item["description"] for item in SEO_OVERRIDES.values()}
 
 
@@ -329,7 +340,148 @@ def build_route_maps(live_slugs: set[str]) -> None:
             removed.discard(alias)
     for alias in conflicts:
         removed.discard(alias)
+    assign_cross_site_redirects(removed, live_slugs)
     REMOVED_SLUGS[:] = sorted(removed)
+
+
+def straight_slug(value: str) -> str:
+    return (value or "").replace("\u2019", "'").replace("\u2018", "'").replace("`", "'")
+
+
+def compact_slug(value: str) -> str:
+    """Compare old paths and live slugs when & , and, and apostrophes differ."""
+    text = straight_slug(value).replace("&", " and ").replace("+", " and ").replace("'", "")
+    return slugify(text).replace("-and-", "-")
+
+
+def sister_catalog() -> dict:
+    return json.loads((DATA / "sister-catalog.json").read_text(encoding="utf-8"))
+
+
+def sister_scores(alias: str, restaurants: list[dict]) -> list[tuple[int, str]]:
+    key = compact_slug(alias)
+    if len(key) < 3:
+        return []
+    scored = []
+    for item in restaurants:
+        slug_c = compact_slug(item["slug"])
+        name_c = compact_slug(item["name"])
+        if slug_c == key or name_c == key:
+            scored.append((100, item["slug"]))
+        elif len(key) >= 6 and slug_c.startswith(key + "-"):
+            scored.append((80, item["slug"]))
+        elif name_c and len(name_c) >= 8 and key.startswith(name_c + "-"):
+            scored.append((70, item["slug"]))
+    return scored
+
+
+def choose_sister_slug(scored: list[tuple[int, str]]) -> str | None:
+    if not scored:
+        return None
+    best = max(score for score, _slug in scored)
+    # 70 means the old path names a specific closed branch of a chain. Do not guess which live branch.
+    if best < 80:
+        return None
+    slugs = sorted({slug for score, slug in scored if score == best})
+    if len(slugs) == 1:
+        return slugs[0]
+    return None
+
+
+def looks_like_30a(alias: str) -> bool:
+    key = compact_slug(alias)
+    tokens = (
+        "30a",
+        "seagrove",
+        "grayton",
+        "rosemary",
+        "seaside",
+        "watercolor",
+        "inlet-beach",
+        "alys",
+        "dune-allen",
+        "watersound",
+        "seacrest",
+        "gulf-place",
+        "blue-mountain",
+    )
+    return any(token in key for token in tokens)
+
+
+def destin_listing_for(alias: str, live_slugs: set[str]) -> str | None:
+    """The one live Destin slug an old path still names, when the prefix is unique."""
+    key = compact_slug(alias)
+    parts = [part for part in key.split("-") if part]
+    for length in range(len(parts), 1, -1):
+        prefix = "-".join(parts[:length])
+        if len(prefix) < 8:
+            continue
+        hits = [
+            slug
+            for slug in live_slugs
+            if compact_slug(slug) == prefix or compact_slug(slug).startswith(prefix + "-")
+        ]
+        if len(hits) == 1:
+            return hits[0]
+        if len(hits) > 1:
+            return None
+    return None
+
+
+# Old Wix paths that now belong on Eating on 30A. Values are absolute URLs.
+SISTER_REDIRECTS: dict[str, str] = {}
+LOCATION_REDIRECTS: dict[str, str] = {}
+SISTER_UNMAPPED: list[str] = []
+
+
+def assign_cross_site_redirects(removed: set[str], live_slugs: set[str]) -> None:
+    """301 a removed path to Eating on 30A, or to the one live Destin listing it still names."""
+    SISTER_REDIRECTS.clear()
+    LOCATION_REDIRECTS.clear()
+    SISTER_UNMAPPED.clear()
+    catalog = sister_catalog()
+    origin = (catalog.get("origin") or SISTER_ORIGIN).rstrip("/")
+    restaurants = catalog["restaurants"]
+    known = {item["slug"] for item in restaurants}
+    directory = f"{origin}/restaurants/"
+    areas_index = f"{origin}/areas/"
+    for area in catalog["areas"]:
+        if area:
+            LOCATION_REDIRECTS[area] = f"{origin}/areas/{area}/"
+    LOCATION_REDIRECTS["all-of-30a"] = areas_index
+    claimed: set[str] = set()
+    for alias in sorted(removed):
+        if alias in LEGACY_REDIRECTS or alias in AMP_REDIRECTS:
+            continue
+        scored = sister_scores(alias, restaurants)
+        chosen = choose_sister_slug(scored)
+        target = ""
+        if chosen and chosen in known:
+            target = f"{origin}/restaurants/{chosen}/"
+        elif scored or looks_like_30a(alias):
+            target = directory
+        else:
+            destin = destin_listing_for(alias, live_slugs)
+            if (
+                destin
+                and "&" not in alias
+                and "/" not in alias
+                and alias != destin
+                and alias not in live_slugs
+                and len(alias) <= 180
+                and LEGACY_REDIRECTS.get(alias) in {None, destin}
+            ):
+                LEGACY_REDIRECTS[alias] = destin
+                claimed.add(alias)
+            else:
+                SISTER_UNMAPPED.append(alias)
+            continue
+        if not target.startswith(f"{origin}/"):
+            continue
+        SISTER_REDIRECTS[straight_slug(alias)] = target
+        claimed.add(alias)
+    for alias in claimed:
+        removed.discard(alias)
 
 
 def parse_list(raw: str) -> list[str]:
@@ -891,7 +1043,7 @@ def profile_gallery(restaurant: dict) -> str:
         loading = "eager" if index < GALLERY_WINDOW else "lazy"
         cells.append(
             f'<div class="profile-gallery-cell"{hidden}>'
-            f'<img src="{e(src)}" alt="{e(alt)}" loading="{loading}">'
+            f'<img src="{e(src)}" alt="{e(alt)}" loading="{loading}"{img_size(src)}>'
             "</div>"
         )
     prev_arrow = gallery_arrow(-1) if total > GALLERY_WINDOW else ""
@@ -915,7 +1067,7 @@ def media_block(image: str | None, alt: str, tone: str, label: str, eager: bool 
         return placeholder(tone, label, mark_name)
     loading = "eager" if eager else "lazy"
     return (
-        f'<img src="{e(image)}" alt="{e(alt)}" loading="{loading}" '
+        f'<img src="{e(image)}" alt="{e(alt)}" loading="{loading}"{img_size(image)} '
         'onerror="var p=this.parentElement;this.remove();var f=p&&p.querySelector(\'.ph\');if(f)f.hidden=false">'
         f"{placeholder(tone, label, mark_name, hidden=True)}"
     )
@@ -992,7 +1144,7 @@ def sentence(text: str) -> str:
 def within_meta(text: str) -> str | None:
     """Search snippets stay in the range the rest of the guide already uses."""
     text = clean_text(text)
-    if 110 <= len(text) <= 165 and "Destin" in text:
+    if 110 <= len(text) <= 160 and "Destin" in text:
         return text
     return None
 
@@ -1256,6 +1408,8 @@ def restaurant_title(restaurant: dict) -> str:
         if not title or title in seen:
             continue
         seen.add(title)
+        if title.endswith(BRAND_SUFFIX) and len(title) > 60:
+            continue
         if 20 <= len(title) <= 70 and title not in USED_TITLES:
             return title
     raise SystemExit(f"title out of range for {restaurant['slug']}")
@@ -1328,6 +1482,9 @@ def opening_hours(raw: str) -> list[str]:
         if body.lower() == "closed":
             continue
         day = DAY_CODES[match.group(1).lower()]
+        if body.lower() == "open 24 hours":
+            slots.append(f"{day} 00:00-23:59")
+            continue
         for piece in body.split(","):
             times = re.fullmatch(
                 r"(\d{1,2}:\d{2}(?:\s*[AP]M)?)\s*-\s*(\d{1,2}:\d{2}\s*[AP]M)",
@@ -1343,6 +1500,34 @@ def opening_hours(raw: str) -> list[str]:
                 return []
             slots.append(f"{day} {start}-{end}")
     return slots
+
+
+DAY_FULL = {
+    "Mo": "Monday",
+    "Tu": "Tuesday",
+    "We": "Wednesday",
+    "Th": "Thursday",
+    "Fr": "Friday",
+    "Sa": "Saturday",
+    "Su": "Sunday",
+}
+
+
+def opening_hours_specification(raw: str) -> list[dict]:
+    """Schema.org openingHoursSpecification from the same hours string as the page."""
+    specs = []
+    for slot in opening_hours(raw):
+        day, times = slot.split(" ", 1)
+        opens, closes = times.split("-", 1)
+        specs.append(
+            {
+                "@type": "OpeningHoursSpecification",
+                "dayOfWeek": f"https://schema.org/{DAY_FULL[day]}",
+                "opens": opens,
+                "closes": closes,
+            }
+        )
+    return specs
 
 
 def postal_address(restaurant: dict) -> dict:
@@ -1394,6 +1579,9 @@ def restaurant_schema(restaurant: dict, description: str) -> dict:
     hours = opening_hours(restaurant["hours"])
     if hours:
         schema["openingHours"] = hours
+    specification = opening_hours_specification(restaurant["hours"])
+    if specification:
+        schema["openingHoursSpecification"] = specification
     same_as = [url for url in (restaurant["website"], restaurant["instagram"], restaurant["facebook"]) if url]
     if same_as:
         schema["sameAs"] = same_as
@@ -1404,8 +1592,27 @@ USED_TITLES: set[str] = set()
 USED_DESCRIPTIONS: set[str] = set()
 
 
-def claim_title(title: str) -> str:
+def fit_brand_title(title: str) -> str:
+    """Drop the brand suffix when it would push the title past 60 characters."""
     title = clean_text(title)
+    if title.endswith(BRAND_SUFFIX) and len(title) > 60:
+        title = title[: -len(BRAND_SUFFIX)].rstrip()
+    return title
+
+
+def trim_meta(text: str) -> str:
+    """Shorten a description that is over 160 characters to 150-155, without an ellipsis."""
+    text = clean_text(text)
+    if len(text) <= 160:
+        return text
+    cut = text[:155].rsplit(" ", 1)[0].rstrip(".,;:")
+    if len(cut) < 150:
+        cut = text[:155].rstrip(".,;: ")
+    return cut
+
+
+def claim_title(title: str) -> str:
+    title = fit_brand_title(title)
     if not (20 <= len(title) <= 70):
         raise SystemExit(f"title length {len(title)}: {title}")
     if title in USED_TITLES:
@@ -1417,9 +1624,11 @@ def claim_title(title: str) -> str:
 def claim_description(description: str) -> str:
     description = clean_text(description)
     exact = description in EXACT_DESCRIPTIONS
-    long_enough = 110 <= len(description) <= 165
+    if not exact:
+        description = trim_meta(description)
+    long_enough = 110 <= len(description) <= 160
     exact_ok = exact and 50 <= len(description) <= 165
-    if (not long_enough and not exact_ok) or "Destin" not in description:
+    if (not long_enough and not exact_ok) or (not exact and "Destin" not in description):
         raise SystemExit(f"description out of range ({len(description)}): {description}")
     if description in USED_DESCRIPTIONS:
         raise SystemExit(f"duplicate description: {description}")
@@ -1433,6 +1642,13 @@ def local_image_info(path: Path) -> tuple[int, int, str] | None:
     data = path.read_bytes()
     if data.startswith(b"\x89PNG") and len(data) >= 24:
         return int.from_bytes(data[16:20], "big"), int.from_bytes(data[20:24], "big"), "image/png"
+    if data.startswith(b"<svg") or data.startswith(b"<?xml") or b"<svg" in data[:400]:
+        text = data.decode("utf-8", errors="ignore")
+        width = re.search(r'\bwidth="([\d.]+)"', text)
+        height = re.search(r'\bheight="([\d.]+)"', text)
+        if width and height:
+            return int(float(width.group(1))), int(float(height.group(1))), "image/svg+xml"
+        return None
     if data[:2] != b"\xff\xd8":
         return None
     index = 2
@@ -1457,6 +1673,16 @@ def local_image_info(path: Path) -> tuple[int, int, str] | None:
     return None
 
 
+def img_size(src: str) -> str:
+    """Width and height attributes for a local image, when the file can be measured."""
+    if not src or not src.startswith("/"):
+        return ""
+    info = local_image_info(ROOT / src.lstrip("/"))
+    if not info:
+        return ""
+    return f' width="{info[0]}" height="{info[1]}"'
+
+
 def image_facts(url: str | None) -> dict:
     src = url or SHARE_IMAGE
     absolute = src if src.startswith(("http://", "https://")) else ORIGIN + src
@@ -1474,7 +1700,14 @@ def image_facts(url: str | None) -> dict:
     return facts
 
 
-def social_tags(title: str, description: str, canonical: str | None, image: str | None, image_alt: str) -> str:
+def social_tags(
+    title: str,
+    description: str,
+    canonical: str | None,
+    image: str | None,
+    image_alt: str,
+    og_type: str = "website",
+) -> str:
     facts = image_facts(image)
     alt = image_alt or SHARE_ALT
     tags = [
@@ -1491,7 +1724,7 @@ def social_tags(title: str, description: str, canonical: str | None, image: str 
         tags.append(f'<meta property="og:image:type" content="{facts["type"]}">')
     tags.extend(
         [
-            '<meta property="og:type" content="website">',
+            f'<meta property="og:type" content="{e(og_type)}">',
             '<meta property="og:site_name" content="Eating in Destin">',
             '<meta property="og:locale" content="en_US">',
             '<meta name="twitter:card" content="summary_large_image">',
@@ -1584,6 +1817,67 @@ def ga_tag() -> str:
     )
 
 
+def organization_node() -> dict:
+    # sameAs stays off. The repo has no Eating in Destin social profile, only restaurant links.
+    return {
+        "@type": "Organization",
+        "@id": ORIGIN + "/#organization",
+        "name": "Eating in Destin",
+        "url": ORIGIN + "/",
+        "logo": ORIGIN + "/images/eating-in-destin-logo.png",
+        "description": ABOUT,
+    }
+
+
+def website_node(description: str = "") -> dict:
+    return {
+        "@type": "WebSite",
+        "@id": ORIGIN + "/#website",
+        "name": "Eating in Destin",
+        "url": ORIGIN + "/",
+        "description": description
+        or (
+            "Find restaurants and food in Destin and Miramar Beach, Florida, by meal, area, or cuisine, "
+            "with a directory and a map of the coast."
+        ),
+        "inLanguage": "en",
+        "publisher": {"@id": ORIGIN + "/#organization"},
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": ORIGIN + "/restaurants/?q={search_term_string}",
+            "query-input": "required name=search_term_string",
+        },
+    }
+
+
+def inject_site_graph(extra_head: str) -> str:
+    """Put Organization and WebSite on every indexable page that does not already include them."""
+    if '"@type": "Organization"' in extra_head and '"@type": "WebSite"' in extra_head:
+        return extra_head
+    marker = '<script type="application/ld+json">'
+    if marker not in extra_head:
+        return json_ld(graph(organization_node(), website_node())) + extra_head
+    start = extra_head.index(marker) + len(marker)
+    end = extra_head.index("</script>", start)
+    payload = json.loads(extra_head[start:end])
+    nodes = payload.get("@graph")
+    if not isinstance(nodes, list):
+        return json_ld(graph(organization_node(), website_node())) + extra_head
+    types = []
+    for node in nodes:
+        value = node.get("@type")
+        types.extend(value if isinstance(value, list) else [value])
+    prefix = []
+    if "Organization" not in types:
+        prefix.append(organization_node())
+    if "WebSite" not in types:
+        prefix.append(website_node())
+    if not prefix:
+        return extra_head
+    payload["@graph"] = prefix + nodes
+    return extra_head[:start] + json.dumps(payload, ensure_ascii=False).replace("<", "\\u003c") + extra_head[end:]
+
+
 def layout(
     title: str,
     description: str,
@@ -1597,6 +1891,7 @@ def layout(
     noindex: bool = False,
     extra_scripts: str = "",
     include_canonical: bool = True,
+    og_type: str = "website",
 ) -> str:
     canonical = ORIGIN + path if include_canonical else None
     title = claim_title(title)
@@ -1606,7 +1901,13 @@ def layout(
         scripts += '<script type="module" src="/site.js"></script>'
     body_attr = ' class="home"' if active == "home" else ""
     banner = "" if active == "home" else sample_banner()
-    robots = '<meta name="robots" content="noindex">\n' if noindex else ""
+    robots = (
+        '<meta name="robots" content="noindex">\n'
+        if noindex
+        else f'<meta name="robots" content="{ROBOTS_INDEX}">\n'
+    )
+    if not noindex:
+        extra_head = inject_site_graph(extra_head)
     canonical_tag = f'<link rel="canonical" href="{e(canonical)}">\n' if canonical else ""
     return (
         "<!DOCTYPE html>\n"
@@ -1618,7 +1919,7 @@ def layout(
         f'<meta name="description" content="{e(description)}">\n'
         + canonical_tag
         + robots
-        + social_tags(title, description, canonical, image, image_alt)
+        + social_tags(title, description, canonical, image, image_alt, og_type)
         + '<meta name="theme-color" content="#102825">\n'
         '<link rel="icon" href="/favicon.ico" sizes="any">\n'
         '<link rel="icon" href="/favicon.png" type="image/png" sizes="32x32">\n'
@@ -2020,7 +2321,7 @@ def home_categories(restaurants: list[dict]) -> str:
             raise SystemExit(f"homepage category has no restaurants: {name}")
         items.append(
             f'<a href="{e(href)}">'
-            f'<img src="{e(image)}" alt="{e(photo_alt(source))}" loading="lazy">'
+            f'<img src="{e(image)}" alt="{e(photo_alt(source))}" loading="lazy"{img_size(image)}>'
             f'<span class="meal-copy"><span class="meal-name">{e(name)}</span>'
             f'<span class="meal-count">{count}</span></span></a>'
         )
@@ -2031,7 +2332,7 @@ def build_home(restaurants: list[dict], areas: list[dict], hero: str | None) -> 
     towns = []
     for area in areas:
         if area["image"]:
-            photo = f'<img src="{e(area["image"])}" alt="{e(area["fullName"] + " in Destin")}" loading="lazy">'
+            photo = f'<img src="{e(area["image"])}" alt="{e(area["fullName"] + " in Destin")}" loading="lazy"{img_size(area["image"])}>'
         else:
             photo = placeholder("gulf", area["name"], area["name"])
         word = restaurant_count_word(area["count"], label=True)
@@ -2095,27 +2396,8 @@ def build_home(restaurants: list[dict], areas: list[dict], hero: str | None) -> 
     )
     extra = json_ld(
         graph(
-            {
-                "@type": "Organization",
-                "@id": ORIGIN + "/#organization",
-                "name": "Eating in Destin",
-                "url": ORIGIN + "/",
-                "description": ABOUT,
-            },
-            {
-                "@type": "WebSite",
-                "@id": ORIGIN + "/#website",
-                "name": "Eating in Destin",
-                "url": ORIGIN + "/",
-                "description": description,
-                "inLanguage": "en",
-                "publisher": {"@id": ORIGIN + "/#organization"},
-                "potentialAction": {
-                    "@type": "SearchAction",
-                    "target": ORIGIN + "/restaurants/?q={search_term_string}",
-                    "query-input": "required name=search_term_string",
-                },
-            },
+            organization_node(),
+            website_node(description),
             {
                 "@type": "ItemList",
                 "name": "Restaurant areas in Destin",
@@ -2339,7 +2621,11 @@ def build_detail(restaurant: dict, restaurants: list[dict]) -> None:
             fact("Also", " · ".join(socials)),
         ]
     )
-    logo = f'<img class="logo" src="{e(restaurant["logo"])}" alt="{e(restaurant["name"])} logo">' if restaurant["logo"] else ""
+    logo = (
+        f'<img class="logo" src="{e(restaurant["logo"])}" alt="{e(restaurant["name"])} logo"{img_size(restaurant["logo"])}>'
+        if restaurant["logo"]
+        else ""
+    )
     nearby = [
         other
         for other in restaurants
@@ -2394,7 +2680,7 @@ def build_detail(restaurant: dict, restaurants: list[dict]) -> None:
         '<div class="wrap profile-head">'
         f"{crumb_nav(profile_crumbs)}"
         f'<p class="eyebrow"><a href="{e(area_href)}">{e(area_line)}</a>{price_bit}{category_bit}</p>'
-        f"<h1>{e(restaurant['name'])}</h1>"
+        f"<h1>{e(seo_override(f'/restaurants/{restaurant["slug"]}/').get('h1') or restaurant['name'])}</h1>"
         f'<ul class="chips">{"".join(chips)}</ul>'
         + (
             '<p class="music-note">Live music is seasonal and subject to change — confirm with the restaurant.</p>'
@@ -2426,6 +2712,7 @@ def build_detail(restaurant: dict, restaurants: list[dict]) -> None:
             extra,
             image=restaurant["heroImage"],
             image_alt=photo_alt(restaurant) if restaurant["heroImage"] else SHARE_ALT,
+            og_type="restaurant.restaurant",
         ),
     )
 
@@ -2478,7 +2765,7 @@ def build_areas(areas: list[dict], restaurants: list[dict]) -> None:
     cards = []
     for area in areas:
         photo = (
-            f'<img src="{e(area["image"])}" alt="{e(area["fullName"] + " in Destin")}" loading="lazy">'
+            f'<img src="{e(area["image"])}" alt="{e(area["fullName"] + " in Destin")}" loading="lazy"{img_size(area["image"])}>'
             if area["image"]
             else placeholder("gulf", area["name"], area["name"])
         )
@@ -2539,7 +2826,7 @@ def build_areas(areas: list[dict], restaurants: list[dict]) -> None:
         group = [restaurant for restaurant in restaurants if restaurant["areaSlug"] == area["slug"]]
         photo = ""
         if area["image"]:
-            photo = f'<img src="{e(area["image"])}" alt="{e(area["fullName"])}" loading="eager">'
+            photo = f'<img src="{e(area["image"])}" alt="{e(area["fullName"])}" loading="eager"{img_size(area["image"])}>'
         name = area["fullName"]
         if "Destin" in name:
             food_line = f"Find restaurants and food in {name}, Florida."
@@ -3337,6 +3624,16 @@ def main() -> None:
         DATA / "removed-slugs.json",
         json.dumps(REMOVED_SLUGS, indent=2, ensure_ascii=False) + "\n",
     )
+    write(
+        DATA / "sister-redirects.json",
+        json.dumps(SISTER_REDIRECTS, indent=2, ensure_ascii=False, sort_keys=True) + "\n",
+    )
+    write(
+        DATA / "location-redirects.json",
+        json.dumps(LOCATION_REDIRECTS, indent=2, ensure_ascii=False, sort_keys=True) + "\n",
+    )
+    if SISTER_UNMAPPED:
+        print(f"Unmapped removed slugs ({len(SISTER_UNMAPPED)}): {', '.join(SISTER_UNMAPPED)}")
     build_robots()
     build_llms(restaurants, areas, guides)
     photos = sum(1 for restaurant in restaurants if restaurant["cardImage"])

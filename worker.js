@@ -1,6 +1,8 @@
 import ampRedirects from "./data/amp-redirects.json" with { type: "json" };
 import legacyRedirects from "./data/legacy-redirects.json" with { type: "json" };
+import locationRedirects from "./data/location-redirects.json" with { type: "json" };
 import removedSlugs from "./data/removed-slugs.json" with { type: "json" };
+import sisterRedirects from "./data/sister-redirects.json" with { type: "json" };
 import listingOptions from "./data/listing-options.json" with { type: "json" };
 import { handleAccount } from "./account-api.js";
 import { handleAdmin } from "./admin-api.js";
@@ -570,7 +572,7 @@ function decodedRestaurantSlug(pathname) {
       return "";
     }
   }
-  return slug;
+  return slug.replace(/[\u2019\u2018`]/g, "'");
 }
 
 // Live listings whose old path still contains "&" 301 to the clean slug.
@@ -586,7 +588,8 @@ export function ampersandRedirect(url, method = "GET") {
   return { location: dest.toString(), status };
 }
 
-const REMOVED_SLUGS = new Set(removedSlugs);
+const REMOVED_SLUGS = new Set(removedSlugs.map((slug) => slug.replace(/[\u2019\u2018`]/g, "'")));
+const SISTER_ORIGIN = "https://www.eatingon30a.com";
 
 function redirectToSlug(target, url, method) {
   if (!target || typeof target !== "string" || !/^[a-z0-9-]+$/.test(target)) return null;
@@ -604,10 +607,50 @@ export function legacyRedirect(url, method = "GET") {
   return redirectToSlug(legacyRedirects[slug], url, method);
 }
 
+function redirectStatus(method) {
+  return method === "GET" || method === "HEAD" ? 301 : 308;
+}
+
+function externalRedirect(target, url, method) {
+  if (!target || typeof target !== "string" || !target.startsWith(`${SISTER_ORIGIN}/`)) return null;
+  const dest = new URL(target);
+  if (url.search) dest.search = url.search;
+  return { location: dest.toString(), status: redirectStatus(method) };
+}
+
+// Removed Wix paths that belong on Eating on 30A. The value is an absolute URL
+// whose slug was checked against that site's sitemap.
+export function sisterRedirect(url, method = "GET") {
+  const slug = decodedRestaurantSlug(url.pathname);
+  if (!slug) return null;
+  return externalRedirect(sisterRedirects[slug], url, method);
+}
+
+function decodedLocationSlug(pathname) {
+  const match = String(pathname || "").match(/^\/location\/([^/]+?)\/?$/);
+  if (!match) return "";
+  let slug = match[1];
+  if (slug.includes("%")) {
+    try {
+      slug = decodeURIComponent(slug);
+    } catch {
+      return "";
+    }
+  }
+  return slug.replace(/[\u2019\u2018`]/g, "'");
+}
+
+// Old /location/ paths. 30A towns go to the matching Eating on 30A area page.
+export function locationRedirect(url, method = "GET") {
+  const slug = decodedLocationSlug(url.pathname);
+  if (!slug) return null;
+  return externalRedirect(locationRedirects[slug], url, method);
+}
+
 export function removedRestaurantStatus(pathname) {
   const slug = decodedRestaurantSlug(pathname);
   if (!slug || !REMOVED_SLUGS.has(slug)) return 0;
-  if (ampRedirects[slug] || legacyRedirects[slug]) return 0;
+  if (ampRedirects[slug] || legacyRedirects[slug] || sisterRedirects[slug]) return 0;
   return 410;
 }
 
@@ -652,6 +695,21 @@ export async function rejectSoftNotFound(response) {
   headers.set("x-robots-tag", "noindex");
   headers.set("cache-control", "no-store");
   return new Response(stripMissingCanonical(html), { status: 404, headers });
+}
+
+// A restaurant URL with an empty 200 body is a soft 404. Real listings have a heading.
+export async function rejectEmptyRestaurant(pathname, response, request, env) {
+  const slug = decodedRestaurantSlug(pathname);
+  if (!slug || !response || response.status !== 200) return response;
+  const type = response.headers.get("content-type") || "";
+  if (!type.includes("html")) return response;
+  const html = await response.text();
+  if (html.trim() && /<h1[\s>]/i.test(html)) {
+    const headers = new Headers(response.headers);
+    headers.delete("content-length");
+    return new Response(html, { status: response.status, statusText: response.statusText, headers });
+  }
+  return cleanMissingResponse(await missingPage(request, env, 404));
 }
 
 function json(body, status = 200) {
@@ -881,7 +939,10 @@ export default {
         },
       });
     }
-    const moved = ampersandRedirect(url, request.method) || legacyRedirect(url, request.method);
+    const moved = ampersandRedirect(url, request.method)
+      || legacyRedirect(url, request.method)
+      || sisterRedirect(url, request.method)
+      || locationRedirect(url, request.method);
     if (moved) {
       return new Response(null, {
         status: moved.status,
@@ -908,6 +969,7 @@ export default {
       return handleAdmin(request, env);
     }
     const served = await servePublic(request, await env.ASSETS.fetch(request), env);
-    return cleanMissingResponse(await rejectSoftNotFound(withAdminRobots(url, served)));
+    const checked = await rejectSoftNotFound(withAdminRobots(url, served));
+    return cleanMissingResponse(await rejectEmptyRestaurant(url.pathname, checked, request, env));
   },
 };
