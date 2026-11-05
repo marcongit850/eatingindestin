@@ -22,6 +22,7 @@ export function presentListing(raw) {
   const area = raw.area || "";
   const listing = {
     ...raw,
+    name: raw.name || "",
     area,
     areaSlug: slugify(area),
     subarea: raw.subarea || "",
@@ -55,7 +56,7 @@ export function presentListing(raw) {
     photos: photosOf(raw.photos),
     logo: raw.logo || "",
     search: raw.search || "",
-    status: raw.status === "draft" ? "draft" : "live",
+    status: raw.status === "draft" ? "draft" : raw.status === "inactive" ? "inactive" : "live",
     deleted: Boolean(raw.deleted),
     source: raw.source || "baseline",
   };
@@ -79,13 +80,13 @@ export function mergeCatalog(baseline, rows) {
       ...payload,
       logo: payload.logo || (previous && previous.logo) || "",
       slug: row.slug,
-      status: row.status === "draft" ? "draft" : "live",
+      status: row.status === "draft" ? "draft" : row.status === "inactive" ? "inactive" : "live",
       deleted: Boolean(row.deleted),
       source: previous ? "override" : "created",
       updatedAt: row.updatedAt || null,
     }));
   }
-  return [...map.values()].sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+  return [...map.values()].sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), undefined, { sensitivity: "base" }));
 }
 
 export function isPublicListing(listing) {

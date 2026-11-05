@@ -81,6 +81,7 @@
   background: rgba(28, 71, 66, 0.1);
 }
 .badge-draft { background: rgba(196, 120, 98, 0.18); }
+.badge-inactive { background: rgba(92, 74, 58, 0.2); }
 .admin-editor { display: grid; gap: 1.25rem; margin-top: 1rem; }
 .admin-section {
   display: grid;
