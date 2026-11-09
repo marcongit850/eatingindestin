@@ -65,7 +65,7 @@ const titles = new Set();
 const descriptions = new Set();
 const canonicals = new Set();
 const EXACT_DESCRIPTIONS = new Set([
-  "Planning dinner at Bricktop's in Grand Boulevard, Miramar Beach? See hours, menu highlights, reservations and what to order before you go.",
+  "Bricktop's in Miramar Beach at Grand Boulevard. Hours, reservations, location and photos before you go.",
   "Every restaurant at Baytowne Wharf in Sandestin, from casual bites to date night spots, with hours, menus and local picks.",
   "Every restaurant at Grand Boulevard Destin, including Bricktop's. Hours and maps.",
 ]);
@@ -427,8 +427,8 @@ const camilleMoved = await worker.fetch(new Request(`${ORIGIN}/restaurants/${enc
 assert.equal(camilleMoved.status, 301);
 assert.equal(camilleMoved.headers.get("location"), `${ORIGIN}/restaurants/camille-s-at-crystal-beach-crystal-beach/`);
 const brickHtml = read("restaurants/bricktop-s-grand-boulevard/index.html");
-assert.equal(attr(brickHtml, /<title>([^<]+)<\/title>/), "Bricktop's Destin at Grand Boulevard: Menu, Hours and Reservations");
-assert.equal(attr(brickHtml, /<meta name="description" content="([^"]+)">/), "Planning dinner at Bricktop's in Grand Boulevard, Miramar Beach? See hours, menu highlights, reservations and what to order before you go.");
+assert.equal(attr(brickHtml, /<title>([^<]+)<\/title>/), "Bricktop's Destin at Grand Boulevard: Hours and Reservations");
+assert.equal(attr(brickHtml, /<meta name="description" content="([^"]+)">/), "Bricktop's in Miramar Beach at Grand Boulevard. Hours, reservations, location and photos before you go.");
 assert.equal(attr(brickHtml, /<meta property="og:title" content="([^"]+)">/), attr(brickHtml, /<title>([^<]+)<\/title>/));
 assert.equal(attr(brickHtml, /<meta property="og:description" content="([^"]+)">/), attr(brickHtml, /<meta name="description" content="([^"]+)">/));
 assert.match(brickHtml, /<h1>Bricktop&#x27;s Destin at Grand Boulevard<\/h1>/);
