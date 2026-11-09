@@ -83,10 +83,10 @@ SAMPLE_SLUGS = None
 # The visible heading and the page body stay on the normal template.
 SEO_OVERRIDES = {
     "/restaurants/bricktop-s-grand-boulevard/": {
-        "title": "Bricktop's Destin at Grand Boulevard: Menu, Hours and Reservations",
+        "title": "Bricktop's Destin at Grand Boulevard: Hours and Reservations",
         "description": (
-            "Planning dinner at Bricktop's in Grand Boulevard, Miramar Beach? "
-            "See hours, menu highlights, reservations and what to order before you go."
+            "Bricktop's in Miramar Beach at Grand Boulevard. "
+            "Hours, reservations, location and photos before you go."
         ),
         "h1": "Bricktop's Destin at Grand Boulevard",
     },
