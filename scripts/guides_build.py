@@ -924,7 +924,7 @@ def guide_picks(restaurants: list[dict], areas: list[dict]) -> list[dict]:
             "Baytowne Wharf Restaurants: Where to Eat in Sandestin (2026 Guide)",
             (
                 "Every restaurant at Baytowne Wharf in Sandestin, from casual bites to date night spots, "
-                "with hours, menus and local picks."
+                "with hours and local picks."
             ),
             "Baytowne Wharf",
             [

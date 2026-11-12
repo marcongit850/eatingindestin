@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import html
 import json
 import re
 import sys
@@ -1072,6 +1073,57 @@ check("<h1>Bricktop&#x27;s Destin at Grand Boulevard</h1>" in brick_page, "Brick
 check("Grand Boulevard Restaurants in Sandestin | Eating in Destin" in grand_area, "Grand Boulevard title override")
 check("Every restaurant at Grand Boulevard Destin, including Bricktop's. Hours and maps." in grand_area, "Grand Boulevard description override")
 check("<h1>Restaurants in Grand Boulevard</h1>" in grand_area, "Grand Boulevard heading stays")
+
+
+def page_meta(path: Path) -> tuple[str, str]:
+    text = path.read_text(encoding="utf-8")
+    title = html.unescape(re.search(r"<title>([^<]+)</title>", text).group(1))
+    description = html.unescape(re.search(r'<meta name="description" content="([^"]*)">', text).group(1))
+    return title, description
+
+
+menu_word = re.compile(r"\bmenus?\b", re.I)
+build.USED_TITLES.clear()
+for restaurant in source:
+    title, description = page_meta(ROOT / "restaurants" / restaurant["slug"] / "index.html")
+    check(not menu_word.search(title), f"listing title mentions a menu: {title}")
+    check(not menu_word.search(description), f"listing description mentions a menu: {restaurant['slug']}")
+    check("Hours and Location" not in title, f"generic hours ending: {title}")
+    check("\u2014" not in title and "\u2013" not in title, f"dash in title: {title}")
+    check("\u2014" not in description and "\u2013" not in description, f"dash in description: {restaurant['slug']}")
+    if restaurant["slug"] == "bricktop-s-grand-boulevard":
+        check(title == "Bricktop's Destin at Grand Boulevard: Hours and Reservations", "Bricktop's title stays the approved special case")
+        continue
+    check(title == build.restaurant_title(restaurant), f"listing title should come from the generator: {restaurant['slug']}")
+    check(build.phrase_in(title, restaurant["titleTown"]), f"listing title should name the town: {title}")
+
+expected_titles = {
+    "harbor-docks-destin-harbor": "Harbor Docks, Destin: Hours and Breakfast",
+    "chick-fil-a-miramar-beach-miramar-beach": "Chick-fil-A Miramar Beach at Silver Sands: Hours and Breakfast",
+    "chick-fil-a-destin-mid-destin": "Chick-fil-A Destin: Hours and Breakfast",
+    "buffalo-jack-s-legendary-wings-and-pizza-miramar-beach": "Buffalo Jack's Legendary Wings & Pizza, Miramar Beach: Walk-Ins",
+    "whataburger-destin-miramar-beach": "Whataburger Destin, Miramar Beach: Hours and Breakfast",
+    "whataburger-destin-harbor-destin-harbor": "Whataburger Destin Harbor: Hours and Breakfast",
+    "shrimp-basket-mid-destin": "Shrimp Basket, Destin: Seafood and Hours",
+    "joe-s-crab-shack-mid-destin": "Joe's Crab Shack, Destin: Hours and Reservations",
+    "sushimoto-of-south-walton-miramar-beach": "Sushimoto of South Walton, Miramar Beach: Walk-Ins Welcome",
+    "fatboys-destin-mid-destin": "Fatboys Destin at HarborWalk Village: Hours and Walk-Ins Welcome",
+}
+for slug, expected in expected_titles.items():
+    title, _description = page_meta(ROOT / "restaurants" / slug / "index.html")
+    check(title == expected, f"{slug} title should be {expected}, got {title}")
+
+_joe_title, joe_description = page_meta(ROOT / "restaurants" / "joe-s-crab-shack-mid-destin" / "index.html")
+_moe_title, moe_description = page_meta(ROOT / "restaurants" / "moe-s-original-bbq-destin-harbor" / "index.html")
+check(joe_description.endswith("with a patio."), "Joe's description should drop the menu clause")
+check(moe_description.endswith("with indoor seats, a patio."), "Moe's description should drop the menu clause")
+check("Restaurants in Sandestin, FL | Eating in Destin" == page_meta(ROOT / "areas" / "sandestin" / "index.html")[0], "Sandestin area title stays off the listing template")
+check("Destin Commons restaurants | Eating in Destin" == page_meta(ROOT / "guides" / "destin-commons-restaurants" / "index.html")[0], "Destin Commons guide title stays off the listing template")
+check("Restaurants in Destin, FL | Eating in Destin" == page_meta(ROOT / "restaurants" / "index.html")[0], "restaurant index title stays off the listing template")
+baytowne_title, baytowne_description = page_meta(ROOT / "guides" / "baytowne-wharf-restaurants" / "index.html")
+check(baytowne_title == "Baytowne Wharf Restaurants: Where to Eat in Sandestin (2026 Guide)", "Baytowne guide title stays")
+check(baytowne_description == "Every restaurant at Baytowne Wharf in Sandestin, from casual bites to date night spots, with hours and local picks.", "Baytowne description drops menus only")
+check(not menu_word.search(baytowne_description), "Baytowne description should not mention menus")
 lagniappe_page = (ROOT / "restaurants" / "louisiana-lagniappe-destin-harbor" / "index.html").read_text(encoding="utf-8")
 check("facebook.com/2008/fbml" not in lagniappe_page, "Louisiana Lagniappe should not link the broken Facebook placeholder")
 check("775 Gulf Shore" in lagniappe_page and "<h1>Louisiana Lagniappe</h1>" in lagniappe_page, "Louisiana Lagniappe keeps its own name and address")

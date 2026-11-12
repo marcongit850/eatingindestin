@@ -6,6 +6,7 @@ import worker, {
   CANONICAL_HOST,
   ampersandRedirect,
   canonicalRedirect,
+  exploreDestinRedirect,
   legacyRedirect,
   locationRedirect,
   notFoundPathStatus,
@@ -15,7 +16,7 @@ import worker, {
   sisterRedirect,
   stripMissingCanonical,
 } from "../worker.js";
-import { patchSitemap, renderProfile } from "../public-html.js";
+import { listingTitle, patchSitemap, renderProfile } from "../public-html.js";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const config = JSON.parse(readFileSync(join(root, "site.config.json"), "utf8"));
@@ -66,7 +67,7 @@ const descriptions = new Set();
 const canonicals = new Set();
 const EXACT_DESCRIPTIONS = new Set([
   "Bricktop's in Miramar Beach at Grand Boulevard. Hours, reservations, location and photos before you go.",
-  "Every restaurant at Baytowne Wharf in Sandestin, from casual bites to date night spots, with hours, menus and local picks.",
+  "Every restaurant at Baytowne Wharf in Sandestin, from casual bites to date night spots, with hours and local picks.",
   "Every restaurant at Grand Boulevard Destin, including Bricktop's. Hours and maps.",
 ]);
 const ROBOTS_INDEX = "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1";
@@ -186,8 +187,7 @@ assert.match(harborHtml, />All restaurants in Destin Harbor<\/a>/);
 assert.match(harborHtml, /class="listing-claim"/);
 assert.equal(harborHtml.includes('class="card-grid"'), false);
 assert.match(harborHtml, /href="\/areas\/destin-harbor\/"/);
-assert.match(attr(harborHtml, /<title>([^<]+)<\/title>/), /Harbor Docks/);
-assert.match(attr(harborHtml, /<title>([^<]+)<\/title>/), /Destin Harbor/);
+assert.equal(attr(harborHtml, /<title>([^<]+)<\/title>/), "Harbor Docks, Destin: Hours and Breakfast");
 
 const seaLevel = jsonLd(read("restaurants/sea-level-crystal-beach/index.html"));
 const seaLevelRestaurant = seaLevel["@graph"].find((node) => typesOf(node).includes("Restaurant"));
@@ -383,6 +383,14 @@ assert.equal(sisterRedirect(new URL(`${ORIGIN}/restaurants/goatfeathers-seafood-
 assert.equal(locationRedirect(new URL(`${ORIGIN}/location/dune-allen-beach/`), "GET").location, "https://www.eatingon30a.com/areas/dune-allen-beach/");
 assert.equal(locationRedirect(new URL(`${ORIGIN}/location/seagrove-beach`), "GET").location, "https://www.eatingon30a.com/areas/seagrove-beach/");
 assert.equal(locationRedirect(new URL(`${ORIGIN}/location/all-of-30a/`), "GET").location, "https://www.eatingon30a.com/areas/");
+assert.equal(exploreDestinRedirect(new URL(`${ORIGIN}/exploredestin`), "GET").status, 301);
+assert.equal(exploreDestinRedirect(new URL(`${ORIGIN}/exploredestin`), "GET").location, `${ORIGIN}/`);
+assert.equal(exploreDestinRedirect(new URL(`${ORIGIN}/exploredestin/`), "HEAD").status, 301);
+assert.equal(exploreDestinRedirect(new URL(`${ORIGIN}/exploredestin/`), "HEAD").location, `${ORIGIN}/`);
+assert.equal(exploreDestinRedirect(new URL(`${ORIGIN}/exploredestin?ref=old`), "GET").location, `${ORIGIN}/?ref=old`);
+assert.equal(exploreDestinRedirect(new URL(`${ORIGIN}/exploredestin`), "POST").status, 308);
+assert.equal(exploreDestinRedirect(new URL(`${ORIGIN}/restaurants/?meal=Desserts`), "GET"), null);
+assert.equal(exploreDestinRedirect(new URL(`${ORIGIN}/restaurants/hooters-destin/`), "GET"), null);
 const curlyAj = ampersandRedirect(new URL(`${ORIGIN}/restaurants/${encodeURIComponent("aj\u2019s-seafood-&-oyster-bar")}/`), "GET");
 assert.equal(curlyAj.status, 301);
 assert.equal(curlyAj.location, `${ORIGIN}/restaurants/aj-s-seafood-and-oyster-bar-destin-harbor/`);
@@ -423,6 +431,12 @@ const gonePage = await worker.fetch(new Request(`${ORIGIN}/restaurants/hooters-d
 assert.equal(gonePage.status, 410);
 assert.equal(gonePage.headers.get("x-robots-tag"), "noindex");
 assert.equal((await gonePage.text()).includes("canonical"), false);
+const exploreMoved = await worker.fetch(new Request(`${ORIGIN}/exploredestin`), routeEnv);
+assert.equal(exploreMoved.status, 301);
+assert.equal(exploreMoved.headers.get("location"), `${ORIGIN}/`);
+const exploreSlash = await worker.fetch(new Request(`${ORIGIN}/exploredestin/`), routeEnv);
+assert.equal(exploreSlash.status, 301);
+assert.equal(exploreSlash.headers.get("location"), `${ORIGIN}/`);
 const camilleMoved = await worker.fetch(new Request(`${ORIGIN}/restaurants/${encodeURIComponent("camille's-at-crystal-beach")}/`), routeEnv);
 assert.equal(camilleMoved.status, 301);
 assert.equal(camilleMoved.headers.get("location"), `${ORIGIN}/restaurants/camille-s-at-crystal-beach-crystal-beach/`);
@@ -434,7 +448,51 @@ assert.equal(attr(brickHtml, /<meta property="og:description" content="([^"]+)">
 assert.match(brickHtml, /<h1>Bricktop&#x27;s Destin at Grand Boulevard<\/h1>/);
 const baytowneHtml = read("guides/baytowne-wharf-restaurants/index.html");
 assert.equal(attr(baytowneHtml, /<title>([^<]+)<\/title>/), "Baytowne Wharf Restaurants: Where to Eat in Sandestin (2026 Guide)");
-assert.equal(attr(baytowneHtml, /<meta name="description" content="([^"]+)">/), "Every restaurant at Baytowne Wharf in Sandestin, from casual bites to date night spots, with hours, menus and local picks.");
+assert.equal(attr(baytowneHtml, /<meta name="description" content="([^"]+)">/), "Every restaurant at Baytowne Wharf in Sandestin, from casual bites to date night spots, with hours and local picks.");
+assert.equal(attr(baytowneHtml, /<meta property="og:description" content="([^"]+)">/), attr(baytowneHtml, /<meta name="description" content="([^"]+)">/));
+assert.equal(attr(baytowneHtml, /<meta name="twitter:description" content="([^"]+)">/), attr(baytowneHtml, /<meta name="description" content="([^"]+)">/));
+const breakfastTitle = listingTitle({
+  slug: "chick-fil-a-miramar-beach-miramar-beach",
+  name: "Chick-fil-A Miramar Beach",
+  area: "Miramar Beach",
+  areaSlug: "miramar-beach",
+  label: "Miramar Beach | Silver Sands",
+  meals: ["Breakfast", "Lunch", "Dinner"],
+  cuisines: ["American"],
+  reservations: false,
+  reservationState: "no",
+}, [{ slug: "chick-fil-a-destin-mid-destin", name: "Chick-fil-A Destin", area: "Mid-Destin", areaSlug: "mid-destin" }]);
+assert.equal(breakfastTitle, "Chick-fil-A Miramar Beach at Silver Sands: Hours and Breakfast");
+assert.equal(listingTitle({
+  slug: "sample-grill",
+  name: "Sample Grill",
+  area: "Mid-Destin",
+  areaSlug: "mid-destin",
+  address: "1 Harbor Blvd, Destin, FL 32541",
+  meals: ["Dinner"],
+  cuisines: ["Seafood"],
+  reservations: true,
+}, []), "Sample Grill, Destin: Hours and Reservations");
+assert.equal(listingTitle({
+  slug: "sample-counter",
+  name: "Sample Counter",
+  area: "Mid-Destin",
+  areaSlug: "mid-destin",
+  address: "1 Harbor Blvd, Destin, FL 32541",
+  meals: ["Lunch"],
+  cuisines: ["American"],
+  reservations: false,
+  source: "created",
+}, []), "Sample Counter, Destin: Hours and Walk-Ins Welcome");
+assert.equal(listingTitle({
+  slug: "sample-review",
+  name: "Sample Review",
+  area: "Sandestin",
+  areaSlug: "sandestin",
+  meals: ["Dinner"],
+  cuisines: ["Italian"],
+  reservations: false,
+}, []), "Sample Review, Sandestin: Italian and Hours");
 const baytowneLd = jsonLd(baytowneHtml);
 assert.equal(baytowneLd["@graph"].some((node) => node["@type"] === "ItemList"), true);
 assert.equal(baytowneLd["@graph"].some((node) => node["@type"] === "FAQPage"), true);
