@@ -647,6 +647,15 @@ export function locationRedirect(url, method = "GET") {
   return externalRedirect(locationRedirects[slug], url, method);
 }
 
+// The old Wix explore page. Eating on 30A sends /explore30a to its homepage the same way.
+export function exploreDestinRedirect(url, method = "GET") {
+  const bare = String(url.pathname || "").replace(/\/+$/, "") || "/";
+  if (bare !== "/exploredestin") return null;
+  const dest = new URL("/", `https://${CANONICAL_HOST}`);
+  if (url.search) dest.search = url.search;
+  return { location: dest.toString(), status: redirectStatus(method) };
+}
+
 export function removedRestaurantStatus(pathname) {
   const slug = decodedRestaurantSlug(pathname);
   if (!slug || !REMOVED_SLUGS.has(slug)) return 0;
@@ -973,7 +982,8 @@ export default {
         },
       });
     }
-    const moved = ampersandRedirect(url, request.method)
+    const moved = exploreDestinRedirect(url, request.method)
+      || ampersandRedirect(url, request.method)
       || legacyRedirect(url, request.method)
       || sisterRedirect(url, request.method)
       || locationRedirect(url, request.method);

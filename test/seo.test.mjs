@@ -6,6 +6,7 @@ import worker, {
   CANONICAL_HOST,
   ampersandRedirect,
   canonicalRedirect,
+  exploreDestinRedirect,
   legacyRedirect,
   locationRedirect,
   notFoundPathStatus,
@@ -382,6 +383,14 @@ assert.equal(sisterRedirect(new URL(`${ORIGIN}/restaurants/goatfeathers-seafood-
 assert.equal(locationRedirect(new URL(`${ORIGIN}/location/dune-allen-beach/`), "GET").location, "https://www.eatingon30a.com/areas/dune-allen-beach/");
 assert.equal(locationRedirect(new URL(`${ORIGIN}/location/seagrove-beach`), "GET").location, "https://www.eatingon30a.com/areas/seagrove-beach/");
 assert.equal(locationRedirect(new URL(`${ORIGIN}/location/all-of-30a/`), "GET").location, "https://www.eatingon30a.com/areas/");
+assert.equal(exploreDestinRedirect(new URL(`${ORIGIN}/exploredestin`), "GET").status, 301);
+assert.equal(exploreDestinRedirect(new URL(`${ORIGIN}/exploredestin`), "GET").location, `${ORIGIN}/`);
+assert.equal(exploreDestinRedirect(new URL(`${ORIGIN}/exploredestin/`), "HEAD").status, 301);
+assert.equal(exploreDestinRedirect(new URL(`${ORIGIN}/exploredestin/`), "HEAD").location, `${ORIGIN}/`);
+assert.equal(exploreDestinRedirect(new URL(`${ORIGIN}/exploredestin?ref=old`), "GET").location, `${ORIGIN}/?ref=old`);
+assert.equal(exploreDestinRedirect(new URL(`${ORIGIN}/exploredestin`), "POST").status, 308);
+assert.equal(exploreDestinRedirect(new URL(`${ORIGIN}/restaurants/?meal=Desserts`), "GET"), null);
+assert.equal(exploreDestinRedirect(new URL(`${ORIGIN}/restaurants/hooters-destin/`), "GET"), null);
 const curlyAj = ampersandRedirect(new URL(`${ORIGIN}/restaurants/${encodeURIComponent("aj\u2019s-seafood-&-oyster-bar")}/`), "GET");
 assert.equal(curlyAj.status, 301);
 assert.equal(curlyAj.location, `${ORIGIN}/restaurants/aj-s-seafood-and-oyster-bar-destin-harbor/`);
@@ -422,6 +431,12 @@ const gonePage = await worker.fetch(new Request(`${ORIGIN}/restaurants/hooters-d
 assert.equal(gonePage.status, 410);
 assert.equal(gonePage.headers.get("x-robots-tag"), "noindex");
 assert.equal((await gonePage.text()).includes("canonical"), false);
+const exploreMoved = await worker.fetch(new Request(`${ORIGIN}/exploredestin`), routeEnv);
+assert.equal(exploreMoved.status, 301);
+assert.equal(exploreMoved.headers.get("location"), `${ORIGIN}/`);
+const exploreSlash = await worker.fetch(new Request(`${ORIGIN}/exploredestin/`), routeEnv);
+assert.equal(exploreSlash.status, 301);
+assert.equal(exploreSlash.headers.get("location"), `${ORIGIN}/`);
 const camilleMoved = await worker.fetch(new Request(`${ORIGIN}/restaurants/${encodeURIComponent("camille's-at-crystal-beach")}/`), routeEnv);
 assert.equal(camilleMoved.status, 301);
 assert.equal(camilleMoved.headers.get("location"), `${ORIGIN}/restaurants/camille-s-at-crystal-beach-crystal-beach/`);
