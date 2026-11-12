@@ -52,16 +52,184 @@ function snippet(text, limit = 150) {
   return `${cut.replace(/[.,;:]$/, "")}…`;
 }
 
-const BRAND_SUFFIX = " | Eating in Destin";
 const ROBOTS_INDEX = "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1";
+const TITLE_SOFT_MAX = 65;
+const TITLE_HARD_MAX = 70;
+const TITLE_CENTERS = [
+  "HarborWalk Village",
+  "The Market Shops",
+  "Destin Commons",
+  "Grand Boulevard",
+  "Baytowne Wharf",
+  "Silver Sands",
+  "Market Shops",
+];
+const TITLE_PLACE_SUFFIXES = [
+  "destin commons",
+  "grand boulevard",
+  "miramar beach",
+  "santa rosa beach",
+  "destin harbor",
+  "silver sands",
+  "harborwalk village",
+  "the market shops",
+  "market shops",
+  "baytowne wharf",
+  "crystal beach",
+  "mid destin",
+  "emerald coast",
+  "sandestin",
+  "destin",
+];
 
-function listingTitle(listing) {
-  const titled = `${listing.name} in ${listing.area}${BRAND_SUFFIX}`;
-  return titled.length > 60 ? `${listing.name} in ${listing.area}` : titled;
+function foldName(name) {
+  return String(name || "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/['’‘`]/g, "")
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function phraseIn(text, phrase) {
+  if (!text || !phrase) return false;
+  const escaped = String(phrase).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(?<![\\w])${escaped}(?![\\w])`, "i").test(String(text));
+}
+
+function listingTown(listing) {
+  const area = listing.areaSlug || "";
+  const city = (String(listing.address || "").match(/,\s*([^,]+),\s*[A-Z]{2}\s+\d{5}/) || [])[1] || "";
+  if (area === "sandestin" || area === "grand-boulevard") return "Sandestin";
+  if (area === "miramar-beach" || city === "Miramar Beach" || listing.area === "Miramar Beach") return "Miramar Beach";
+  if (city) return city;
+  if (listing.area === "Sandestin") return "Sandestin";
+  return "Destin";
+}
+
+function listingCenter(listing) {
+  const label = listing.label || "";
+  for (const center of TITLE_CENTERS) {
+    if (phraseIn(label, center)) return center;
+  }
+  if (listing.area === "Destin Commons" || listing.area === "Grand Boulevard") return listing.area;
+  return "";
+}
+
+function brandStem(name) {
+  let folded = foldName(name);
+  let changed = true;
+  while (changed && folded) {
+    changed = false;
+    for (const suffix of TITLE_PLACE_SUFFIXES) {
+      const suffixFolded = foldName(suffix);
+      if (folded === suffixFolded) {
+        folded = "";
+        changed = true;
+        break;
+      }
+      const tail = ` ${suffixFolded}`;
+      if (folded.endsWith(tail)) {
+        folded = folded.slice(0, -tail.length).trim();
+        changed = true;
+        break;
+      }
+    }
+  }
+  return folded || foldName(name);
+}
+
+function reservationChoice(listing) {
+  if (listing.reservations === true) return "yes";
+  // A new listing leaves the box unchecked when it does not take reservations.
+  // A built "In Review" row is also stored as false, so that is not walk-in.
+  if (listing.source === "created" && listing.reservations === false) return "no";
+  if (listing.reservationState === "no") return "no";
+  return "";
+}
+
+function titleEndings(listing) {
+  const meals = new Set((listing.meals || []).map((meal) => String(meal).toLowerCase()));
+  if (meals.has("breakfast")) return ["Hours and Breakfast", "Breakfast"];
+  const state = reservationChoice(listing);
+  if (state === "no") return ["Hours and Walk-Ins Welcome", "Walk-Ins Welcome", "Walk-Ins"];
+  if (state === "yes") return ["Hours and Reservations", "Reservations"];
+  const cuisine = (listing.cuisines || [])[0] || "";
+  const endings = [];
+  if (cuisine) endings.push(`${cuisine} and Hours`, cuisine);
+  return endings;
+}
+
+function composeListingTitle(name, town, center, ending) {
+  let place = center;
+  if (place && phraseIn(name, place)) place = "";
+  let head;
+  if (phraseIn(name, town) && place) head = `${name} at ${place}`;
+  else if (phraseIn(name, town)) head = name;
+  else if (place) head = `${name}, ${town} at ${place}`;
+  else head = `${name}, ${town}`;
+  return `${head}: ${ending}`.replace(/\s+/g, " ").trim();
+}
+
+export function listingTitle(listing, listings = []) {
+  const name = listing.name || "Restaurant";
+  const town = listingTown(listing);
+  const stem = brandStem(name);
+  const siblings = (listings || []).filter((item) => item && item.slug !== listing.slug && brandStem(item.name) === stem);
+  let center = listingCenter(listing);
+  if (!center || !siblings.length || phraseIn(name, center)) center = "";
+  const specific = titleEndings(listing);
+
+  function make(ending, useCenter) {
+    const title = composeListingTitle(name, town, useCenter ? center : "", ending);
+    if (title.includes("Hours and Location") || !phraseIn(title, town)) return "";
+    if (title.length < 20 || title.length > TITLE_HARD_MAX) return "";
+    return title;
+  }
+
+  function earliest(useCenter, limit) {
+    if (useCenter && !center) return null;
+    for (let rank = 0; rank < specific.length; rank += 1) {
+      const title = make(specific[rank], useCenter);
+      if (title && title.length <= limit) return { rank, title };
+    }
+    return null;
+  }
+
+  const centered = earliest(true, TITLE_HARD_MAX);
+  const plainSoft = earliest(false, TITLE_SOFT_MAX);
+  const plainHard = earliest(false, TITLE_HARD_MAX);
+  if (centered) {
+    const plainRank = plainSoft ? plainSoft.rank : null;
+    const sameOrBetter = plainRank === null || centered.rank <= plainRank;
+    const staysReadable = centered.title.length <= TITLE_SOFT_MAX || plainSoft === null || (plainRank !== null && centered.rank < plainRank);
+    if (sameOrBetter && staysReadable) return centered.title;
+  }
+  if (plainSoft) return plainSoft.title;
+  if (plainHard) return plainHard.title;
+  if (centered) return centered.title;
+  return make("Hours", false) || make("Hours", true) || `${name}, ${town}: Hours`;
+}
+
+function withoutMenuClaims(text) {
+  return String(text || "")
+    .replace(/,?\s+\band\s+a\s+kid['’]s\s+menu\b/gi, "")
+    .replace(/,?\s+\band\s+a\s+kids['’]?\s+menu\b/gi, "")
+    .replace(/\ba\s+late-night\s+menu\b/gi, "late night")
+    .replace(/\blate-night\s+menu\b/gi, "late night")
+    .replace(/\bmenus\b/gi, "")
+    .replace(/\bmenu\b/gi, "")
+    .replace(/\bGulf of Mexico\b/gi, "Gulf of America")
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s+([,.;:])/g, "$1")
+    .replace(/\(\s*\)/g, "")
+    .trim();
 }
 
 function listingDescription(listing) {
-  const text = `${listing.name} in ${listing.area}, Destin and Miramar Beach, Florida. ${listing.notes || "Hours, the address, and a map are on this page."}`.replace(/\s+/g, " ").trim();
+  const text = withoutMenuClaims(`${listing.name} in ${listing.area}, Destin and Miramar Beach, Florida. ${listing.notes || "Hours, the address, and a map are on this page."}`);
   if (text.length <= 160) return text;
   const cut = text.slice(0, 155).replace(/\s+\S*$/, "").replace(/[.,;:]$/, "");
   return cut.length >= 150 ? cut : text.slice(0, 155).replace(/[.,;: ]+$/, "");
@@ -683,7 +851,7 @@ export function renderProfile(listing, nearby = []) {
   const also = nearby.filter((item) => item.slug !== listing.slug && item.areaSlug === listing.areaSlug).slice(0, 4);
   const alsoHtml = also.map((item) => `<a class="map-hit" href="/restaurants/${escapeHtml(item.slug)}/"><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml(item.price || "")}</span></a>`).join("");
   const image = listing.photos && listing.photos[0] ? listing.photos[0].src : "";
-  const title = listingTitle(listing);
+  const title = listingTitle(listing, nearby);
   const description = listingDescription(listing);
   const path = `/restaurants/${listing.slug}/`;
   const areaPage = `/areas/${listing.areaSlug}/`;

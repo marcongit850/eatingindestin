@@ -94,7 +94,7 @@ SEO_OVERRIDES = {
         "title": "Baytowne Wharf Restaurants: Where to Eat in Sandestin (2026 Guide)",
         "description": (
             "Every restaurant at Baytowne Wharf in Sandestin, from casual bites to date night spots, "
-            "with hours, menus and local picks."
+            "with hours and local picks."
         ),
     },
     "/areas/grand-boulevard/": {
@@ -510,6 +510,16 @@ def is_yes(raw: str) -> bool:
     return any(item.lower() in {"yes", "occasional"} for item in parse_list(raw))
 
 
+def reservation_state(raw: str) -> str:
+    """yes, no, or blank. In Review and empty stay blank so titles do not guess."""
+    items = [item.lower() for item in parse_list(raw)]
+    if any(item in {"yes", "occasional"} for item in items):
+        return "yes"
+    if any(item == "no" for item in items):
+        return "no"
+    return ""
+
+
 def fold_name(name: str) -> str:
     text = unicodedata.normalize("NFKD", name or "")
     for mark in ("'", "’", "‘", "`"):
@@ -855,6 +865,7 @@ def load_restaurants() -> list[dict]:
                 "happyDrinks": is_yes(row.get("Happy Hour (drinks)")),
                 "happyFood": is_yes(row.get("Happy Hour (food)")),
                 "reservations": is_yes(row.get("Reservations")),
+                "reservationState": reservation_state(row.get("Reservations")),
                 "groups": is_yes(row.get("Groups of 12")),
                 "facebook": social_href(row.get("Facebook URL") or ""),
                 "instagram": website_href(row.get("Instagram") or ""),
@@ -869,6 +880,7 @@ def load_restaurants() -> list[dict]:
         )
     restaurants.sort(key=lambda item: item["name"].lower())
     assert_laurens_favorites(restaurants)
+    assign_title_context(restaurants)
     build_route_maps({item["slug"] for item in restaurants})
     return restaurants
 
@@ -1154,6 +1166,21 @@ def within_meta(text: str) -> str | None:
     return None
 
 
+def without_menu_claims(text: str) -> str:
+    """Drop menu wording from a meta description. Listings do not publish a menu."""
+    text = re.sub(r",?\s+\band\s+a\s+kid['’]s\s+menu\b", "", text, flags=re.I)
+    text = re.sub(r",?\s+\band\s+a\s+kids['’]?\s+menu\b", "", text, flags=re.I)
+    text = re.sub(r"\ba\s+late-night\s+menu\b", "late night", text, flags=re.I)
+    text = re.sub(r"\blate-night\s+menu\b", "late night", text, flags=re.I)
+    text = re.sub(r"\bmenus\b", "", text, flags=re.I)
+    text = re.sub(r"\bmenu\b", "", text, flags=re.I)
+    text = re.sub(r"\bGulf of Mexico\b", "Gulf of America", text, flags=re.I)
+    text = re.sub(r"\s{2,}", " ", text)
+    text = re.sub(r"\s+([,.;:])", r"\1", text)
+    text = re.sub(r"\(\s*\)", "", text)
+    return clean_text(text)
+
+
 BROAD_PLACES = {
     "destin",
     "miramar beach",
@@ -1383,39 +1410,202 @@ def listing_description(restaurant: dict) -> str:
             options.append(f"{lead} {tail}")
     for option in options:
         fitted = within_meta(option)
-        if fitted and fitted not in USED_DESCRIPTIONS:
-            return fitted
+        if not fitted or fitted in USED_DESCRIPTIONS:
+            continue
+        cleaned = without_menu_claims(fitted)
+        if cleaned != fitted:
+            cleaned = within_meta(cleaned)
+            if not cleaned or cleaned in USED_DESCRIPTIONS:
+                continue
+            return cleaned
+        return fitted
     raise SystemExit(f"meta description out of range for {restaurant['slug']}")
 
 
+# Shopping centers and villages already stored on a listing. Roads are not centers.
+TITLE_CENTERS = (
+    "HarborWalk Village",
+    "The Market Shops",
+    "Destin Commons",
+    "Grand Boulevard",
+    "Baytowne Wharf",
+    "Silver Sands",
+    "Market Shops",
+)
+# Longer place names first so "Destin Commons" is removed before "Destin".
+TITLE_PLACE_SUFFIXES = (
+    "destin commons",
+    "grand boulevard",
+    "miramar beach",
+    "santa rosa beach",
+    "destin harbor",
+    "silver sands",
+    "harborwalk village",
+    "the market shops",
+    "market shops",
+    "baytowne wharf",
+    "crystal beach",
+    "mid destin",
+    "emerald coast",
+    "sandestin",
+    "destin",
+)
+# Prefer a full ending near 60 characters. 70 is the hard cap shared with claim_title.
+TITLE_SOFT_MAX = 65
+TITLE_HARD_MAX = 70
+
+
+def phrase_in(text: str, phrase: str) -> bool:
+    if not text or not phrase:
+        return False
+    return re.search(rf"(?<![\w]){re.escape(phrase)}(?![\w])", text, re.IGNORECASE) is not None
+
+
+def listing_town(restaurant: dict) -> str:
+    """Town for the title. Sandestin and Miramar Beach come from the listing's own area."""
+    area = restaurant["areaSlug"]
+    city = restaurant["city"] or ""
+    if area in {"sandestin", "grand-boulevard"}:
+        return "Sandestin"
+    if area == "miramar-beach" or city == "Miramar Beach":
+        return "Miramar Beach"
+    if city:
+        return city
+    return "Destin"
+
+
+def listing_center(restaurant: dict) -> str:
+    """A plaza or center named on the listing. Nothing is inferred from the street."""
+    label = restaurant.get("label") or ""
+    for center in TITLE_CENTERS:
+        if phrase_in(label, center):
+            return center
+    area = restaurant.get("area") or ""
+    if area in {"Destin Commons", "Grand Boulevard"}:
+        return area
+    return ""
+
+
+def brand_stem(name: str) -> str:
+    """Restaurant name with a trailing town or center removed, for multi-location groups."""
+    folded = fold_name(name)
+    changed = True
+    while changed and folded:
+        changed = False
+        for suffix in TITLE_PLACE_SUFFIXES:
+            suffix_folded = fold_name(suffix)
+            if folded == suffix_folded:
+                folded = ""
+                changed = True
+                break
+            tail = " " + suffix_folded
+            if folded.endswith(tail):
+                folded = folded[: -len(tail)].strip()
+                changed = True
+                break
+    return folded or fold_name(name)
+
+
+def assign_title_context(restaurants: list[dict]) -> None:
+    """Town, and a center only when another location of the same place needs it."""
+    groups: dict[str, list[dict]] = {}
+    for restaurant in restaurants:
+        groups.setdefault(brand_stem(restaurant["name"]), []).append(restaurant)
+    for restaurant in restaurants:
+        restaurant["titleTown"] = listing_town(restaurant)
+        center = listing_center(restaurant)
+        siblings = [
+            item
+            for item in groups.get(brand_stem(restaurant["name"]), [])
+            if item["slug"] != restaurant["slug"]
+        ]
+        if center and siblings and not phrase_in(restaurant["name"], center):
+            restaurant["titleCenter"] = center
+        else:
+            restaurant["titleCenter"] = ""
+
+
+def title_endings(restaurant: dict) -> list[str]:
+    """Most specific ending first. Hours is the last shortening, never Hours and Location."""
+    meals = {meal.lower() for meal in restaurant["meals"]}
+    if "breakfast" in meals:
+        return ["Hours and Breakfast", "Breakfast", "Hours"]
+    state = restaurant.get("reservationState") or ""
+    if state == "no":
+        return ["Hours and Walk-Ins Welcome", "Walk-Ins Welcome", "Walk-Ins", "Hours"]
+    if state == "yes":
+        return ["Hours and Reservations", "Reservations", "Hours"]
+    cuisine = restaurant["cuisines"][0] if restaurant["cuisines"] else ""
+    endings = []
+    if cuisine:
+        endings.append(f"{cuisine} and Hours")
+        endings.append(cuisine)
+    endings.append("Hours")
+    return endings
+
+
+def compose_listing_title(name: str, town: str, center: str, ending: str) -> str:
+    """{Name}, {Town}: {ending}. Repeat the town only when the name does not already say it."""
+    if center and phrase_in(name, center):
+        center = ""
+    if phrase_in(name, town) and center:
+        head = f"{name} at {center}"
+    elif phrase_in(name, town):
+        head = name
+    elif center:
+        head = f"{name}, {town} at {center}"
+    else:
+        head = f"{name}, {town}"
+    return clean_text(f"{head}: {ending}")
+
+
 def restaurant_title(restaurant: dict) -> str:
-    """Restaurant name plus one local cue. The brand supplies Destin when the cue is a neighborhood."""
+    """Default listing title. A plaza is added only when it separates two locations and still fits."""
     name = restaurant["name"]
-    cue = heading_cue(restaurant)
-    phrase = f"{cue_lead(cue)} {cue}"
-    area = restaurant["area"]
-    city = restaurant["city"] or "Destin"
-    brand = "Eating in Destin"
-    candidates = [
-        f"{name} {phrase} | {brand}",
-        f"{name} | {cue} | {brand}",
-        f"{name} in {area} | {brand}",
-        f"{name} in {city} | {brand}",
-        f"{name} | {area} | {brand}",
-        f"{name} | {brand}",
-        f"{name} {phrase}",
-        f"{name} | {area}",
-        f"{name} in {city}",
-    ]
-    seen: set[str] = set()
-    for candidate in candidates:
-        title = clean_text(candidate)
-        if not title or title in seen:
-            continue
-        seen.add(title)
-        if title.endswith(BRAND_SUFFIX) and len(title) > 60:
-            continue
-        if 20 <= len(title) <= 70 and title not in USED_TITLES:
+    town = restaurant.get("titleTown") or listing_town(restaurant)
+    center = restaurant.get("titleCenter") or ""
+    endings = title_endings(restaurant)
+    specific = [ending for ending in endings if ending != "Hours"]
+
+    def make(ending: str, use_center: bool) -> str | None:
+        title = compose_listing_title(name, town, center if use_center else "", ending)
+        if "Hours and Location" in title or not phrase_in(title, town):
+            return None
+        if not (20 <= len(title) <= TITLE_HARD_MAX) or title in USED_TITLES:
+            return None
+        return title
+
+    def earliest(use_center: bool, limit: int) -> tuple[int, str] | None:
+        if use_center and not center:
+            return None
+        for rank, ending in enumerate(specific):
+            title = make(ending, use_center)
+            if title and len(title) <= limit:
+                return rank, title
+        return None
+
+    centered = earliest(True, TITLE_HARD_MAX)
+    plain_soft = earliest(False, TITLE_SOFT_MAX)
+    plain_hard = earliest(False, TITLE_HARD_MAX)
+    # Keep the center when it does not force a vaguer ending than the plain title.
+    if centered:
+        rank, title = centered
+        plain_rank = plain_soft[0] if plain_soft else None
+        same_or_better = plain_rank is None or rank <= plain_rank
+        stays_readable = len(title) <= TITLE_SOFT_MAX or plain_soft is None or (
+            plain_rank is not None and rank < plain_rank
+        )
+        if same_or_better and stays_readable:
+            return title
+    if plain_soft:
+        return plain_soft[1]
+    if plain_hard:
+        return plain_hard[1]
+    if centered:
+        return centered[1]
+    for use_center in (False, True):
+        title = make("Hours", use_center)
+        if title:
             return title
     raise SystemExit(f"title out of range for {restaurant['slug']}")
 
