@@ -26,6 +26,7 @@ Search by restaurant name, or look for restaurants and food in Destin, Miramar B
 - [Mid-Destin](https://www.eatingindestin.com/areas/mid-destin/): The US 98 stretch through Destin, with everyday restaurants between the harbor and Sandestin.
 - [Destin Harbor](https://www.eatingindestin.com/areas/destin-harbor/): HarborWalk Village and the Destin Harbor docks, with seafood houses on the water.
 - [Crystal Beach](https://www.eatingindestin.com/areas/crystal-beach/): Along Scenic 98, including Henderson Beach and the gulf-front inns.
+- [Okaloosa Island](https://www.eatingindestin.com/areas/okaloosa-island/): Seafood houses on Santa Rosa Boulevard and at the pier.
 
 ## Guides
 
@@ -50,7 +51,9 @@ Search by restaurant name, or look for restaurants and food in Destin, Miramar B
 - [5 o'Clock Somewhere Bar & Grill](https://www.eatingindestin.com/restaurants/5-o-clock-somewhere-bar-and-grill-sandestin/): American in Sandestin, Miramar Beach, near Destin, Florida.
 - [Acme Oyster House](https://www.eatingindestin.com/restaurants/acme-oyster-house-miramar-beach/): Seafood, Southern in Miramar Beach, near Destin, Florida.
 - [Aegean Greek Restaurant](https://www.eatingindestin.com/restaurants/aegean-greek-restaurant-miramar-beach/): Mediterranean in Miramar Beach, near Destin, Florida.
+- [AJ's Oyster Shanty](https://www.eatingindestin.com/restaurants/ajs-oyster-shanty-okaloosa-island/): Seafood, American in Okaloosa Island, Fort Walton Beach, near Destin, Florida.
 - [AJ's Seafood & Oyster Bar](https://www.eatingindestin.com/restaurants/aj-s-seafood-and-oyster-bar-destin-harbor/): Seafood, American in Destin Harbor, Destin, Florida.
+- [Angler's Beachside Grill](https://www.eatingindestin.com/restaurants/anglers-beachside-grill-okaloosa-island/): Seafood, American in Okaloosa Island, Fort Walton Beach, near Destin, Florida.
 - [Another Broken Egg Cafe Destin Commons](https://www.eatingindestin.com/restaurants/another-broken-egg-cafe-destin-commons-destin-commons/): American in Destin Commons, Destin, Florida.
 - [Another Broken Egg Cafe Grand Boulevard](https://www.eatingindestin.com/restaurants/another-broken-egg-cafe-grand-boulevard-grand-boulevard/): American in Grand Boulevard, Miramar Beach, near Destin, Florida.
 - [Ara Rooftop Pool & Lounge](https://www.eatingindestin.com/restaurants/ara-rooftop-pool-and-lounge-sandestin/): American in Sandestin, Miramar Beach, near Destin, Florida.
@@ -62,13 +65,16 @@ Search by restaurant name, or look for restaurants and food in Destin, Miramar B
 - [Barefoot's Beachside Bar & Grill](https://www.eatingindestin.com/restaurants/barefoot-s-beachside-bar-and-grill-sandestin/): American, Seafood in Sandestin, Miramar Beach, near Destin, Florida.
 - [Bayside Café Sandestin](https://www.eatingindestin.com/restaurants/bayside-cafe-sandestin-sandestin/): American in Sandestin, Miramar Beach, near Destin, Florida.
 - [Beach Walk Cafe](https://www.eatingindestin.com/restaurants/beach-walk-cafe-crystal-beach/): American, Seafood in Crystal Beach, Destin, Florida.
+- [Beignets & Brew](https://www.eatingindestin.com/restaurants/beignets-and-brew-destin-harbor/): Dessert, Cafe in Destin Harbor, Destin, Florida.
 - [Big Bad Breakfast Miramar Beach](https://www.eatingindestin.com/restaurants/big-bad-breakfast-miramar-beach-miramar-beach/): American, Southern in Miramar Beach, near Destin, Florida.
 - [Bijoux](https://www.eatingindestin.com/restaurants/bijoux-sandestin/): American, Seafood in Sandestin, Miramar Beach, near Destin, Florida.
 - [Bistrology](https://www.eatingindestin.com/restaurants/bistrology-miramar-beach/): Cafe, American in Miramar Beach, near Destin, Florida.
 - [Bitterroot](https://www.eatingindestin.com/restaurants/bitterroot-destin-commons/): American, Southern in Destin Commons, Destin, Florida.
+- [Blue Iguana Taco Bar & Cantina](https://www.eatingindestin.com/restaurants/blue-iguana-taco-bar-mid-destin/): Mexican in Mid-Destin, Destin, Florida.
 - [Boardwalk Fry Co.](https://www.eatingindestin.com/restaurants/boardwalk-fry-co-destin-harbor/): American in Destin Harbor, Destin, Florida.
 - [Boathouse Oyster Bar](https://www.eatingindestin.com/restaurants/boathouse-oyster-bar-destin-harbor/): Seafood, American in Destin Harbor, Destin, Florida.
 - [Bonefish Grill Destin](https://www.eatingindestin.com/restaurants/bonefish-grill-destin-mid-destin/): Seafood, American in Destin Commons, Destin, Florida.
+- [Bosforo Seafood & Steak](https://www.eatingindestin.com/restaurants/bosforo-seafood-and-steak-miramar-beach/): Seafood, American in Miramar Beach, near Destin, Florida.
 - [Boshamps Seafood & Oyster House](https://www.eatingindestin.com/restaurants/boshamps-seafood-and-oyster-house-destin-harbor/): Seafood, American in Destin Harbor, Destin, Florida.
 - [Bowled Co.](https://www.eatingindestin.com/restaurants/bowled-co-destin-commons/): American in Destin Commons, Destin, Florida.
 - [Bric à Brac](https://www.eatingindestin.com/restaurants/bric-a-brac-mid-destin/): American in Mid-Destin, Destin, Florida.
@@ -101,6 +107,7 @@ Search by restaurant name, or look for restaurants and food in Destin, Miramar B
 - [Cracker Barrel Destin](https://www.eatingindestin.com/restaurants/cracker-barrel-destin-mid-destin/): American, Southern in Mid-Destin, Destin, Florida.
 - [Crackings](https://www.eatingindestin.com/restaurants/crackings-mid-destin/): American, Southern in Mid-Destin, Destin, Florida.
 - [Crafty Siren](https://www.eatingindestin.com/restaurants/crafty-siren-destin-harbor/): American in Destin Harbor, Destin, Florida.
+- [Crumbl Cookies](https://www.eatingindestin.com/restaurants/crumbl-cookies-destin-commons/): Dessert in Destin Commons, Destin, Florida.
 - [Culver's Miramar Beach](https://www.eatingindestin.com/restaurants/culver-s-miramar-beach-miramar-beach/): American in Miramar Beach, Destin, Florida.
 - [Dat Burrito Place](https://www.eatingindestin.com/restaurants/dat-burrito-place-destin-commons/): Mexican in Destin Commons, Destin, Florida.
 - [Dewey Destin's Harborside](https://www.eatingindestin.com/restaurants/dewey-destin-s-harborside-destin-harbor/): Seafood, American in Destin Harbor, Destin, Florida.
@@ -108,6 +115,7 @@ Search by restaurant name, or look for restaurants and food in Destin, Miramar B
 - [Domo Izakaya](https://www.eatingindestin.com/restaurants/domo-izakaya-mid-destin/): Japanese, Sushi in Mid-Destin, Destin, Florida.
 - [Drizzle](https://www.eatingindestin.com/restaurants/drizzle-destin-harbor/): Dessert in Destin Harbor, Destin, Florida.
 - [Dude & Meatball's](https://www.eatingindestin.com/restaurants/dude-and-meatball-s-sandestin/): Italian in Sandestin, Miramar Beach, near Destin, Florida.
+- [East Pass Coffee Co.](https://www.eatingindestin.com/restaurants/eastpass-coffee-co-mid-destin/): Cafe, American in Mid-Destin, Destin, Florida.
 - [El Jalisco Destin Commons](https://www.eatingindestin.com/restaurants/el-jalisco-destin-commons-destin-commons/): Mexican in Destin Commons, Destin, Florida.
 - [Empanola Destin](https://www.eatingindestin.com/restaurants/empanola-destin-mid-destin/): American in Mid-Destin, Destin, Florida.
 - [everbowl](https://www.eatingindestin.com/restaurants/everbowl-miramar-beach/): Cafe in Miramar Beach, near Destin, Florida.
@@ -138,6 +146,7 @@ Search by restaurant name, or look for restaurants and food in Destin, Miramar B
 - [Harbor Docks](https://www.eatingindestin.com/restaurants/harbor-docks-destin-harbor/): Seafood, Japanese, Sushi in Destin Harbor, Destin, Florida.
 - [Harbor Tavern](https://www.eatingindestin.com/restaurants/harbor-tavern-destin-harbor/): American in Destin Harbor, Destin, Florida.
 - [Harry T's Lighthouse](https://www.eatingindestin.com/restaurants/harry-t-s-lighthouse-destin-harbor/): Seafood, American in Destin Harbor, Destin, Florida.
+- [Hightide Island Grill](https://www.eatingindestin.com/restaurants/hightide-island-grill-okaloosa-island/): Seafood, American in Okaloosa Island, Fort Walton Beach, near Destin, Florida.
 - [Holi Indian Kitchen](https://www.eatingindestin.com/restaurants/holi-indian-kitchen-miramar-beach/): Indian, Asian in Miramar Beach, near Destin, Florida.
 - [Horizons Gastropub](https://www.eatingindestin.com/restaurants/horizons-crystal-beach/): American in Crystal Beach, Destin, Florida.
 - [Hungry Howie's Pizza Destin](https://www.eatingindestin.com/restaurants/hungry-howie-s-pizza-destin-mid-destin/): Italian, American in Mid-Destin, Destin, Florida.
@@ -183,6 +192,7 @@ Search by restaurant name, or look for restaurants and food in Destin, Miramar B
 - [New Dragon Chinese Buffet & Mongolian Grill](https://www.eatingindestin.com/restaurants/new-dragon-chinese-buffet-and-mongolian-grill-mid-destin/): Chinese, Asian in Mid-Destin, Destin, Florida.
 - [Nonna's Ristorante](https://www.eatingindestin.com/restaurants/nonna-s-ristorante-destin-harbor/): Italian in Destin Harbor, Destin, Florida.
 - [O'Quigley's Seafood Steamer](https://www.eatingindestin.com/restaurants/o-quigley-s-seafood-steamer-mid-destin/): Seafood, American in Mid-Destin, Destin, Florida.
+- [Old Bay Steamer](https://www.eatingindestin.com/restaurants/old-bay-steamer-okaloosa-island/): Seafood, American in Okaloosa Island, Fort Walton Beach, near Destin, Florida.
 - [Olive Garden Destin](https://www.eatingindestin.com/restaurants/olive-garden-destin-mid-destin/): Italian in Mid-Destin, Destin, Florida.
 - [On the Rocks](https://www.eatingindestin.com/restaurants/on-the-rocks-destin-harbor/): American in Destin Harbor, Destin, Florida.
 - [Osaka Japanese Hibachi Steakhouse & Sushi Bar](https://www.eatingindestin.com/restaurants/osaka-japanese-hibachi-steakhouse-sushi-bar-mid-destin/): Japanese, Sushi in Mid-Destin, Destin, Florida.
@@ -223,6 +233,7 @@ Search by restaurant name, or look for restaurants and food in Destin, Miramar B
 - [Shan Kishi](https://www.eatingindestin.com/restaurants/shan-kishi-miramar-beach/): Japanese, Sushi in Miramar Beach, near Destin, Florida.
 - [Shrimp Basket](https://www.eatingindestin.com/restaurants/shrimp-basket-mid-destin/): Seafood, American in Mid-Destin, Destin, Florida.
 - [Slick Lips Seafood & Oyster House](https://www.eatingindestin.com/restaurants/slick-lips-seafood-and-oyster-house-sandestin/): Seafood, American in Sandestin, Miramar Beach, near Destin, Florida.
+- [SmallCakes Destin](https://www.eatingindestin.com/restaurants/smallcakes-destin-mid-destin/): Dessert in Mid-Destin, Destin, Florida.
 - [Smashburger Destin Commons](https://www.eatingindestin.com/restaurants/smashburger-destin-commons-destin-commons/): American in Destin Commons, Destin, Florida.
 - [Smoothie King Destin](https://www.eatingindestin.com/restaurants/smoothie-king-destin-mid-destin/): American in Mid-Destin, Destin, Florida.
 - [SnowBiz by Ray](https://www.eatingindestin.com/restaurants/snowbiz-by-ray-destin-commons/): Dessert, American in Destin Commons, Destin, Florida.
@@ -233,6 +244,7 @@ Search by restaurant name, or look for restaurants and food in Destin, Miramar B
 - [Starbucks Emerald Coast](https://www.eatingindestin.com/restaurants/starbucks-emerald-coast-mid-destin/): Cafe, American in Mid-Destin, Destin, Florida.
 - [Starbucks Grand Boulevard](https://www.eatingindestin.com/restaurants/starbucks-grand-boulevard-grand-boulevard/): Cafe, American in Grand Boulevard, Miramar Beach, near Destin, Florida.
 - [Starbucks Miramar Beach](https://www.eatingindestin.com/restaurants/starbucks-miramar-beach-miramar-beach/): Cafe, American in Miramar Beach, near Destin, Florida.
+- [Stewby's Seafood Shanty](https://www.eatingindestin.com/restaurants/stewbys-seafood-shanty-okaloosa-island/): Seafood, American in Okaloosa Island, Fort Walton Beach, near Destin, Florida.
 - [Subway Destin](https://www.eatingindestin.com/restaurants/subway-destin-mid-destin/): American in Mid-Destin, Destin, Florida.
 - [Sundries General Market](https://www.eatingindestin.com/restaurants/sundries-general-market-sandestin/): American in Sandestin, Miramar Beach, near Destin, Florida.
 - [Sushimoto of South Walton](https://www.eatingindestin.com/restaurants/sushimoto-of-south-walton-miramar-beach/): Japanese, Sushi in Miramar Beach, near Destin, Florida.

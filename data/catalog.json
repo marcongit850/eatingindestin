@@ -240,6 +240,67 @@
     "search": "aegean greek restaurant miramar beach  miramar beach | us 98 mediterranean lunch dinner gyros seafood restaurant aegean greek restaurant is a seafood restaurant in miramar beach | us 98, offering a coastal dining option for lunch or dinner. aegean greek restaurant gyros seafood mediterranean casual dining miramar beach miramar beach | us 98 $$"
   },
   {
+    "slug": "ajs-oyster-shanty-okaloosa-island",
+    "name": "AJ's Oyster Shanty",
+    "area": "Okaloosa Island",
+    "areaSlug": "okaloosa-island",
+    "subarea": "",
+    "label": "Okaloosa Island | Santa Rosa Blvd",
+    "address": "108 Santa Rosa Blvd, Fort Walton Beach, FL 32548",
+    "lat": 30.3969249,
+    "lng": -86.6000377,
+    "phone": "(850) 226-8108",
+    "website": "https://ajsoystershanty.com/",
+    "price": "",
+    "notes": "AJ's Oyster Shanty is the Okaloosa Island oyster bar at 108 Santa Rosa Boulevard, in the Destin area. It is a separate room from AJ's Seafood & Oyster Bar on Destin Harbor. The shanty site lists live music and a reservations link.",
+    "hours": "Mon: 11:00 AM - 11:00 PM; Tue: 11:00 AM - 11:00 PM; Wed: 11:00 AM - 11:00 PM; Thu: 11:00 AM - 11:00 PM; Fri: 11:00 AM - 11:00 PM; Sat: 11:00 AM - 11:00 PM; Sun: 11:00 AM - 11:00 PM",
+    "cuisines": [
+      "Seafood",
+      "American"
+    ],
+    "meals": [
+      "Lunch",
+      "Dinner"
+    ],
+    "foods": [
+      "Seafood",
+      "Oyster Bar"
+    ],
+    "vibes": [
+      "Casual Dining",
+      "Bar"
+    ],
+    "category": "Bar & Restaurant",
+    "outdoor": false,
+    "waterfront": false,
+    "bar": true,
+    "kids": false,
+    "music": true,
+    "laurensFavorite": false,
+    "happyDrinks": false,
+    "happyFood": false,
+    "reservations": true,
+    "groups": false,
+    "facebook": "https://www.facebook.com/AJsOysterShanty/",
+    "instagram": "https://www.instagram.com/ajsoystershanty",
+    "photos": [
+      {
+        "id": null,
+        "src": "/images/restaurants/ajs-oyster-shanty-okaloosa-island/01.jpg"
+      },
+      {
+        "id": null,
+        "src": "/images/restaurants/ajs-oyster-shanty-okaloosa-island/02.jpg"
+      },
+      {
+        "id": null,
+        "src": "/images/restaurants/ajs-oyster-shanty-okaloosa-island/03.jpg"
+      }
+    ],
+    "logo": "/images/restaurants/ajs-oyster-shanty-okaloosa-island/logo.png",
+    "search": "aj's oyster shanty okaloosa island  okaloosa island | santa rosa blvd seafood american lunch dinner seafood oyster bar bar & restaurant aj's oyster shanty is the okaloosa island oyster bar at 108 santa rosa boulevard, in the destin area. it is a separate room from aj's seafood & oyster bar on destin harbor. the shanty site lists live music and a reservations link. aj's oyster shanty seafood oyster bar lunch dinner okaloosa island "
+  },
+  {
     "slug": "aj-s-seafood-and-oyster-bar-destin-harbor",
     "name": "AJ's Seafood & Oyster Bar",
     "area": "Destin Harbor",
@@ -299,6 +360,68 @@
     ],
     "logo": null,
     "search": "aj's seafood & oyster bar destin harbor  destin harbor seafood american lunch dinner seafood oyster bar bar & restaurant aj's seafood & oyster bar is a casual bar and restaurant in destin harbor with seafood-focused dishes and a relaxed coastal atmosphere. aj's seafood & oyster bar seafood oyster bar seafood american casual dining bar destin harbor destin harbor $$"
+  },
+  {
+    "slug": "anglers-beachside-grill-okaloosa-island",
+    "name": "Angler's Beachside Grill",
+    "area": "Okaloosa Island",
+    "areaSlug": "okaloosa-island",
+    "subarea": "",
+    "label": "Okaloosa Island | Pier",
+    "address": "1030 Miracle Strip Parkway SE, Fort Walton Beach, FL 32548",
+    "lat": 30.3938577,
+    "lng": -86.592917,
+    "phone": "(850) 796-0260",
+    "website": "https://anglersgrill.com/",
+    "price": "",
+    "notes": "Angler's Beachside Grill sits at the Okaloosa Island Pier, at 1030 Miracle Strip Parkway, in the Destin area. The site lists indoor seats, a covered patio, an indoor bar, and an outdoor tiki bar.",
+    "hours": "Mon: 11:00 AM - 8:00 PM; Tue: 11:00 AM - 8:00 PM; Wed: 11:00 AM - 8:00 PM; Thu: 11:00 AM - 8:00 PM; Fri: 11:00 AM - 9:00 PM; Sat: 8:00 AM - 9:00 PM; Sun: 10:00 AM - 8:00 PM",
+    "cuisines": [
+      "Seafood",
+      "American"
+    ],
+    "meals": [
+      "Breakfast",
+      "Lunch",
+      "Dinner"
+    ],
+    "foods": [
+      "Seafood",
+      "Burgers"
+    ],
+    "vibes": [
+      "Casual Dining",
+      "Bar"
+    ],
+    "category": "Bar & Restaurant",
+    "outdoor": true,
+    "waterfront": true,
+    "bar": true,
+    "kids": true,
+    "music": false,
+    "laurensFavorite": false,
+    "happyDrinks": true,
+    "happyFood": false,
+    "reservations": false,
+    "groups": false,
+    "facebook": "https://www.facebook.com/anglersbeachsidegrill/",
+    "instagram": "https://www.instagram.com/anglersbeachsidebarandgrill_",
+    "photos": [
+      {
+        "id": null,
+        "src": "/images/restaurants/anglers-beachside-grill-okaloosa-island/01.jpg"
+      },
+      {
+        "id": null,
+        "src": "/images/restaurants/anglers-beachside-grill-okaloosa-island/02.jpg"
+      },
+      {
+        "id": null,
+        "src": "/images/restaurants/anglers-beachside-grill-okaloosa-island/03.jpg"
+      }
+    ],
+    "logo": "/images/restaurants/anglers-beachside-grill-okaloosa-island/logo.png",
+    "search": "angler's beachside grill okaloosa island  okaloosa island | pier seafood american breakfast lunch dinner seafood burgers bar & restaurant angler's beachside grill sits at the okaloosa island pier, at 1030 miracle strip parkway, in the destin area. the site lists indoor seats, a covered patio, an indoor bar, and an outdoor tiki bar. angler's beachside grill seafood burgers okaloosa island pier "
   },
   {
     "slug": "another-broken-egg-cafe-destin-commons-destin-commons",
@@ -956,6 +1079,59 @@
     "search": "beach walk cafe crystal beach  crystal beach | henderson park inn american seafood lunch dinner seafood steak restaurant beach walk cafe offers a polished dining experience in crystal beach | henderson park inn, suited for a nicer dinner, date night, or special occasion. beach walk cafe seafood steak american seafood fine dining crystal beach crystal beach | henderson park inn $$$"
   },
   {
+    "slug": "beignets-and-brew-destin-harbor",
+    "name": "Beignets & Brew",
+    "area": "Destin Harbor",
+    "areaSlug": "destin-harbor",
+    "subarea": "",
+    "label": "Destin Harbor | Harbor Blvd",
+    "address": "302 Harbor Blvd Unit D, Destin, FL 32541",
+    "lat": 30.39282,
+    "lng": -86.50515,
+    "phone": "(850) 424-6587",
+    "website": "https://www.beignetsandbrew.com/find/fl/destin-harbor/302-harbor-blvd-unit-d",
+    "price": "",
+    "notes": "Beignets & Brew at 302 Harbor Blvd is the Destin Harbor shop, with outdoor seats by the water. The same company has other shops. This listing is only the Harbor Blvd location.",
+    "hours": "Sun: 7:00 AM - 9:00 PM; Mon: 7:00 AM - 9:00 PM; Tue: 7:00 AM - 9:00 PM; Wed: 7:00 AM - 9:00 PM; Thu: 7:00 AM - 9:00 PM; Fri: 7:00 AM - 10:00 PM; Sat: 7:00 AM - 10:00 PM",
+    "cuisines": [
+      "Dessert",
+      "Cafe"
+    ],
+    "meals": [
+      "Breakfast",
+      "Brunch"
+    ],
+    "foods": [
+      "Donuts",
+      "Coffee",
+      "Dessert"
+    ],
+    "vibes": [
+      "Casual Dining"
+    ],
+    "category": "Cafe / Coffee",
+    "outdoor": true,
+    "waterfront": true,
+    "bar": false,
+    "kids": false,
+    "music": false,
+    "laurensFavorite": false,
+    "happyDrinks": false,
+    "happyFood": false,
+    "reservations": false,
+    "groups": false,
+    "facebook": "https://www.facebook.com/beignetsandbrew",
+    "instagram": "https://www.instagram.com/beignetsandbrew",
+    "photos": [
+      {
+        "id": null,
+        "src": "/images/restaurants/beignets-and-brew-destin-harbor/01.jpg"
+      }
+    ],
+    "logo": "/images/restaurants/beignets-and-brew-destin-harbor/logo.png",
+    "search": "beignets & brew destin harbor  destin harbor | harbor blvd dessert cafe breakfast brunch donuts coffee dessert cafe / coffee beignets & brew at 302 harbor blvd is the destin harbor shop, with outdoor seats by the water. the same company has other shops. this listing is only the harbor blvd location. beignets & brew dessert coffee breakfast destin harbor harbor blvd "
+  },
+  {
     "slug": "big-bad-breakfast-miramar-beach-miramar-beach",
     "name": "Big Bad Breakfast Miramar Beach",
     "area": "Miramar Beach",
@@ -1185,6 +1361,61 @@
     "search": "bitterroot destin commons  commons drive | destin american southern dinner tapas steak bar & restaurant bitterroot is an upscale restaurant and bar in commons drive | destin, offering a more refined option for lunch, dinner, or drinks. bitterroot tapas steak american southern upscale bar destin commons commons drive | destin $$$"
   },
   {
+    "slug": "blue-iguana-taco-bar-mid-destin",
+    "name": "Blue Iguana Taco Bar & Cantina",
+    "area": "Mid-Destin",
+    "areaSlug": "mid-destin",
+    "subarea": "",
+    "label": "Destin | US 98",
+    "address": "36178 Emerald Coast Pkwy, Destin, FL 32541",
+    "lat": 30.3869,
+    "lng": -86.4077,
+    "phone": "(850) 353-2138",
+    "website": "https://blueiguanadestin.com/",
+    "price": "",
+    "notes": "Blue Iguana Taco Bar & Cantina is a family-owned Mexican restaurant at 36178 Emerald Coast Parkway in Destin, in the Destin area. The site lists a full bar and outdoor dining.",
+    "hours": "Mon: 10:00 AM - 10:00 PM; Tue: 10:00 AM - 10:00 PM; Wed: 10:00 AM - 10:00 PM; Thu: 10:00 AM - 10:00 PM; Fri: 10:00 AM - 11:00 PM; Sat: 10:00 AM - 11:00 PM; Sun: 10:00 AM - 10:00 PM",
+    "cuisines": [
+      "Mexican"
+    ],
+    "meals": [
+      "Lunch",
+      "Dinner"
+    ],
+    "foods": [
+      "Tacos"
+    ],
+    "vibes": [
+      "Casual Dining",
+      "Bar"
+    ],
+    "category": "Bar & Restaurant",
+    "outdoor": true,
+    "waterfront": false,
+    "bar": true,
+    "kids": false,
+    "music": false,
+    "laurensFavorite": false,
+    "happyDrinks": false,
+    "happyFood": false,
+    "reservations": false,
+    "groups": false,
+    "facebook": "https://www.facebook.com/BlueIguanaDestin/",
+    "instagram": "",
+    "photos": [
+      {
+        "id": null,
+        "src": "/images/restaurants/blue-iguana-taco-bar-mid-destin/01.jpg"
+      },
+      {
+        "id": null,
+        "src": "/images/restaurants/blue-iguana-taco-bar-mid-destin/02.jpg"
+      }
+    ],
+    "logo": "/images/restaurants/blue-iguana-taco-bar-mid-destin/logo.png",
+    "search": "blue iguana taco bar & cantina mid-destin  destin | us 98 mexican lunch dinner tacos bar & restaurant blue iguana taco bar & cantina is a family-owned mexican restaurant at 36178 emerald coast parkway in destin, in the destin area. the site lists a full bar and outdoor dining. blue iguana taco bar cantina mexican tacos lunch dinner destin us 98 "
+  },
+  {
     "slug": "boardwalk-fry-co-destin-harbor",
     "name": "Boardwalk Fry Co.",
     "area": "Destin Harbor",
@@ -1355,6 +1586,65 @@
     ],
     "logo": null,
     "search": "bonefish grill destin destin commons  destin commons seafood american lunch dinner seafood restaurant bonefish grill destin is a seafood restaurant in destin | us 98, offering a coastal dining option for lunch or dinner. bonefish grill destin seafood seafood american casual dining mid-destin destin | us 98 $$"
+  },
+  {
+    "slug": "bosforo-seafood-and-steak-miramar-beach",
+    "name": "Bosforo Seafood & Steak",
+    "area": "Miramar Beach",
+    "areaSlug": "miramar-beach",
+    "subarea": "",
+    "label": "Miramar Beach | US 98",
+    "address": "10859 Emerald Coast Pkwy Suite 206, Miramar Beach, FL 32550",
+    "lat": 30.3797356,
+    "lng": -86.3563642,
+    "phone": "(850) 353-2783",
+    "website": "https://www.bosforomiramarbeach.com/",
+    "price": "",
+    "notes": "Bosforo Seafood & Steak is a dinner room at 10859 Emerald Coast Parkway in Miramar Beach, in the Destin area. The site lists Wednesday through Sunday service and is closed Monday and Tuesday.",
+    "hours": "Mon: Closed; Tue: Closed; Wed: 5:00 PM - 9:00 PM; Thu: 5:00 PM - 9:00 PM; Fri: 5:00 PM - 9:00 PM; Sat: 5:00 PM - 9:00 PM; Sun: 5:00 PM - 9:00 PM",
+    "cuisines": [
+      "Seafood",
+      "American"
+    ],
+    "meals": [
+      "Dinner"
+    ],
+    "foods": [
+      "Seafood",
+      "Steak"
+    ],
+    "vibes": [
+      "Fine Dining"
+    ],
+    "category": "Restaurant",
+    "outdoor": false,
+    "waterfront": false,
+    "bar": false,
+    "kids": false,
+    "music": false,
+    "laurensFavorite": false,
+    "happyDrinks": false,
+    "happyFood": false,
+    "reservations": false,
+    "groups": false,
+    "facebook": "https://www.facebook.com/bosforomiramarbeach",
+    "instagram": "https://www.instagram.com/bosforomiramarbeach/",
+    "photos": [
+      {
+        "id": null,
+        "src": "/images/restaurants/bosforo-seafood-and-steak-miramar-beach/01.jpg"
+      },
+      {
+        "id": null,
+        "src": "/images/restaurants/bosforo-seafood-and-steak-miramar-beach/02.jpg"
+      },
+      {
+        "id": null,
+        "src": "/images/restaurants/bosforo-seafood-and-steak-miramar-beach/03.jpg"
+      }
+    ],
+    "logo": "/images/restaurants/bosforo-seafood-and-steak-miramar-beach/logo.png",
+    "search": "bosforo seafood & steak miramar beach  miramar beach | us 98 seafood american dinner seafood steak restaurant bosforo seafood & steak is a dinner room at 10859 emerald coast parkway in miramar beach, in the destin area. the site lists wednesday through sunday service and is closed monday and tuesday. bosforo seafood & steak seafood steak dinner fine dining miramar beach us 98 "
   },
   {
     "slug": "boshamps-seafood-and-oyster-house-destin-harbor",
@@ -3217,6 +3507,56 @@
     "search": "crafty siren destin harbor  harborwalk village | destin american dinner drinks  bar & restaurant crafty siren is a walk-up bar at harborwalk village, at 66 harbor boulevard, selling canned beer, seltzers, and other drinks. crafty siren destin harbor harborwalk village | destin $ $"
   },
   {
+    "slug": "crumbl-cookies-destin-commons",
+    "name": "Crumbl Cookies",
+    "area": "Destin Commons",
+    "areaSlug": "destin-commons",
+    "subarea": "",
+    "label": "Destin Commons | Commons Drive",
+    "address": "4447 Commons Dr E Ste K112, Destin, FL 32541",
+    "lat": 30.3921,
+    "lng": -86.4275751,
+    "phone": "(850) 389-4689",
+    "website": "https://crumblcookies.com/stores/fl/fldestin",
+    "price": "",
+    "notes": "Crumbl Cookies at 4447 Commons Drive East is the Destin bakery, in the Destin Commons area. The Destin store page lists Monday through Saturday hours and is closed Sunday.",
+    "hours": "Mon: 8:00 AM - 10:00 PM; Tue: 8:00 AM - 10:00 PM; Wed: 8:00 AM - 10:00 PM; Thu: 8:00 AM - 10:00 PM; Fri: 8:00 AM - 10:00 PM; Sat: 8:00 AM - 10:00 PM; Sun: Closed",
+    "cuisines": [
+      "Dessert"
+    ],
+    "meals": [
+      "Desserts"
+    ],
+    "foods": [
+      "Cookies & Sweets",
+      "Dessert"
+    ],
+    "vibes": [
+      "Fast Casual"
+    ],
+    "category": "Dessert",
+    "outdoor": false,
+    "waterfront": false,
+    "bar": false,
+    "kids": false,
+    "music": false,
+    "laurensFavorite": false,
+    "happyDrinks": false,
+    "happyFood": false,
+    "reservations": false,
+    "groups": false,
+    "facebook": "https://www.facebook.com/1061097407079003",
+    "instagram": "",
+    "photos": [
+      {
+        "id": null,
+        "src": "/images/restaurants/crumbl-cookies-destin-commons/01.jpg"
+      }
+    ],
+    "logo": "/images/restaurants/crumbl-cookies-destin-commons/logo.png",
+    "search": "crumbl cookies destin commons  destin commons | commons drive dessert desserts cookies & sweets dessert dessert crumbl cookies at 4447 commons drive east is the destin bakery, in the destin commons area. the destin store page lists monday through saturday hours and is closed sunday. crumbl cookies dessert cookies destin commons commons drive "
+  },
+  {
     "slug": "culver-s-miramar-beach-miramar-beach",
     "name": "Culver's Miramar Beach",
     "area": "Miramar Beach",
@@ -3608,6 +3948,65 @@
     ],
     "logo": null,
     "search": "dude & meatball's sandestin  baytowne wharf | sandestin italian lunch dinner pasta bar & restaurant dude & meatball's is an italian restaurant at baytowne wharf, with house-made pastas and sauces and a patio over the pond. dude & meatball's pasta italian casual dining bar sandestin baytowne wharf | sandestin $$"
+  },
+  {
+    "slug": "eastpass-coffee-co-mid-destin",
+    "name": "East Pass Coffee Co.",
+    "area": "Mid-Destin",
+    "areaSlug": "mid-destin",
+    "subarea": "",
+    "label": "Destin | Benning Drive",
+    "address": "121 Benning Drive, Destin, FL 32541",
+    "lat": 30.39412,
+    "lng": -86.4955303,
+    "phone": "(850) 353-2906",
+    "website": "https://www.eastpasscoffeeco.com/",
+    "price": "",
+    "notes": "East Pass Coffee Co. is a locally owned cafe at 121 Benning Drive in Destin, in the Destin area. The site describes indoor seats and an outdoor space, and it is open seven days from 7:30 AM to 3:00 PM.",
+    "hours": "Mon: 7:30 AM - 3:00 PM; Tue: 7:30 AM - 3:00 PM; Wed: 7:30 AM - 3:00 PM; Thu: 7:30 AM - 3:00 PM; Fri: 7:30 AM - 3:00 PM; Sat: 7:30 AM - 3:00 PM; Sun: 7:30 AM - 3:00 PM",
+    "cuisines": [
+      "Cafe",
+      "American"
+    ],
+    "meals": [
+      "Breakfast",
+      "Lunch"
+    ],
+    "foods": [
+      "Coffee",
+      "Cafe",
+      "Breakfast Spot"
+    ],
+    "vibes": [],
+    "category": "Cafe / Coffee",
+    "outdoor": true,
+    "waterfront": false,
+    "bar": false,
+    "kids": false,
+    "music": false,
+    "laurensFavorite": false,
+    "happyDrinks": false,
+    "happyFood": false,
+    "reservations": false,
+    "groups": false,
+    "facebook": "https://www.facebook.com/eastpasscoffeeco",
+    "instagram": "https://www.instagram.com/eastpasscoffeeco",
+    "photos": [
+      {
+        "id": null,
+        "src": "/images/restaurants/eastpass-coffee-co-mid-destin/01.jpg"
+      },
+      {
+        "id": null,
+        "src": "/images/restaurants/eastpass-coffee-co-mid-destin/02.jpg"
+      },
+      {
+        "id": null,
+        "src": "/images/restaurants/eastpass-coffee-co-mid-destin/03.jpg"
+      }
+    ],
+    "logo": "/images/restaurants/eastpass-coffee-co-mid-destin/logo.png",
+    "search": "east pass coffee co. mid-destin  destin | benning drive cafe american breakfast lunch coffee cafe breakfast spot cafe / coffee east pass coffee co. is a locally owned cafe at 121 benning drive in destin, in the destin area. the site describes indoor seats and an outdoor space, and it is open seven days from 7:30 am to 3:00 pm. east pass coffee co. cafe coffee breakfast lunch destin benning drive "
   },
   {
     "slug": "el-jalisco-destin-commons-destin-commons",
@@ -5319,6 +5718,58 @@
     ],
     "logo": null,
     "search": "harry t's lighthouse destin harbor  harborwalk village | destin seafood american breakfast lunch dinner seafood burgers bar & restaurant harry t's lighthouse is a casual bar and restaurant in harborwalk village | destin with seafood-focused dishes and a relaxed coastal atmosphere. harry t's lighthouse seafood burgers seafood american casual dining bar destin harbor harborwalk village | destin $$"
+  },
+  {
+    "slug": "hightide-island-grill-okaloosa-island",
+    "name": "Hightide Island Grill",
+    "area": "Okaloosa Island",
+    "areaSlug": "okaloosa-island",
+    "subarea": "",
+    "label": "Okaloosa Island | Miracle Strip Pkwy",
+    "address": "1203 Miracle Strip Parkway, Fort Walton Beach, FL 32548",
+    "lat": 30.3984537,
+    "lng": -86.5993773,
+    "phone": "(850) 244-2624",
+    "website": "https://hightideislandgrill.com/",
+    "price": "",
+    "notes": "Hightide Island Grill is the oyster bar at 1203 Miracle Strip Parkway on Okaloosa Island, in the Destin area, at the foot of Brooks Bridge. It is closed Sunday.",
+    "hours": "Mon: 4:30 PM - 9:00 PM; Tue: 4:30 PM - 9:00 PM; Wed: 4:30 PM - 9:00 PM; Thu: 4:30 PM - 9:00 PM; Fri: 4:30 PM - 9:00 PM; Sat: 4:30 PM - 9:00 PM; Sun: Closed",
+    "cuisines": [
+      "Seafood",
+      "American"
+    ],
+    "meals": [
+      "Dinner"
+    ],
+    "foods": [
+      "Seafood",
+      "Oyster Bar"
+    ],
+    "vibes": [
+      "Casual Dining",
+      "Bar"
+    ],
+    "category": "Bar & Restaurant",
+    "outdoor": false,
+    "waterfront": false,
+    "bar": true,
+    "kids": false,
+    "music": false,
+    "laurensFavorite": false,
+    "happyDrinks": true,
+    "happyFood": false,
+    "reservations": false,
+    "groups": false,
+    "facebook": "https://www.facebook.com/HightideIslandGrill",
+    "instagram": "",
+    "photos": [
+      {
+        "id": null,
+        "src": "/images/restaurants/hightide-island-grill-okaloosa-island/01.jpg"
+      }
+    ],
+    "logo": "/images/restaurants/hightide-island-grill-okaloosa-island/logo.png",
+    "search": "hightide island grill okaloosa island  okaloosa island | miracle strip pkwy seafood american dinner seafood oyster bar bar & restaurant hightide island grill is the oyster bar at 1203 miracle strip parkway on okaloosa island, in the destin area, at the foot of brooks bridge. it is closed sunday. hightide island grill seafood oyster bar dinner okaloosa island "
   },
   {
     "slug": "holi-indian-kitchen-miramar-beach",
@@ -7904,6 +8355,65 @@
     "search": "o'quigley's seafood steamer mid-destin  destin | us 98 seafood american lunch dinner seafood oyster bar bar & restaurant o'quigley's seafood steamer is a locally owned oyster and seafood bar at 34940 emerald coast parkway, with steamed seafood and a late-night menu. o'quigley's seafood steamer oyster bar seafood destin emerald coast parkway $$"
   },
   {
+    "slug": "old-bay-steamer-okaloosa-island",
+    "name": "Old Bay Steamer",
+    "area": "Okaloosa Island",
+    "areaSlug": "okaloosa-island",
+    "subarea": "",
+    "label": "Okaloosa Island | Santa Rosa Blvd",
+    "address": "102 Santa Rosa Blvd, Fort Walton Beach, FL 32548",
+    "lat": 30.3976746,
+    "lng": -86.5990159,
+    "phone": "(850) 664-2795",
+    "website": "https://oldbaysteamerfwb.com/",
+    "price": "",
+    "notes": "Old Bay Steamer is a dinner restaurant at 102 Santa Rosa Boulevard on Okaloosa Island, in the Destin area. The site opens daily at 4:00 PM and does not print a closing time. Live music is listed Friday and Saturday.",
+    "hours": "Open daily 4:00 PM until close",
+    "cuisines": [
+      "Seafood",
+      "American"
+    ],
+    "meals": [
+      "Dinner"
+    ],
+    "foods": [
+      "Seafood",
+      "Steak"
+    ],
+    "vibes": [
+      "Casual Dining"
+    ],
+    "category": "Restaurant",
+    "outdoor": false,
+    "waterfront": false,
+    "bar": false,
+    "kids": false,
+    "music": true,
+    "laurensFavorite": false,
+    "happyDrinks": false,
+    "happyFood": false,
+    "reservations": false,
+    "groups": false,
+    "facebook": "https://www.facebook.com/oldbaysteamerfwb/",
+    "instagram": "https://www.instagram.com/oldbaysteamer/",
+    "photos": [
+      {
+        "id": null,
+        "src": "/images/restaurants/old-bay-steamer-okaloosa-island/01.jpg"
+      },
+      {
+        "id": null,
+        "src": "/images/restaurants/old-bay-steamer-okaloosa-island/02.jpg"
+      },
+      {
+        "id": null,
+        "src": "/images/restaurants/old-bay-steamer-okaloosa-island/03.jpg"
+      }
+    ],
+    "logo": "/images/restaurants/old-bay-steamer-okaloosa-island/logo.png",
+    "search": "old bay steamer okaloosa island  okaloosa island | santa rosa blvd seafood american dinner seafood steak restaurant old bay steamer is a dinner restaurant at 102 santa rosa boulevard on okaloosa island, in the destin area. the site opens daily at 4:00 pm and does not print a closing time. live music is listed friday and saturday. old bay steamer seafood dinner okaloosa island santa rosa blvd "
+  },
+  {
     "slug": "olive-garden-destin-mid-destin",
     "name": "Olive Garden Destin",
     "area": "Mid-Destin",
@@ -10168,6 +10678,57 @@
     "search": "slick lips seafood & oyster house sandestin  baytowne wharf | sandestin seafood american lunch dinner seafood oyster bar bar & restaurant slick lips seafood & oyster house is a casual bar and restaurant in baytowne wharf | sandestin with seafood-focused dishes and a relaxed coastal atmosphere. slick lips seafood & oyster house seafood oyster bar seafood american casual dining bar sandestin baytowne wharf | sandestin $$"
   },
   {
+    "slug": "smallcakes-destin-mid-destin",
+    "name": "SmallCakes Destin",
+    "area": "Mid-Destin",
+    "areaSlug": "mid-destin",
+    "subarea": "",
+    "label": "Destin | US 98",
+    "address": "36150 Emerald Coast Pkwy #110, Destin, FL 32541",
+    "lat": 30.3866057,
+    "lng": -86.4073846,
+    "phone": "(850) 842-9002",
+    "website": "https://www.smallcakesdestin.com/",
+    "price": "",
+    "notes": "SmallCakes Destin is the cupcake shop at 36150 Emerald Coast Parkway in Destin. The shop is closed Sunday. The site also posts holiday closures, including the week of Thanksgiving 2026.",
+    "hours": "Mon: 11:00 AM - 7:00 PM; Tue: 11:00 AM - 7:00 PM; Wed: 11:00 AM - 7:00 PM; Thu: 11:00 AM - 7:00 PM; Fri: 11:00 AM - 7:00 PM; Sat: 11:00 AM - 7:00 PM; Sun: Closed",
+    "cuisines": [
+      "Dessert"
+    ],
+    "meals": [
+      "Desserts"
+    ],
+    "foods": [
+      "Bakery",
+      "Cookies & Sweets",
+      "Dessert"
+    ],
+    "vibes": [
+      "Fast Casual"
+    ],
+    "category": "Dessert",
+    "outdoor": false,
+    "waterfront": false,
+    "bar": false,
+    "kids": false,
+    "music": false,
+    "laurensFavorite": false,
+    "happyDrinks": false,
+    "happyFood": false,
+    "reservations": false,
+    "groups": false,
+    "facebook": "https://www.facebook.com/SmallCakesOfDestin",
+    "instagram": "https://www.instagram.com/smallcakesofdestin/",
+    "photos": [
+      {
+        "id": null,
+        "src": "/images/restaurants/smallcakes-destin-mid-destin/01.jpg"
+      }
+    ],
+    "logo": "/images/restaurants/smallcakes-destin-mid-destin/logo.png",
+    "search": "smallcakes destin mid-destin  destin | us 98 dessert desserts bakery cookies & sweets dessert dessert smallcakes destin is the cupcake shop at 36150 emerald coast parkway in destin. the shop is closed sunday. the site also posts holiday closures, including the week of thanksgiving 2026. smallcakes destin dessert cupcakes bakery emerald coast parkway "
+  },
+  {
     "slug": "smashburger-destin-commons-destin-commons",
     "name": "Smashburger Destin Commons",
     "area": "Destin Commons",
@@ -10751,6 +11312,57 @@
     ],
     "logo": null,
     "search": "starbucks miramar beach miramar beach  miramar beach | us 98 cafe american breakfast lunch coffee cafe cafe / coffee starbucks miramar beach is a casual cafe in miramar beach | us 98, useful for coffee, breakfast, or a quick daytime stop. starbucks miramar beach coffee cafe american fast casual miramar beach miramar beach | us 98 $"
+  },
+  {
+    "slug": "stewbys-seafood-shanty-okaloosa-island",
+    "name": "Stewby's Seafood Shanty",
+    "area": "Okaloosa Island",
+    "areaSlug": "okaloosa-island",
+    "subarea": "",
+    "label": "Okaloosa Island | Santa Rosa Blvd",
+    "address": "235 Santa Rosa Blvd, Fort Walton Beach, FL 32548",
+    "lat": 30.3966862,
+    "lng": -86.602552,
+    "phone": "(850) 586-7001",
+    "website": "https://stewbys.com/home/okaloosa-island/",
+    "price": "",
+    "notes": "Stewby's Seafood Shanty at 235 Santa Rosa Boulevard is the Okaloosa Island shop, in the Destin area. The same company has other shops. This listing is only the island location. The island menu includes kids meals.",
+    "hours": "Mon: 11:00 AM - 9:00 PM; Tue: 11:00 AM - 9:30 PM; Wed: 11:00 AM - 9:00 PM; Thu: 11:00 AM - 9:00 PM; Fri: 11:00 AM - 9:30 PM; Sat: 11:00 AM - 9:30 PM; Sun: 11:00 AM - 9:00 PM",
+    "cuisines": [
+      "Seafood",
+      "American"
+    ],
+    "meals": [
+      "Lunch",
+      "Dinner"
+    ],
+    "foods": [
+      "Seafood"
+    ],
+    "vibes": [
+      "Fast Casual"
+    ],
+    "category": "Restaurant",
+    "outdoor": false,
+    "waterfront": false,
+    "bar": false,
+    "kids": true,
+    "music": false,
+    "laurensFavorite": false,
+    "happyDrinks": false,
+    "happyFood": false,
+    "reservations": false,
+    "groups": false,
+    "facebook": "https://www.facebook.com/Stewbys/",
+    "instagram": "https://www.instagram.com/stewbyseafoodshanty/",
+    "photos": [
+      {
+        "id": null,
+        "src": "/images/restaurants/stewbys-seafood-shanty-okaloosa-island/01.jpg"
+      }
+    ],
+    "logo": "/images/restaurants/stewbys-seafood-shanty-okaloosa-island/logo.png",
+    "search": "stewby's seafood shanty okaloosa island  okaloosa island | santa rosa blvd seafood american lunch dinner seafood restaurant stewby's seafood shanty at 235 santa rosa boulevard is the okaloosa island shop, in the destin area. the same company has other shops. this listing is only the island location. the island menu includes kids meals. stewby's seafood shanty seafood lunch dinner okaloosa island santa rosa blvd "
   },
   {
     "slug": "subway-destin-mid-destin",

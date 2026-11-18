@@ -39,6 +39,7 @@ AREA_ORDER = [
     "mid-destin",
     "destin-harbor",
     "crystal-beach",
+    "okaloosa-island",
 ]
 
 SHORT_NAMES = {
@@ -49,6 +50,7 @@ SHORT_NAMES = {
     "mid-destin": "Mid-Destin",
     "destin-harbor": "Destin Harbor",
     "crystal-beach": "Crystal Beach",
+    "okaloosa-island": "Okaloosa Island",
 }
 
 FALLBACK_COPY = {
@@ -59,6 +61,7 @@ FALLBACK_COPY = {
     "mid-destin": "The US 98 stretch through Destin, with everyday restaurants between the harbor and Sandestin.",
     "destin-harbor": "HarborWalk Village and the Destin Harbor docks, with seafood houses on the water.",
     "crystal-beach": "Along Scenic 98, including Henderson Beach and the gulf-front inns.",
+    "okaloosa-island": "Seafood houses on Santa Rosa Boulevard and at the pier.",
 }
 
 MEAL_ORDER = ["Breakfast", "Lunch", "Dinner", "Desserts", "Drinks"]
