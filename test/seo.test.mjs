@@ -141,7 +141,7 @@ assert.equal(home["@graph"][1].publisher["@id"], `${ORIGIN}/#organization`);
 
 const directory = jsonLd(read("restaurants/index.html"));
 const list = directory["@graph"].find((node) => node["@type"] === "ItemList");
-assert.equal(list.numberOfItems, 236);
+assert.equal(list.numberOfItems, 247);
 assert.equal(directory["@graph"].some((node) => node["@type"] === "BreadcrumbList"), true);
 
 const profile = jsonLd(read("restaurants/harbor-docks-destin-harbor/index.html"));
@@ -203,7 +203,7 @@ assert.equal(/h1-place|Related guides|Other locations/.test(seaLevelHtml), false
 const profilePages = walk(join(root, "restaurants")).filter(
   (path) => path.endsWith(`${join("index.html")}`) && !path.endsWith(`${join("restaurants", "index.html")}`),
 );
-assert.equal(profilePages.length, 236);
+assert.equal(profilePages.length, 247);
 const seenProfiles = new Set();
 for (const path of profilePages) {
   const html = readFileSync(path, "utf8");
@@ -327,7 +327,7 @@ for (const loc of locs) {
 assert.equal(locs.includes(`${ORIGIN}/guides/`), true);
 assert.equal(locs.includes(`${ORIGIN}/guides/best-seafood-destin/`), true);
 assert.equal(locs.includes(`${ORIGIN}/list-your-restaurant/`), true);
-assert.equal(locs.length, 8 + 14 + 7 + 236);
+assert.equal(locs.length, 8 + 14 + 8 + 247);
 
 const llms = read("llms.txt");
 const llmsFull = read("llms-full.txt");

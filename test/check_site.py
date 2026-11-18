@@ -33,11 +33,11 @@ def check(condition: bool, message: str) -> None:
 
 
 shown = build.published_restaurants()
-check(len(source) == 236, f"named published rows should stay at 236, got {len(source)}")
-check(len(restaurants) == len(shown) == 236, "public json should include every named published restaurant")
+check(len(source) == 247, f"named published rows should stay at 247, got {len(source)}")
+check(len(restaurants) == len(shown) == 247, "public json should include every named published restaurant")
 csv_rows = build.load_rows(ROOT / "data" / "restaurants.csv")
 blank_names = [row for row in csv_rows if build.clean_text(row.get("Status")) == "PUBLISHED" and not build.clean_text(row.get("Restaurant Name"))]
-check(len(csv_rows) == 372 and len(blank_names) == 114, "the CSV keeps 372 rows, including 114 blank stubs that stay off the site")
+check(len(csv_rows) == 383 and len(blank_names) == 114, "the CSV keeps 383 rows, including 114 blank stubs that stay off the site")
 detail_pages = list((ROOT / "restaurants").glob("*/index.html"))
 check(len(detail_pages) == len(restaurants), f"generated {len(detail_pages)} detail pages for {len(restaurants)} rows")
 check("not on the site yet" not in home and "Design preview" not in home, "homepage should not say the catalog is still a sample")
@@ -186,14 +186,14 @@ check("More filters" in home and "Clear all" in home, "homepage search should of
 check("data-hero-show" in home, "homepage search should include the show button")
 check('data-hero-flag="waterfront"' in home and 'data-hero-flag="waterfront" hidden' not in home, "Waterfront chip shows once listings are tagged")
 check('data-hero-flag="bar"' in home and 'data-hero-flag="bar" hidden' not in home, "Bar Scene chip shows once listings are tagged")
-check(sum(1 for item in restaurants if item.get("waterfront") is True) == 38, "public catalog should tag 38 waterfront restaurants")
-check(sum(1 for item in restaurants if item.get("bar") is True) == 32, "public catalog should tag 32 bar scene restaurants")
+check(sum(1 for item in restaurants if item.get("waterfront") is True) == 40, "public catalog should tag 40 waterfront restaurants")
+check(sum(1 for item in restaurants if item.get("bar") is True) == 36, "public catalog should tag 36 bar scene restaurants")
 check(
     all(item.get("waterfront") in {True, False} and item.get("bar") in {True, False} for item in restaurants),
     "every public restaurant should carry waterfront and bar",
 )
-check(directory.count('data-waterfront="yes"') == 38, "directory should mark 38 waterfront listings")
-check(directory.count('data-bar="yes"') == 32, "directory should mark 32 bar scene listings")
+check(directory.count('data-waterfront="yes"') == 40, "directory should mark 40 waterfront listings")
+check(directory.count('data-bar="yes"') == 36, "directory should mark 36 bar scene listings")
 edge = next(item for item in restaurants if item["slug"] == "the-edge-seafood-restaurant-and-skybar-destin-harbor")
 check(edge["waterfront"] is True and edge["bar"] is True, "The Edge should be waterfront and bar in the public catalog")
 edge_page = (ROOT / "restaurants" / edge["slug"] / "index.html").read_text(encoding="utf-8")
@@ -202,8 +202,8 @@ published_rows = [
     row for row in csv_rows
     if build.clean_text(row.get("Status")) == "PUBLISHED" and build.clean_text(row.get("Restaurant Name"))
 ]
-check(sum(1 for row in published_rows if build.is_yes(row.get("Waterfront"))) == 38, "CSV should mark 38 waterfront listings")
-check(sum(1 for row in published_rows if build.is_yes(row.get("Bar Scene"))) == 32, "CSV should mark 32 bar scene listings")
+check(sum(1 for row in published_rows if build.is_yes(row.get("Waterfront"))) == 40, "CSV should mark 40 waterfront listings")
+check(sum(1 for row in published_rows if build.is_yes(row.get("Bar Scene"))) == 36, "CSV should mark 36 bar scene listings")
 check("Waterfront" in csv_rows[0] and "Bar Scene" in csv_rows[0], "CSV should include Waterfront and Bar Scene columns")
 
 areas = json.loads((ROOT / "data" / "locations.json").read_text(encoding="utf-8"))
@@ -214,7 +214,7 @@ for area in areas:
 
 music_note = "Live music is seasonal and subject to change — confirm with the restaurant."
 music_count = sum(1 for item in restaurants if item.get("music") is True)
-check(music_count == 22, f"live music should stay a verified yes on 22 listings, got {music_count}")
+check(music_count == 24, f"live music should stay a verified yes on 24 listings, got {music_count}")
 check(directory.count('data-music="yes"') == music_count, "directory should keep every live music listing filterable")
 check(
     'data-param="music"' in directory and ">Live music</span>" in directory and "Live music*" not in directory,
@@ -328,7 +328,7 @@ check(
     ],
     f"unexpected monogram listings: {missing_photos}",
 )
-check(len(photos) == 229, f"expected 229 restaurant photos, got {len(photos)}")
+check(len(photos) == 240, f"expected 240 restaurant photos, got {len(photos)}")
 check(build.local_listing_photo("not-a-restaurant") is None, "a slug without a dropped file should stay a monogram")
 check(build.listing_photos("sundries-general-market-sandestin") == [], "Sundries General Market has no photo folder")
 check(build.listing_photos("crafty-siren-destin-harbor") == [], "Crafty Siren has no photo folder")
@@ -616,7 +616,7 @@ check(
     "town restaurant counts should stay on one line",
 )
 check("11 Restaurants" in areas_index and "11 places" not in areas_index, "area cards should count Restaurants")
-check("56 Restaurants" in home and re.search(r"\bplaces\b", home) is None, "homepage area counts should say Restaurants")
+check("59 Restaurants" in home and re.search(r"\bplaces\b", home) is None, "homepage area counts should say Restaurants")
 check(build.restaurant_count_word(1, label=True) == "Restaurant", "a single listing is a Restaurant label")
 check(build.restaurant_count_word(7) == "restaurants", "sentence counts stay lowercase")
 check("1 restaurant on the map" in site_js and "restaurants on the map" in site_js, "map count should say restaurants")

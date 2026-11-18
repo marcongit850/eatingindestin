@@ -9,7 +9,7 @@ const blank = { meal: "", area: "", cuisine: "", q: "", outdoor: "", kids: "", m
 
 test("empty filters keep the full directory", () => {
   assert.equal(restaurants.filter((item) => matches(item, blank)).length, restaurants.length);
-  assert.equal(restaurants.length, 236);
+  assert.equal(restaurants.length, 247);
 });
 
 test("list and map links keep the active filters", () => {
@@ -69,7 +69,7 @@ test("amenity filters require a yes flag", () => {
   const music = restaurants.filter((item) => matches(item, { ...blank, music: "yes" }));
   assert.ok(happyFood.length > 0 && happyFood.every((item) => item.happyFood === true));
   assert.ok(happyDrinks.length > 0 && happyDrinks.every((item) => item.happyDrinks === true));
-  assert.equal(music.length, 22);
+  assert.equal(music.length, 24);
   assert.ok(music.every((item) => item.music === true));
   assert.ok(music.some((item) => item.slug === "harbor-tavern-destin-harbor"));
   assert.ok(music.some((item) => item.slug === "boshamps-seafood-and-oyster-house-destin-harbor"));
@@ -94,8 +94,8 @@ test("price, waterfront, bar, and happy hour query params filter the directory",
 
   const waterfront = restaurants.filter((item) => matches(item, { ...blank, waterfront: "yes" }));
   const bar = restaurants.filter((item) => matches(item, { ...blank, bar: "yes" }));
-  assert.equal(waterfront.length, 38);
-  assert.equal(bar.length, 32);
+  assert.equal(waterfront.length, 40);
+  assert.equal(bar.length, 36);
   assert.ok(waterfront.every((item) => item.waterfront === true));
   assert.ok(bar.every((item) => item.bar === true));
   const edge = restaurants.find((item) => item.slug === "the-edge-seafood-restaurant-and-skybar-destin-harbor");
